@@ -50,7 +50,10 @@ views are tied together by these badges rather than by lining up geometrically.
 
 **Print-ready export.** PNG export (SVG fallback) puts the pseudocode in a left
 column and the Python in a right column beside the diagram, each line badged
-with its step, separated by ruled dividers. The sheet is repainted for paper —
+with its step, separated by ruled dividers. The sheet is a fixed 210 x 99 mm at
+300 dpi — one third of an A4 page, with the resolution written into the PNG so a
+word processor places it at that size — and the columns spread outwards to fill
+the band, so three worked examples stack on one printed page. The sheet is repainted for paper —
 ink on white, each shape keeping its hue as a light tint — rather than exporting
 the app's dark theme, which drains a cartridge and photocopies to mud. Plus JSON project save/load, and debounced autosave to
 `localStorage` so a refresh doesn't lose work.

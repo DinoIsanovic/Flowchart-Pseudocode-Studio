@@ -57,6 +57,61 @@ interface HistoryState {
  * the two still read as the same diagram, and staying legible photocopied in
  * grey.
  */
+
+// The exported sheet is one third of an A4 page — full page width, a third of
+// its height — so three worked examples stack on one printed page.
+const PRINT_DPI = 300;
+const mmToPx = (mm: number) => Math.round((mm / 25.4) * PRINT_DPI);
+const SHEET_W_MM = 210;
+const SHEET_H_MM = 99;
+const SHEET_MARGIN_MM = 6;
+
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+
+function crc32(bytes: Uint8Array): number {
+  let c = 0xffffffff;
+  for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+/**
+ * Canvas writes a PNG with no resolution, so a word processor drops it in at
+ * 96 dpi and the sheet lands two and a half times too large. This stamps a
+ * pHYs chunk after IHDR, which is how a PNG states its physical size.
+ */
+function withPngDpi(png: Uint8Array, dpi: number): Uint8Array {
+  const perMetre = Math.round(dpi / 0.0254);
+  const data = new Uint8Array(9);
+  const dv = new DataView(data.buffer);
+  dv.setUint32(0, perMetre);
+  dv.setUint32(4, perMetre);
+  data[8] = 1; // unit: metre
+
+  const chunk = new Uint8Array(21);
+  const cv = new DataView(chunk.buffer);
+  cv.setUint32(0, 9);
+  chunk.set([0x70, 0x48, 0x59, 0x73], 4); // "pHYs"
+  chunk.set(data, 8);
+  cv.setUint32(17, crc32(chunk.subarray(4, 17)));
+
+  // 8-byte signature + 25-byte IHDR chunk
+  const at = 8 + 25;
+  if (png.length < at) return png;
+  const out = new Uint8Array(png.length + chunk.length);
+  out.set(png.subarray(0, at), 0);
+  out.set(chunk, at);
+  out.set(png.subarray(at), at + chunk.length);
+  return out;
+}
+
 const PRINT_INK = '#1F2937';
 const PRINT_ACCENT = '#0E7490';
 const PRINT_RULE = '#CBD5E1';
@@ -915,10 +970,20 @@ export default function App() {
     const leftW = hasColumns ? widthFor(pseudoLines, 'PSEUDOKOD') : 0;
     const rightW = hasColumns ? widthFor(pyText, 'PYTHON') : 0;
 
-    const outX = boxX - (hasColumns ? leftW + COL_GAP : 0);
-    const outW = boxW + (hasColumns ? leftW + rightW + COL_GAP * 2 : 0);
     const columnH = HEADER_H + Math.max(pseudoLines.length, pyLines.length) * LINE_H + 40;
     const outH = Math.max(boxH, columnH);
+
+    // The sheet is a wide band, so a tall diagram would sit small in the middle
+    // with empty paper either side. Widening the two gaps instead pushes the
+    // columns out towards the edges until the drawing matches the sheet's
+    // proportions and fills it.
+    const sheetAspect = SHEET_W_MM / SHEET_H_MM;
+    const gap = hasColumns
+      ? Math.min(700, Math.max(COL_GAP, (outH * sheetAspect - boxW - leftW - rightW) / 2))
+      : COL_GAP;
+
+    const outX = boxX - (hasColumns ? leftW + gap : 0);
+    const outW = boxW + (hasColumns ? leftW + rightW + gap * 2 : 0);
 
     const clone = svgEl.cloneNode(true) as SVGSVGElement;
     clone.removeAttribute('id');
@@ -1075,8 +1140,8 @@ export default function App() {
         return g;
       };
 
-      clone.appendChild(drawDivider(boxX - COL_GAP / 2));
-      clone.appendChild(drawDivider(boxX + boxW + COL_GAP / 2));
+      clone.appendChild(drawDivider(boxX - gap / 2));
+      clone.appendChild(drawDivider(boxX + boxW + gap / 2));
 
       const pseudoTitle = language === 'en' ? 'Pseudocode' : language === 'de' ? 'Pseudocode' : 'Pseudokod';
       clone.appendChild(drawColumn(
@@ -1086,7 +1151,7 @@ export default function App() {
         pseudoLines.map((text, i) => ({ badge: stepByLine.get(i + 1), text }))
       ));
       clone.appendChild(drawColumn(
-        boxX + boxW + COL_GAP,
+        boxX + boxW + gap,
         rightW,
         'Python',
         pyLines.map((l, i) => ({ badge: l.step, text: pyText[i] }))
@@ -1099,10 +1164,11 @@ export default function App() {
     const img = new Image();
 
     img.onload = () => {
-      const scale = 2; // 2x high resolution
+      // Fixed sheet rather than a canvas sized to the content, so every export
+      // prints at the same size and three of them stack on one A4 page.
       const canvas = document.createElement('canvas');
-      canvas.width = Math.round(outW * scale);
-      canvas.height = Math.round(outH * scale);
+      canvas.width = mmToPx(SHEET_W_MM);
+      canvas.height = mmToPx(SHEET_H_MM);
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         URL.revokeObjectURL(url);
@@ -1112,7 +1178,17 @@ export default function App() {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      // Fit the drawing inside the margins without distorting it. A tall
+      // algorithm simply comes out smaller on the sheet.
+      const margin = mmToPx(SHEET_MARGIN_MM);
+      const fit = Math.min(
+        (canvas.width - margin * 2) / outW,
+        (canvas.height - margin * 2) / outH
+      );
+      const drawW = outW * fit;
+      const drawH = outH * fit;
+      ctx.drawImage(img, (canvas.width - drawW) / 2, (canvas.height - drawH) / 2, drawW, drawH);
       URL.revokeObjectURL(url);
 
       canvas.toBlob(async (blob) => {
@@ -1121,7 +1197,7 @@ export default function App() {
           return;
         }
         try {
-          const bytes = new Uint8Array(await blob.arrayBuffer());
+          const bytes = withPngDpi(new Uint8Array(await blob.arrayBuffer()), PRINT_DPI);
           await saveBytes(`flowchart-${Date.now()}.png`, bytes, 'image/png', [
             { name: 'PNG', extensions: ['png'] },
           ]);
