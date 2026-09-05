@@ -114,6 +114,41 @@ No environment variables are needed to run the app. `.env.example` is a
 leftover from AI Studio hosting; the app itself reads no `GEMINI_API_KEY` at
 build or run time.
 
+## Desktop builds (Windows, Linux)
+
+The desktop app is a [Tauri](https://tauri.app) shell around the same frontend,
+so it ships a native window instead of a browser tab and needs no runtime
+install. Pushing a `v*` tag runs `.github/workflows/release.yml`, which builds
+every target and attaches them to a draft GitHub Release:
+
+| Platform | Artifact |
+| --- | --- |
+| Windows | `.exe` (NSIS installer, per-user — no admin rights needed) |
+| Linux | `.AppImage` (portable, run it directly) |
+| Linux | `.deb` (Debian/Ubuntu; depends on `libwebkit2gtk-4.1-0` and `libgtk-3-0`) |
+
+### Building locally
+
+**Prerequisites:** Rust (stable) plus the platform webview libraries —
+`webkit2gtk-4.1` and `gtk3` on Linux, WebView2 on Windows (preinstalled on
+Windows 10/11).
+
+```bash
+npm run tauri build                     # bundles for the current platform
+npm run tauri build -- --bundles deb    # or a single target
+npm run tauri dev                       # desktop window with hot reload
+```
+
+Windows binaries cannot be produced from Linux — use the workflow, which builds
+them on a real Windows runner.
+
+> **Arch / CachyOS:** AppImage bundling fails with
+> `failed to run linuxdeploy`. `linuxdeploy` carries its own outdated `strip`,
+> which does not understand the `.relr.dyn` section emitted by current Arch
+> toolchains. Prefix the build with `NO_STRIP=true`. The CI workflow builds on
+> Ubuntu 22.04 and is unaffected — and building there is deliberate, since an
+> AppImage links against the glibc of the machine that built it.
+
 ## Using the AI Tutor
 
 The tutor calls the Gemini REST API **from the browser** with a key you paste
@@ -142,6 +177,9 @@ don't ship a shared or unrestricted key to a classroom deployment.
 ## Project layout
 
 ```
+src-tauri/                desktop shell (Tauri, Rust) — window config,
+                          bundle targets, CSP, icons
+.github/workflows/        release workflow: Windows .exe, Linux AppImage + deb
 src/
   App.tsx                 state, history, autosave, import/export, shortcuts
   types.ts                FlowNode, FlowEdge, Statement, AppState
@@ -159,7 +197,7 @@ src/
 
 ## Tech stack
 
-React 19 · TypeScript · Vite 6 · Tailwind CSS 4 · vite-plugin-pwa · lucide-react
+React 19 · TypeScript · Vite 6 · Tailwind CSS 4 · vite-plugin-pwa · lucide-react · Tauri 2 (desktop)
 
 ## License
 

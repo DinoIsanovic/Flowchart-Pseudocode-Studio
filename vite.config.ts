@@ -4,12 +4,17 @@ import path from 'path';
 import {defineConfig} from 'vite';
 import {VitePWA} from 'vite-plugin-pwa';
 
+// Tauri sets this during `tauri build` / `tauri dev`. The desktop app is not
+// served over http, so a service worker cannot register there — shipping one
+// only adds a failed registration and dead files to the bundle.
+const isTauri = !!process.env.TAURI_ENV_PLATFORM;
+
 export default defineConfig(() => {
   return {
     plugins: [
       react(),
       tailwindcss(),
-      VitePWA({
+      !isTauri && VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg'],
         manifest: {
@@ -49,7 +54,7 @@ export default defineConfig(() => {
           type: 'module',
         },
       }),
-    ],
+    ].filter(Boolean),
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
