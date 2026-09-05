@@ -1,0 +1,6 @@
+{
+  "name": "Flowchart & Pseudocode Studio",
+  "description": "Intuitive flowchart and pseudocode editor with bi-directional generation, English, German, and Bosnian support, AI Tutor, and Android PWA readiness.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
