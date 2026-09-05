@@ -50,6 +50,26 @@ interface HistoryState {
  * the bytes go through a native save dialog instead; the anchor stays for the
  * browser build.
  */
+
+/**
+ * Print palette for the exported sheet. The app itself is dark, but an export
+ * is meant for paper and a handout: ink on white, keeping each shape's hue so
+ * the two still read as the same diagram, and staying legible photocopied in
+ * grey.
+ */
+const PRINT_INK = '#1F2937';
+const PRINT_ACCENT = '#0E7490';
+const PRINT_RULE = '#CBD5E1';
+const PRINT_SHAPES: Record<string, { fill: string; stroke: string }> = {
+  start_end: { fill: '#E6FAF6', stroke: '#0F766E' },
+  io: { fill: '#E8F1FE', stroke: '#1D4ED8' },
+  process: { fill: '#F4F4F5', stroke: '#334155' },
+  decision: { fill: '#FEF6E3', stroke: '#B45309' },
+  loop: { fill: '#F3EDFD', stroke: '#7E22CE' },
+  subprocess: { fill: '#F4F4F5', stroke: '#334155' },
+  comment: { fill: '#FEFCE8', stroke: '#A16207' },
+};
+
 const isTauri = () => typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
 async function saveBytes(
@@ -912,7 +932,39 @@ export default function App() {
     clone.setAttribute('viewBox', `${outX} ${boxY} ${outW} ${outH}`);
     clone.setAttribute('width', `${outW}`);
     clone.setAttribute('height', `${outH}`);
-    clone.style.backgroundColor = '#0A0A0A';
+    clone.style.backgroundColor = '#FFFFFF';
+
+    // Repaint the cloned diagram for paper. The live canvas is dark; the sheet
+    // has to be ink on white or it eats a cartridge and photocopies to mud.
+    clone.querySelectorAll('[data-node-id]').forEach((g) => {
+      const id = g.getAttribute('data-node-id');
+      const node = nodes.find((n) => n.id === id);
+      if (!node) return;
+      const paint = PRINT_SHAPES[node.type] ?? PRINT_SHAPES.process;
+      g.querySelectorAll('ellipse, polygon, path').forEach((shape) => {
+        if (shape.getAttribute('fill') === 'none') return;
+        shape.setAttribute('fill', paint.fill);
+        shape.setAttribute('stroke', paint.stroke);
+      });
+      g.querySelectorAll('text').forEach((txt) => txt.setAttribute('fill', PRINT_INK));
+      // The step badge keeps its accent so it stays findable in the columns.
+      g.querySelectorAll('.step-badge circle').forEach((c) => {
+        c.setAttribute('fill', PRINT_ACCENT);
+        c.setAttribute('fill-opacity', '1');
+      });
+      g.querySelectorAll('.step-badge text').forEach((t) => t.setAttribute('fill', '#FFFFFF'));
+    });
+
+    clone.querySelectorAll('#edges-layer path, #edges-layer line').forEach((el) => {
+      if (el.getAttribute('stroke') === 'transparent') return;
+      el.setAttribute('stroke', PRINT_INK);
+    });
+    clone.querySelectorAll('#edges-layer rect').forEach((r) => {
+      r.setAttribute('fill', '#FFFFFF');
+      r.setAttribute('stroke', PRINT_INK);
+    });
+    clone.querySelectorAll('#edges-layer text').forEach((t) => t.setAttribute('fill', PRINT_INK));
+    clone.querySelectorAll('marker path').forEach((p) => p.setAttribute('fill', PRINT_INK));
 
     // Insert high-contrast dark background matching flowchart theme
     const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -920,7 +972,7 @@ export default function App() {
     bg.setAttribute('y', `${boxY}`);
     bg.setAttribute('width', `${outW}`);
     bg.setAttribute('height', `${outH}`);
-    bg.setAttribute('fill', '#0A0A0A');
+    bg.setAttribute('fill', '#FFFFFF');
 
     let defs = clone.querySelector('defs');
     if (!defs) {
@@ -966,34 +1018,65 @@ export default function App() {
       ) => {
         const g = document.createElementNS(NS, 'g');
         g.appendChild(mk('text', {
-          x: `${x}`, y: `${top}`, fill: '#06B6D4',
+          x: `${x}`, y: `${top}`, fill: PRINT_ACCENT,
           'font-size': '15', 'font-weight': '900', 'letter-spacing': '0.18em',
         }, title.toUpperCase()));
         g.appendChild(mk('line', {
           x1: `${x}`, y1: `${top + 14}`, x2: `${x + width - 40}`, y2: `${top + 14}`,
-          stroke: '#FFFFFF', 'stroke-opacity': '0.15', 'stroke-width': '1',
+          stroke: PRINT_RULE, 'stroke-width': '1',
         }));
 
         rows.forEach((row, i) => {
           const y = top + HEADER_H + i * LINE_H;
           if (row.badge !== undefined) {
             g.appendChild(mk('circle', {
-              cx: `${x + 10}`, cy: `${y - 5}`, r: '10',
-              fill: '#06B6D4', 'fill-opacity': '0.9',
+              cx: `${x + 10}`, cy: `${y - 5}`, r: '10', fill: PRINT_ACCENT,
             }));
             g.appendChild(mk('text', {
-              x: `${x + 10}`, y: `${y - 1}`, fill: '#000000', 'text-anchor': 'middle',
+              x: `${x + 10}`, y: `${y - 1}`, fill: '#FFFFFF', 'text-anchor': 'middle',
               'font-size': '11', 'font-weight': '900',
             }, String(row.badge)));
           }
           const line = mk('text', {
-            x: `${x + 30}`, y: `${y}`, fill: '#F5F5F5', 'font-size': `${COL_FONT}`,
+            x: `${x + 30}`, y: `${y}`, fill: PRINT_INK, 'font-size': `${COL_FONT}`,
             class: 'code-col',
           }, row.text);
           g.appendChild(line);
         });
         return g;
       };
+
+
+      /**
+       * Decorative rule between two columns: a hairline closed by a small cap
+       * at each end with a diamond at its middle, so the three panels read as
+       * separate parts of one printed sheet rather than three loose blocks.
+       */
+      const drawDivider = (x: number) => {
+        const y1 = boxY + 24;
+        const y2 = boxY + outH - 24;
+        const mid = (y1 + y2) / 2;
+        const g = document.createElementNS(NS, 'g');
+        const rule = (a: string, b: string, c: string, d: string, w: string, col: string) =>
+          g.appendChild(mk('line', { x1: a, y1: b, x2: c, y2: d, stroke: col, 'stroke-width': w, 'stroke-linecap': 'round' }));
+
+        rule(`${x}`, `${y1}`, `${x}`, `${mid - 16}`, '1.25', PRINT_RULE);
+        rule(`${x}`, `${mid + 16}`, `${x}`, `${y2}`, '1.25', PRINT_RULE);
+        // end caps
+        rule(`${x - 7}`, `${y1}`, `${x + 7}`, `${y1}`, '2', PRINT_ACCENT);
+        rule(`${x - 7}`, `${y2}`, `${x + 7}`, `${y2}`, '2', PRINT_ACCENT);
+        // centre diamond
+        g.appendChild(mk('rect', {
+          x: `${x - 5}`, y: `${mid - 5}`, width: '10', height: '10',
+          fill: PRINT_ACCENT, transform: `rotate(45 ${x} ${mid})`,
+        }));
+        g.appendChild(mk('circle', { cx: `${x}`, cy: `${mid - 24}`, r: '2.5', fill: PRINT_RULE }));
+        g.appendChild(mk('circle', { cx: `${x}`, cy: `${mid + 24}`, r: '2.5', fill: PRINT_RULE }));
+        return g;
+      };
+
+      clone.appendChild(drawDivider(boxX - COL_GAP / 2));
+      clone.appendChild(drawDivider(boxX + boxW + COL_GAP / 2));
 
       const pseudoTitle = language === 'en' ? 'Pseudocode' : language === 'de' ? 'Pseudocode' : 'Pseudokod';
       clone.appendChild(drawColumn(
@@ -1025,7 +1108,7 @@ export default function App() {
         URL.revokeObjectURL(url);
         return;
       }
-      ctx.fillStyle = '#0A0A0A';
+      ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';

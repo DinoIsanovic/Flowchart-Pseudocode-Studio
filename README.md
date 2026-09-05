@@ -48,9 +48,11 @@ marks the line that produced it in the pseudocode and in the Python. Branches
 put two nodes on one row and Python's indentation carries meaning, so the three
 views are tied together by these badges rather than by lining up geometrically.
 
-**Export and persistence.** PNG export (SVG fallback) writes the pseudocode in a
-left column and the Python in a right column beside the diagram, each line
-badged with its step. Plus JSON project save/load, and debounced autosave to
+**Print-ready export.** PNG export (SVG fallback) puts the pseudocode in a left
+column and the Python in a right column beside the diagram, each line badged
+with its step, separated by ruled dividers. The sheet is repainted for paper —
+ink on white, each shape keeping its hue as a light tint — rather than exporting
+the app's dark theme, which drains a cartridge and photocopies to mud. Plus JSON project save/load, and debounced autosave to
 `localStorage` so a refresh doesn't lose work.
 
 **Mobile and PWA.** Touch gestures (pinch-zoom, one-finger pan, drag shapes), a
