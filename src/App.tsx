@@ -17,6 +17,8 @@ import {
   stepsByPseudocodeLine,
 } from './core/flowchart-gen';
 import { statementsToPython } from './core/python-gen';
+import { save } from '@tauri-apps/plugin-dialog';
+import { writeFile } from '@tauri-apps/plugin-fs';
 import { autoLayoutFlowchart, centerNodesOnCanvas } from './core/auto-layout';
 import { Header } from './components/Header';
 import { Toolbar } from './components/Toolbar';
@@ -39,6 +41,41 @@ const SNAP_STORAGE_KEY = 'flowchart_studio_snap_v2';
 interface HistoryState {
   nodes: FlowNode[];
   edges: FlowEdge[];
+}
+
+
+/**
+ * The desktop webview silently discards a download the page starts itself: the
+ * <a download> click returns normally and no file is ever written. Inside Tauri
+ * the bytes go through a native save dialog instead; the anchor stays for the
+ * browser build.
+ */
+const isTauri = () => typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+
+async function saveBytes(
+  filename: string,
+  bytes: Uint8Array,
+  mime: string,
+  filters: { name: string; extensions: string[] }[]
+): Promise<'saved' | 'cancelled'> {
+  if (isTauri()) {
+    const path = await save({ defaultPath: filename, filters });
+    if (!path) return 'cancelled';
+    await writeFile(path, bytes);
+    return 'saved';
+  }
+
+  const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: mime }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 100);
+  return 'saved';
 }
 
 export default function App() {
@@ -805,14 +842,26 @@ export default function App() {
       maxY = Math.max(maxY, n.y + n.h / 2);
     });
 
+    // A Waypoint is {axis, v}: a single coordinate on one axis, not a point.
+    // Reading .x/.y off it yielded undefined, so every diagram containing an
+    // edge bend — every loop and branch — turned the whole bounding box into
+    // NaN, and the export canvas came out 0x0 and produced no file.
     edges.forEach((e) => {
       e.waypoints?.forEach((pt) => {
-        minX = Math.min(minX, pt.x);
-        minY = Math.min(minY, pt.y);
-        maxX = Math.max(maxX, pt.x);
-        maxY = Math.max(maxY, pt.y);
+        if (pt.axis === 'x') {
+          minX = Math.min(minX, pt.v);
+          maxX = Math.max(maxX, pt.v);
+        } else {
+          minY = Math.min(minY, pt.v);
+          maxY = Math.max(maxY, pt.v);
+        }
       });
     });
+
+    if (![minX, minY, maxX, maxY].every(Number.isFinite)) {
+      showToast(t.emptyCanvasAlert, 'error');
+      return;
+    }
 
     const pad = 60;
     const boxX = Math.floor(minX - pad);
@@ -829,15 +878,25 @@ export default function App() {
     const pyLines = statementsToPython(parsePseudocode(pseudocode, language).statements, language);
     const hasColumns = pseudoLines.some((l) => l.trim().length > 0);
 
-    const COL_W = 560;
     const COL_GAP = 48;
     const LINE_H = 26;
     const COL_FONT = 16;
     const HEADER_H = 56;
+    const GUTTER = 30;
+    const CHAR_W = COL_FONT * 0.62; // monospace advance width
 
-    const colX = hasColumns ? COL_W + COL_GAP : 0;
-    const outX = boxX - colX;
-    const outW = boxW + colX * 2;
+    // Size each column to its own longest line rather than a fixed width, so a
+    // short program does not export a picture padded with empty space.
+    const widthFor = (lines: string[], title: string) => {
+      const chars = Math.max(title.length, ...lines.map((l) => l.length), 10);
+      return Math.min(1100, Math.max(260, GUTTER + Math.ceil(chars * CHAR_W) + 40));
+    };
+    const pyText = pyLines.map((l) => '    '.repeat(l.depth) + l.text);
+    const leftW = hasColumns ? widthFor(pseudoLines, 'PSEUDOKOD') : 0;
+    const rightW = hasColumns ? widthFor(pyText, 'PYTHON') : 0;
+
+    const outX = boxX - (hasColumns ? leftW + COL_GAP : 0);
+    const outW = boxW + (hasColumns ? leftW + rightW + COL_GAP * 2 : 0);
     const columnH = HEADER_H + Math.max(pseudoLines.length, pyLines.length) * LINE_H + 40;
     const outH = Math.max(boxH, columnH);
 
@@ -901,6 +960,7 @@ export default function App() {
       const top = boxY + 40;
       const drawColumn = (
         x: number,
+        width: number,
         title: string,
         rows: { badge?: number; text: string }[]
       ) => {
@@ -910,7 +970,7 @@ export default function App() {
           'font-size': '15', 'font-weight': '900', 'letter-spacing': '0.18em',
         }, title.toUpperCase()));
         g.appendChild(mk('line', {
-          x1: `${x}`, y1: `${top + 14}`, x2: `${x + COL_W - 40}`, y2: `${top + 14}`,
+          x1: `${x}`, y1: `${top + 14}`, x2: `${x + width - 40}`, y2: `${top + 14}`,
           stroke: '#FFFFFF', 'stroke-opacity': '0.15', 'stroke-width': '1',
         }));
 
@@ -938,13 +998,15 @@ export default function App() {
       const pseudoTitle = language === 'en' ? 'Pseudocode' : language === 'de' ? 'Pseudocode' : 'Pseudokod';
       clone.appendChild(drawColumn(
         outX + 40,
+        leftW,
         pseudoTitle,
         pseudoLines.map((text, i) => ({ badge: stepByLine.get(i + 1), text }))
       ));
       clone.appendChild(drawColumn(
         boxX + boxW + COL_GAP,
+        rightW,
         'Python',
-        pyLines.map((l) => ({ badge: l.step, text: '    '.repeat(l.depth) + l.text }))
+        pyLines.map((l, i) => ({ badge: l.step, text: pyText[i] }))
       ));
     }
 
@@ -970,33 +1032,32 @@ export default function App() {
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(url);
 
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `flowchart-${Date.now()}.png`;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          document.body.removeChild(a);
-          URL.revokeObjectURL(a.href);
-        }, 100);
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          showToast(t.emptyCanvasAlert, 'error');
+          return;
+        }
+        try {
+          const bytes = new Uint8Array(await blob.arrayBuffer());
+          await saveBytes(`flowchart-${Date.now()}.png`, bytes, 'image/png', [
+            { name: 'PNG', extensions: ['png'] },
+          ]);
+        } catch (err) {
+          showToast(err instanceof Error ? err.message : String(err), 'error');
+        }
       }, 'image/png');
     };
 
     img.onerror = (err) => {
       console.error('Failed to load SVG into Image for export:', err);
       URL.revokeObjectURL(url);
-      // Fallback: download as SVG
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(svgBlob);
-      a.download = `flowchart-${Date.now()}.svg`;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(a.href);
-      }, 100);
+      // Fallback: save the SVG itself
+      void saveBytes(
+        `flowchart-${Date.now()}.svg`,
+        new TextEncoder().encode(xml),
+        'image/svg+xml',
+        [{ name: 'SVG', extensions: ['svg'] }]
+      ).catch((e) => showToast(e instanceof Error ? e.message : String(e), 'error'));
     };
 
     img.src = url;
@@ -1011,11 +1072,10 @@ export default function App() {
       pseudocode,
       language,
     };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `flowchart-project-${Date.now()}.json`;
-    a.click();
+    const bytes = new TextEncoder().encode(JSON.stringify(data, null, 2));
+    void saveBytes(`flowchart-project-${Date.now()}.json`, bytes, 'application/json', [
+      { name: 'JSON', extensions: ['json'] },
+    ]).catch((e) => showToast(e instanceof Error ? e.message : String(e), 'error'));
   };
 
   const handleLoadJson = (file: File) => {
