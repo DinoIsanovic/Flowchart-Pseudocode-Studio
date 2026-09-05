@@ -23,6 +23,9 @@ export interface FlowNode {
   h: number;
   text: string;
   counter?: string;
+  // Reading-order badge shared with the pseudocode and Python columns, so the
+  // three views can point at the same step. Absent on hand-drawn nodes.
+  step?: number;
 }
 
 export interface Waypoint {
@@ -64,6 +67,9 @@ export interface ParseError {
 }
 
 export interface Statement {
+  // 1-based line in the pseudocode this statement was parsed from, so the
+  // export can put a step badge next to the right source line.
+  line?: number;
   type: 'action' | 'if' | 'loop' | 'count_loop';
   kind?: 'unesi' | 'ispisi' | 'postavi' | 'racunaj' | 'generic';
   text?: string;

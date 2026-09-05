@@ -35,8 +35,19 @@ pseudocode to the Gemini API along with a Socratic teaching prompt — it asks a
 guiding question before handing over a solution. It can point at a specific node
 and the canvas highlights it. Requires your own API key (see below).
 
-**Export and persistence.** PNG export (SVG fallback), JSON project save/load,
-and debounced autosave to `localStorage` so a refresh doesn't lose work.
+**Python alongside the diagram.** A `Python` tab beside the pseudocode editor
+generates equivalent Python — `if/elif/else`, `while`, `for _ in range(n)`,
+`int(input())` — with real indentation rather than a flattened transcript.
+
+**Step badges.** Every flowchart node carries a number, and the same number
+marks the line that produced it in the pseudocode and in the Python. Branches
+put two nodes on one row and Python's indentation carries meaning, so the three
+views are tied together by these badges rather than by lining up geometrically.
+
+**Export and persistence.** PNG export (SVG fallback) writes the pseudocode in a
+left column and the Python in a right column beside the diagram, each line
+badged with its step. Plus JSON project save/load, and debounced autosave to
+`localStorage` so a refresh doesn't lose work.
 
 **Mobile and PWA.** Touch gestures (pinch-zoom, one-finger pan, drag shapes), a
 mobile nav bar, an install prompt, and a built-in guide for packaging the PWA as
@@ -58,7 +69,7 @@ Python — there is no `END IF` or `END WHILE`.
 | `ELSE IF cond` | `SONST WENN cond` | `INAČE AKO JE cond` |
 | `REPEAT 5 TIMES` | `WIEDERHOLE 5 MAL` | `PONOVI 5 PUTA` |
 | `REPEAT WHILE cond` | `WIEDERHOLE SOLANGE cond` | `PONOVI DOK JE cond` |
-| `REPEAT ... UNTIL cond` | `WIEDERHOLE ... BIS cond` | `PONAVLJAJ ... DOK JE cond` |
+| `LOOP ... UNTIL cond` | `LOOP ... BIS cond` | `PONAVLJAJ ... DOK JE cond` |
 
 Example:
 
@@ -192,7 +203,8 @@ src/
   types.ts                FlowNode, FlowEdge, Statement, AppState
   core/
     flowchart-gen.ts      pseudocode parser, diagram builder, reverse
-                          generator, orthogonal edge routing
+                          generator, orthogonal edge routing, step numbering
+    python-gen.ts         Python generator over the same statement tree
     auto-layout.ts        automatic node placement and canvas centering
   components/             Canvas, Toolbar, Header, PseudocodePanel,
                           AITutorPanel, modals, toasts, mobile nav

@@ -211,7 +211,7 @@ export function parsePseudocode(text: string, lang: Language = 'en'): { statemen
   }
 
   function mkAction(kind: 'unesi' | 'ispisi' | 'postavi' | 'racunaj', ln: PreparedLine): Statement {
-    return { type: 'action', kind, text: splitWords(ln.text).slice(1).join(' ') };
+    return { type: 'action', kind, text: splitWords(ln.text).slice(1).join(' '), line: ln.line };
   }
 
   function parseBody(level: number, requiredFor: PreparedLine | null): Statement[] {
@@ -295,6 +295,7 @@ export function parsePseudocode(text: string, lang: Language = 'en'): { statemen
     }
 
     return {
+      line: ifLine.line,
       type: 'if',
       cond,
       thenBlock,
@@ -403,7 +404,7 @@ export function parsePseudocode(text: string, lang: Language = 'en'): { statemen
             err(repLine.line, msg);
           }
         }
-        stmts.push({ type: 'loop', cond: pcond, body: pbody, until });
+        stmts.push({ type: 'loop', cond: pcond, body: pbody, until, line: repLine.line });
         if (tail && tail.length) stmts = stmts.concat(tail);
         continue;
       }
@@ -418,7 +419,7 @@ export function parsePseudocode(text: string, lang: Language = 'en'): { statemen
           (rw.length === 2 && /^\d+$/.test(rw[0]) && ['PUTA', 'TIMES', 'MAL'].includes(normWord(rw[1])));
         if (isCount) {
           i++;
-          stmts.push({ type: 'count_loop', times: rw[0], body: parseBody(level, repeatLine) });
+          stmts.push({ type: 'count_loop', times: rw[0], body: parseBody(level, repeatLine), line: repeatLine.line });
           continue;
         }
 
@@ -433,14 +434,14 @@ export function parsePseudocode(text: string, lang: Language = 'en'): { statemen
         const lcond = condWords.join(' ');
         i++;
         const body = parseBody(level, repeatLine);
-        stmts.push({ type: 'loop', cond: lcond, body });
+        stmts.push({ type: 'loop', cond: lcond, body, line: repeatLine.line });
         continue;
       }
 
       // Generic action
       const unknown = unknownKeywordWarning(ln.text, lang);
       if (unknown) errors.push({ line: ln.line, message: unknown, severity: 'warning' });
-      stmts.push({ type: 'action', kind: 'generic', text: ln.text });
+      stmts.push({ type: 'action', kind: 'generic', text: ln.text, line: ln.line });
       i++;
     }
     return stmts;
@@ -527,11 +528,72 @@ interface LayoutResult {
   maxX: number;
 }
 
+/**
+ * Numbers the statements in the order buildFlowchart creates their nodes:
+ * pre-order, a statement before the blocks nested inside it. The start node
+ * takes 1, so statements begin at 2 and the end node takes the last number.
+ * The flowchart, the pseudocode gutter and the Python gutter all read these
+ * numbers, so they must come from here and nowhere else.
+ */
+export function assignStepNumbers(statements: Statement[]): Map<Statement, number> {
+  const map = new Map<Statement, number>();
+  let n = 2;
+  const walk = (stmts: Statement[]) => {
+    stmts.forEach((stmt) => {
+      map.set(stmt, n++);
+      if (stmt.type === 'if') {
+        walk(stmt.thenBlock ?? []);
+        walk(stmt.elseBlock ?? []);
+      } else if (stmt.body) {
+        walk(stmt.body);
+      }
+    });
+  };
+  walk(statements);
+  return map;
+}
+
+/**
+ * Maps each pseudocode line to the step badge of the node it produces, so the
+ * exported image can print the badge beside the source line. Lines that draw
+ * no node of their own — YES, ELSE, blanks — are absent from the map.
+ */
+export function stepsByPseudocodeLine(code: string, lang: Language = 'en'): Map<number, number> {
+  const { statements } = parsePseudocode(code, lang);
+  const stepOf = assignStepNumbers(statements);
+  const byLine = new Map<number, number>();
+
+  const walk = (stmts: Statement[]) => {
+    stmts.forEach((stmt) => {
+      const step = stepOf.get(stmt);
+      if (stmt.line !== undefined && step !== undefined) byLine.set(stmt.line, step);
+      if (stmt.type === 'if') {
+        walk(stmt.thenBlock ?? []);
+        walk(stmt.elseBlock ?? []);
+      } else if (stmt.body) {
+        walk(stmt.body);
+      }
+    });
+  };
+  walk(statements);
+
+  // START and END are consumed by the parser rather than becoming statements,
+  // but they do draw the first and last node.
+  code.split(/\r?\n/).forEach((raw, idx) => {
+    const w0 = normWord(splitWords(raw.trim())[0] ?? '');
+    if (KEYWORDS_START.includes(w0)) byLine.set(idx + 1, 1);
+    else if (KEYWORDS_END.includes(w0)) byLine.set(idx + 1, stepOf.size + 2);
+  });
+
+  return byLine;
+}
+
 export function buildFlowchart(statements: Statement[], lang: Language = 'en'): { nodes: FlowNode[]; edges: FlowEdge[] } {
   const nodes: FlowNode[] = [];
   const edges: FlowEdge[] = [];
   let counter = 0;
   let counterSeq = 0;
+  const stepOf = assignStepNumbers(statements);
 
   const newId = () => `n${++counter}`;
   const newEdgeId = () => `e${++counter}`;
@@ -639,6 +701,7 @@ export function buildFlowchart(statements: Statement[], lang: Language = 'en'): 
         w: NODE_W,
         h: NODE_H,
         text: formatActionLabel(stmt, lang),
+        step: stepOf.get(stmt),
       };
       return {
         nodes: [node],
@@ -660,6 +723,7 @@ export function buildFlowchart(statements: Statement[], lang: Language = 'en'): 
         w: DECISION_W,
         h: DECISION_H,
         text: `${stmt.cond || (lang === 'de' ? 'bedingung' : lang === 'en' ? 'condition' : 'uslov')} ?`,
+        step: stepOf.get(stmt),
       };
       const branchY = y + DECISION_H + GAP;
       const thenX = cx - BRANCH_GAP_X;
@@ -720,6 +784,7 @@ export function buildFlowchart(statements: Statement[], lang: Language = 'en'): 
         w: DECISION_W,
         h: DECISION_H,
         text: `${stmt.cond || (lang === 'de' ? 'bedingung' : lang === 'en' ? 'condition' : 'uslov')} ?`,
+        step: stepOf.get(stmt),
       };
       const noLbl = getLocalizedNo(lang);
       return layoutLoopFrame(
@@ -748,6 +813,7 @@ export function buildFlowchart(statements: Statement[], lang: Language = 'en'): 
         h: COUNT_H,
         text: countText,
         counter: `_counter_${++counterSeq}`,
+        step: stepOf.get(stmt),
       };
       return layoutLoopFrame(head, stmt.body, cx, y, '', '');
     }
@@ -821,6 +887,7 @@ export function buildFlowchart(statements: Statement[], lang: Language = 'en'): 
     w: START_W,
     h: START_H,
     text: startText,
+    step: 1,
   };
   nodes.push(startNode);
 
@@ -841,6 +908,7 @@ export function buildFlowchart(statements: Statement[], lang: Language = 'en'): 
     w: START_W,
     h: START_H,
     text: endText,
+    step: stepOf.size + 2,
   };
   nodes.push(endNode);
 

@@ -817,6 +817,30 @@ export const Canvas: React.FC<CanvasProps> = ({
                     );
                   })}
                 </text>
+
+                {/* Step badge: the same number labels this step in the
+                    pseudocode and Python columns and in the exported image. */}
+                {node.step !== undefined && (
+                  <g className="pointer-events-none select-none step-badge">
+                    <circle
+                      cx={-node.w / 2 - 12}
+                      cy={-node.h / 2 + 8}
+                      r="9.5"
+                      fill="#06B6D4"
+                      fillOpacity="0.9"
+                    />
+                    <text
+                      x={-node.w / 2 - 12}
+                      y={-node.h / 2 + 11.5}
+                      textAnchor="middle"
+                      fontSize="10.5"
+                      fontWeight="900"
+                      fill="#000000"
+                    >
+                      {node.step}
+                    </text>
+                  </g>
+                )}
               </g>
             );
           })}

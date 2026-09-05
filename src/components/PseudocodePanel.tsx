@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, ChevronUp, X, ArrowLeft, ArrowRight, AlertCircle, AlertTriangle, Sparkles } from 'lucide-react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { ChevronDown, ChevronUp, X, ArrowLeft, ArrowRight, AlertCircle, AlertTriangle, Sparkles, Copy, Check } from 'lucide-react';
 import { Language, ParseError } from '../types';
 import { translations } from '../i18n/translations';
 import { AUTOCOMPLETE_KEYWORDS, KeywordItem } from '../i18n/keywords';
-import { normWord } from '../core/flowchart-gen';
+import { normWord, parsePseudocode } from '../core/flowchart-gen';
+import { statementsToPython, pythonSource } from '../core/python-gen';
 
 interface PseudocodePanelProps {
   language: Language;
@@ -33,6 +34,22 @@ export const PseudocodePanel: React.FC<PseudocodePanelProps> = ({
 }) => {
   const t = translations[language];
   const [legendOpen, setLegendOpen] = useState(false);
+  const [tab, setTab] = useState<'pseudo' | 'python'>('pseudo');
+  const [copied, setCopied] = useState(false);
+
+  // Derived from the pseudocode in the editor, so the Python view always shows
+  // the code the student is looking at. The step badges come from the same
+  // walk the flowchart uses, so the numbers line up across all three views.
+  const pythonLines = useMemo(
+    () => statementsToPython(parsePseudocode(code, language).statements, language),
+    [code, language]
+  );
+
+  const copyPython = () => {
+    navigator.clipboard.writeText(pythonSource(pythonLines));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   // Autocomplete state
   const [suggestions, setSuggestions] = useState<KeywordItem[]>([]);
@@ -197,6 +214,28 @@ export const PseudocodePanel: React.FC<PseudocodePanelProps> = ({
         </div>
       </div>
 
+      {/* View tabs: the Python column is a read-only rendering of the same
+          pseudocode, so it lives beside the editor rather than in a third
+          panel, which would not fit the width. */}
+      <div className="flex border-b border-white/10 bg-[#0F0F0F] shrink-0">
+        {(['pseudo', 'python'] as const).map((id) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setTab(id)}
+            className={`flex-1 px-3 py-2 text-[11px] font-black uppercase tracking-widest transition-colors border-b-2 ${
+              tab === id
+                ? 'text-white border-[#06B6D4] bg-white/5'
+                : 'text-white/45 border-transparent hover:text-white/80 hover:bg-white/5'
+            }`}
+          >
+            {id === 'pseudo' ? t.pseudocodeHeader : 'Python'}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'pseudo' && (
+        <>
       {/* Cheatsheet Accordion */}
       <div className="border-b border-white/10 bg-[#0F0F0F]">
         <button
@@ -338,8 +377,43 @@ export const PseudocodePanel: React.FC<PseudocodePanelProps> = ({
         </div>
       )}
 
+        </>
+      )}
+
+      {tab === 'python' && (
+        <div className="relative flex-1 min-h-0 bg-[#050505] overflow-auto font-mono text-[13px] leading-[21px] p-3">
+          {pythonLines.map((line, i) => (
+            <div key={i} className="flex gap-3 whitespace-pre">
+              <span className="w-5 shrink-0 text-right text-[#06B6D4]/70 select-none">
+                {line.step ?? ''}
+              </span>
+              <span className="text-[#F5F5F5]">
+                {'    '.repeat(line.depth)}
+                {line.text}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Action Buttons */}
       <div className="p-3 border-t border-white/10 bg-[#121212] flex flex-col gap-2">
+        {tab === 'python' && (
+          <button
+            onClick={copyPython}
+            className="w-full bg-white hover:bg-neutral-200 text-black font-black uppercase tracking-wider text-xs py-2.5 px-3 rounded-lg shadow flex items-center justify-center gap-2 transition-colors"
+          >
+            {copied ? <Check className="w-4 h-4 shrink-0 stroke-[2.5]" /> : <Copy className="w-4 h-4 shrink-0 stroke-[2.5]" />}
+            <span>
+              {copied
+                ? (language === 'en' ? 'Copied' : language === 'de' ? 'Kopiert' : 'Kopirano')
+                : (language === 'en' ? 'Copy Python' : language === 'de' ? 'Python kopieren' : 'Kopiraj Python')}
+            </span>
+          </button>
+        )}
+
+        {tab === 'pseudo' && (
+        <>
         <button
           onClick={onGenerateDiagram}
           className="w-full bg-white hover:bg-neutral-200 text-black font-black uppercase tracking-wider text-xs py-2.5 px-3 rounded-lg shadow flex items-center justify-center gap-2 transition-colors"
@@ -357,6 +431,8 @@ export const PseudocodePanel: React.FC<PseudocodePanelProps> = ({
           <span>{t.generatePseudo}</span>
           <ArrowRight className="w-4 h-4 shrink-0 stroke-[2.5]" />
         </button>
+        </>
+        )}
       </div>
     </div>
   );

@@ -14,7 +14,9 @@ import {
   diagramToPseudocode,
   isFlowNode,
   parsePseudocode,
+  stepsByPseudocodeLine,
 } from './core/flowchart-gen';
+import { statementsToPython } from './core/python-gen';
 import { autoLayoutFlowchart, centerNodesOnCanvas } from './core/auto-layout';
 import { Header } from './components/Header';
 import { Toolbar } from './components/Toolbar';
@@ -818,6 +820,27 @@ export default function App() {
     const boxW = Math.max(200, Math.ceil(maxX - minX + pad * 2));
     const boxH = Math.max(200, Math.ceil(maxY - minY + pad * 2));
 
+    // Side columns: pseudocode left, Python right. They are not aligned to the
+    // node positions — branches put two nodes on one row, and stretching the
+    // code to match would destroy Python's indentation. The step badge on each
+    // node carries the correspondence instead.
+    const pseudoLines = pseudocode.split(/\r?\n/);
+    const stepByLine = stepsByPseudocodeLine(pseudocode, language);
+    const pyLines = statementsToPython(parsePseudocode(pseudocode, language).statements, language);
+    const hasColumns = pseudoLines.some((l) => l.trim().length > 0);
+
+    const COL_W = 560;
+    const COL_GAP = 48;
+    const LINE_H = 26;
+    const COL_FONT = 16;
+    const HEADER_H = 56;
+
+    const colX = hasColumns ? COL_W + COL_GAP : 0;
+    const outX = boxX - colX;
+    const outW = boxW + colX * 2;
+    const columnH = HEADER_H + Math.max(pseudoLines.length, pyLines.length) * LINE_H + 40;
+    const outH = Math.max(boxH, columnH);
+
     const clone = svgEl.cloneNode(true) as SVGSVGElement;
     clone.removeAttribute('id');
 
@@ -827,17 +850,17 @@ export default function App() {
     // Explicit SVG namespace and view sizing
     clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
     clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-    clone.setAttribute('viewBox', `${boxX} ${boxY} ${boxW} ${boxH}`);
-    clone.setAttribute('width', `${boxW}`);
-    clone.setAttribute('height', `${boxH}`);
+    clone.setAttribute('viewBox', `${outX} ${boxY} ${outW} ${outH}`);
+    clone.setAttribute('width', `${outW}`);
+    clone.setAttribute('height', `${outH}`);
     clone.style.backgroundColor = '#0A0A0A';
 
     // Insert high-contrast dark background matching flowchart theme
     const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    bg.setAttribute('x', `${boxX}`);
+    bg.setAttribute('x', `${outX}`);
     bg.setAttribute('y', `${boxY}`);
-    bg.setAttribute('width', `${boxW}`);
-    bg.setAttribute('height', `${boxH}`);
+    bg.setAttribute('width', `${outW}`);
+    bg.setAttribute('height', `${outH}`);
     bg.setAttribute('fill', '#0A0A0A');
 
     let defs = clone.querySelector('defs');
@@ -852,6 +875,10 @@ export default function App() {
       text {
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
       }
+      text.code-col {
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+        white-space: pre;
+      }
     `;
     defs.appendChild(styleEl);
 
@@ -862,6 +889,65 @@ export default function App() {
       clone.appendChild(bg);
     }
 
+    if (hasColumns) {
+      const NS = 'http://www.w3.org/2000/svg';
+      const mk = (tag: string, attrs: Record<string, string>, text?: string) => {
+        const el = document.createElementNS(NS, tag);
+        Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+        if (text !== undefined) el.textContent = text;
+        return el;
+      };
+
+      const top = boxY + 40;
+      const drawColumn = (
+        x: number,
+        title: string,
+        rows: { badge?: number; text: string }[]
+      ) => {
+        const g = document.createElementNS(NS, 'g');
+        g.appendChild(mk('text', {
+          x: `${x}`, y: `${top}`, fill: '#06B6D4',
+          'font-size': '15', 'font-weight': '900', 'letter-spacing': '0.18em',
+        }, title.toUpperCase()));
+        g.appendChild(mk('line', {
+          x1: `${x}`, y1: `${top + 14}`, x2: `${x + COL_W - 40}`, y2: `${top + 14}`,
+          stroke: '#FFFFFF', 'stroke-opacity': '0.15', 'stroke-width': '1',
+        }));
+
+        rows.forEach((row, i) => {
+          const y = top + HEADER_H + i * LINE_H;
+          if (row.badge !== undefined) {
+            g.appendChild(mk('circle', {
+              cx: `${x + 10}`, cy: `${y - 5}`, r: '10',
+              fill: '#06B6D4', 'fill-opacity': '0.9',
+            }));
+            g.appendChild(mk('text', {
+              x: `${x + 10}`, y: `${y - 1}`, fill: '#000000', 'text-anchor': 'middle',
+              'font-size': '11', 'font-weight': '900',
+            }, String(row.badge)));
+          }
+          const line = mk('text', {
+            x: `${x + 30}`, y: `${y}`, fill: '#F5F5F5', 'font-size': `${COL_FONT}`,
+            class: 'code-col',
+          }, row.text);
+          g.appendChild(line);
+        });
+        return g;
+      };
+
+      const pseudoTitle = language === 'en' ? 'Pseudocode' : language === 'de' ? 'Pseudocode' : 'Pseudokod';
+      clone.appendChild(drawColumn(
+        outX + 40,
+        pseudoTitle,
+        pseudoLines.map((text, i) => ({ badge: stepByLine.get(i + 1), text }))
+      ));
+      clone.appendChild(drawColumn(
+        boxX + boxW + COL_GAP,
+        'Python',
+        pyLines.map((l) => ({ badge: l.step, text: '    '.repeat(l.depth) + l.text }))
+      ));
+    }
+
     const xml = new XMLSerializer().serializeToString(clone);
     const svgBlob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(svgBlob);
@@ -870,8 +956,8 @@ export default function App() {
     img.onload = () => {
       const scale = 2; // 2x high resolution
       const canvas = document.createElement('canvas');
-      canvas.width = Math.round(boxW * scale);
-      canvas.height = Math.round(boxH * scale);
+      canvas.width = Math.round(outW * scale);
+      canvas.height = Math.round(outH * scale);
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         URL.revokeObjectURL(url);
