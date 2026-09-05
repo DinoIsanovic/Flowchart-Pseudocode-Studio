@@ -365,27 +365,28 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             </button>
           )}
 
-          {/* Reset View & Center Nodes */}
-          <div className="grid grid-cols-2 gap-1.5">
+          {/* Reset View & Center Nodes — full width rather than a two-column
+              grid: at half the sidebar these labels truncated to "RES…", and
+              "Ansicht zurücksetzen" never had a chance. There is room below the
+              zoom buttons, so they get a row each and wrap if they must. */}
+          <button
+            onClick={onResetView}
+            className="flex items-center justify-center gap-1.5 bg-[#141414] hover:bg-[#1F1F1F] text-white text-[10px] font-bold uppercase tracking-wider leading-tight p-2 rounded-lg border border-white/10 transition-colors text-center"
+            title={t.resetView}
+          >
+            <RotateCcw className="w-3 h-3 shrink-0" />
+            <span>{t.resetView}</span>
+          </button>
+          {onCenterNodes && (
             <button
-              onClick={onResetView}
-              className="flex items-center justify-center gap-1 bg-[#141414] hover:bg-[#1F1F1F] text-white text-[10px] font-bold uppercase tracking-wider p-2 rounded-lg border border-white/10 transition-colors text-center"
-              title={t.resetView}
+              onClick={onCenterNodes}
+              className="flex items-center justify-center gap-1.5 bg-[#141414] hover:bg-[#1F1F1F] text-white text-[10px] font-bold uppercase tracking-wider leading-tight p-2 rounded-lg border border-white/10 transition-colors text-center"
+              title={t.centerNodesTooltip}
             >
-              <RotateCcw className="w-3 h-3 flex-shrink-0" />
-              <span className="truncate">{t.resetView}</span>
+              <AlignCenter className="w-3 h-3 shrink-0" />
+              <span>{t.centerNodes}</span>
             </button>
-            {onCenterNodes && (
-              <button
-                onClick={onCenterNodes}
-                className="flex items-center justify-center gap-1 bg-[#141414] hover:bg-[#1F1F1F] text-white text-[10px] font-bold uppercase tracking-wider p-2 rounded-lg border border-white/10 transition-colors text-center"
-                title={t.centerNodesTooltip}
-              >
-                <AlignCenter className="w-3 h-3 flex-shrink-0" />
-                <span className="truncate">{t.centerNodes}</span>
-              </button>
-            )}
-          </div>
+          )}
         </div>
 
         {/* Section 4: Edit */}
