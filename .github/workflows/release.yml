@@ -14,15 +14,16 @@ jobs:
       contents: write
     strategy:
       fail-fast: false
+      # Both jobs upload into the same draft release; running them one at a
+      # time avoids two jobs racing to create it.
+      max-parallel: 1
       matrix:
         include:
           - platform: windows-latest
-            args: ''
           # Built on the oldest supported Ubuntu on purpose: an AppImage links
           # against the glibc of the machine that built it, so building on a
           # newer distro would refuse to start on older ones.
           - platform: ubuntu-22.04
-            args: ''
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -56,13 +57,39 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build
+        run: npm run tauri build
+
+      # linuxdeploy copies the build host's libwayland into the AppDir. On a
+      # host with newer wayland (Arch, Fedora rawhide) the system Mesa EGL is
+      # then loaded next to Ubuntu's older libwayland-client and initialisation
+      # fails with "Could not create default EGL display: EGL_BAD_PARAMETER",
+      # so the app aborts before its window appears. These libraries are part
+      # of the graphics stack and must come from the host, never the bundle.
+      - name: Unbundle host graphics libraries from the AppImage
+        if: matrix.platform == 'ubuntu-22.04'
+        working-directory: src-tauri/target/release/bundle/appimage
+        run: |
+          set -euo pipefail
+          APPIMAGE="$(ls ./*.AppImage)"
+          echo "Repacking $APPIMAGE"
+          rm -rf squashfs-root
+          "$APPIMAGE" --appimage-extract > /dev/null
+          rm -fv squashfs-root/usr/lib/libwayland-*.so.*
+          wget -q -O appimagetool \
+            https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool
+          ARCH=x86_64 ./appimagetool --appimage-extract-and-run squashfs-root "$APPIMAGE"
+          rm -rf squashfs-root appimagetool
+          ls -lh ./*.AppImage
+
+      - uses: softprops/action-gh-release@v2
         with:
-          tagName: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}-dev', github.run_number) }}
-          releaseName: 'Flowchart & Pseudocode Studio __VERSION__'
-          releaseBody: 'Windows installer (.exe), Linux AppImage and .deb are attached below.'
-          releaseDraft: true
-          prerelease: false
-          args: ${{ matrix.args }}
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}-dev', github.run_number) }}
+          name: 'Flowchart & Pseudocode Studio 0.9.0'
+          body: 'Windows installer (.exe), Linux AppImage and .deb are attached below.'
+          draft: true
+          files: |
+            src-tauri/target/release/bundle/nsis/*.exe
+            src-tauri/target/release/bundle/deb/*.deb
+            src-tauri/target/release/bundle/appimage/*.AppImage

@@ -149,6 +149,13 @@ them on a real Windows runner.
 > Ubuntu 22.04 and is unaffected — and building there is deliberate, since an
 > AppImage links against the glibc of the machine that built it.
 
+The release workflow strips the bundled `libwayland-*` out of the AppImage
+before uploading it. `linuxdeploy` copies the build host's copies in, and on a
+host running newer wayland (Arch, Fedora rawhide) the system Mesa EGL then
+loads beside Ubuntu's older `libwayland-client` and dies with
+`Could not create default EGL display: EGL_BAD_PARAMETER` before the window
+appears. Graphics-stack libraries have to come from the host, never the bundle.
+
 ## Using the AI Tutor
 
 The tutor calls the Gemini REST API **from the browser** with a key you paste
