@@ -163,4 +163,4 @@ React 19 · TypeScript · Vite 6 · Tailwind CSS 4 · vite-plugin-pwa · lucide-
 
 ## License
 
-Apache-2.0, per the SPDX headers on the source files.
+[Apache-2.0](LICENSE) — Copyright 2026 Dino Isanović.
