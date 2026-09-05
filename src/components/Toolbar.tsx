@@ -191,7 +191,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             <svg width="22" height="16" className="shrink-0">
               <ellipse cx="11" cy="8" rx="10" ry="7" fill="#152422" stroke="#2DD4BF" strokeWidth="1.5" />
             </svg>
-            <span className="truncate font-bold tracking-tight text-[11.5px]">{t.shapes.start_end}</span>
+            <span className="font-bold tracking-tight text-[11.5px] leading-tight text-left">{t.shapes.start_end}</span>
           </button>
 
           <button
@@ -202,7 +202,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             <svg width="22" height="16" className="shrink-0">
               <polygon points="4,1 22,1 18,15 0,15" fill="#132238" stroke="#60A5FA" strokeWidth="1.5" />
             </svg>
-            <span className="truncate font-bold tracking-tight text-[11.5px]">{t.shapes.io}</span>
+            <span className="font-bold tracking-tight text-[11.5px] leading-tight text-left">{t.shapes.io}</span>
           </button>
 
           <button
@@ -213,7 +213,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             <svg width="22" height="16" className="shrink-0">
               <rect x="1" y="1" width="20" height="14" fill="#1A1A1A" stroke="#FFFFFF" strokeWidth="1.5" />
             </svg>
-            <span className="truncate font-bold tracking-tight text-[11.5px]">{t.shapes.process}</span>
+            <span className="font-bold tracking-tight text-[11.5px] leading-tight text-left">{t.shapes.process}</span>
           </button>
 
           <button
@@ -224,7 +224,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             <svg width="22" height="16" className="shrink-0">
               <polygon points="11,0 22,8 11,16 0,8" fill="#291B08" stroke="#FBBF24" strokeWidth="1.5" />
             </svg>
-            <span className="truncate font-bold tracking-tight text-[11.5px]">{t.shapes.decision}</span>
+            <span className="font-bold tracking-tight text-[11.5px] leading-tight text-left">{t.shapes.decision}</span>
           </button>
 
           <button
@@ -235,7 +235,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             <svg width="22" height="16" className="shrink-0">
               <polygon points="5,1 17,1 21,8 17,15 5,15 1,8" fill="#1F1A2E" stroke="#C084FC" strokeWidth="1.5" />
             </svg>
-            <span className="truncate font-bold tracking-tight text-[11.5px]">{t.shapes.loop}</span>
+            <span className="font-bold tracking-tight text-[11.5px] leading-tight text-left">{t.shapes.loop}</span>
           </button>
 
           <button
@@ -248,7 +248,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               <line x1="4.5" y1="1" x2="4.5" y2="15" stroke="#FFFFFF" strokeWidth="1.2" />
               <line x1="17.5" y1="1" x2="17.5" y2="15" stroke="#FFFFFF" strokeWidth="1.2" />
             </svg>
-            <span className="truncate font-bold tracking-tight text-[11.5px]">{t.shapes.subprocess}</span>
+            <span className="font-bold tracking-tight text-[11.5px] leading-tight text-left">{t.shapes.subprocess}</span>
           </button>
 
           <button
@@ -265,7 +265,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 strokeDasharray="3 2"
               />
             </svg>
-            <span className="truncate font-bold tracking-tight text-[11.5px]">{t.shapes.comment}</span>
+            <span className="font-bold tracking-tight text-[11.5px] leading-tight text-left">{t.shapes.comment}</span>
           </button>
         </div>
 
@@ -398,7 +398,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             <button
               onClick={onUndo}
               disabled={!canUndo}
-              className="flex items-center justify-center gap-1 bg-[#141414] hover:bg-[#1F1F1F] disabled:opacity-30 disabled:cursor-not-allowed text-white text-[11px] font-bold uppercase tracking-wider p-2 rounded-lg border border-white/10 transition-colors"
+              className="flex items-center justify-center gap-1 bg-[#141414] hover:bg-[#1F1F1F] disabled:opacity-30 disabled:cursor-not-allowed text-white text-[10px] font-bold uppercase tracking-tight leading-tight text-center p-2 rounded-lg border border-white/10 transition-colors min-w-0"
               title="Undo (Ctrl+Z)"
             >
               <Undo2 className="w-3 h-3" />
@@ -407,7 +407,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             <button
               onClick={onRedo}
               disabled={!canRedo}
-              className="flex items-center justify-center gap-1 bg-[#141414] hover:bg-[#1F1F1F] disabled:opacity-30 disabled:cursor-not-allowed text-white text-[11px] font-bold uppercase tracking-wider p-2 rounded-lg border border-white/10 transition-colors"
+              className="flex items-center justify-center gap-1 bg-[#141414] hover:bg-[#1F1F1F] disabled:opacity-30 disabled:cursor-not-allowed text-white text-[10px] font-bold uppercase tracking-tight leading-tight text-center p-2 rounded-lg border border-white/10 transition-colors min-w-0"
               title="Redo (Ctrl+Y)"
             >
               <Redo2 className="w-3 h-3" />
@@ -469,25 +469,25 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           </span>
           <button
             onClick={() => { onLoadTemplate('sequence'); onCloseMobile(); }}
-            className="bg-[#141414] hover:bg-[#1F1F1F] border border-white/10 hover:border-white/20 text-white text-[11px] font-bold p-2 rounded-lg text-left uppercase tracking-wider truncate transition-colors"
+            className="bg-[#141414] hover:bg-[#1F1F1F] border border-white/10 hover:border-white/20 text-white text-[11px] font-bold p-2 rounded-lg text-left uppercase tracking-wider leading-tight transition-colors"
           >
             {t.templates.sequence}
           </button>
           <button
             onClick={() => { onLoadTemplate('branch'); onCloseMobile(); }}
-            className="bg-[#141414] hover:bg-[#1F1F1F] border border-white/10 hover:border-white/20 text-white text-[11px] font-bold p-2 rounded-lg text-left uppercase tracking-wider truncate transition-colors"
+            className="bg-[#141414] hover:bg-[#1F1F1F] border border-white/10 hover:border-white/20 text-white text-[11px] font-bold p-2 rounded-lg text-left uppercase tracking-wider leading-tight transition-colors"
           >
             {t.templates.branch}
           </button>
           <button
             onClick={() => { onLoadTemplate('while'); onCloseMobile(); }}
-            className="bg-[#141414] hover:bg-[#1F1F1F] border border-white/10 hover:border-white/20 text-white text-[11px] font-bold p-2 rounded-lg text-left uppercase tracking-wider truncate transition-colors"
+            className="bg-[#141414] hover:bg-[#1F1F1F] border border-white/10 hover:border-white/20 text-white text-[11px] font-bold p-2 rounded-lg text-left uppercase tracking-wider leading-tight transition-colors"
           >
             {t.templates.while}
           </button>
           <button
             onClick={() => { onLoadTemplate('repeat'); onCloseMobile(); }}
-            className="bg-[#141414] hover:bg-[#1F1F1F] border border-white/10 hover:border-white/20 text-white text-[11px] font-bold p-2 rounded-lg text-left uppercase tracking-wider truncate transition-colors"
+            className="bg-[#141414] hover:bg-[#1F1F1F] border border-white/10 hover:border-white/20 text-white text-[11px] font-bold p-2 rounded-lg text-left uppercase tracking-wider leading-tight transition-colors"
           >
             {t.templates.repeat}
           </button>
@@ -503,21 +503,21 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             className="flex items-center gap-2 bg-[#141414] hover:bg-[#1F1F1F] border border-white/10 text-white text-[11px] font-bold uppercase tracking-wider p-2 rounded-lg text-left transition-colors"
           >
             <Image className="w-3.5 h-3.5 shrink-0 text-white/70" />
-            <span className="truncate">{t.exportPng}</span>
+            <span className="leading-tight text-center">{t.exportPng}</span>
           </button>
           <button
             onClick={onSaveJson}
             className="flex items-center gap-2 bg-[#141414] hover:bg-[#1F1F1F] border border-white/10 text-white text-[11px] font-bold uppercase tracking-wider p-2 rounded-lg text-left transition-colors"
           >
             <Save className="w-3.5 h-3.5 shrink-0 text-white/70" />
-            <span className="truncate">{t.saveJson}</span>
+            <span className="leading-tight text-center">{t.saveJson}</span>
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
             className="flex items-center gap-2 bg-[#141414] hover:bg-[#1F1F1F] border border-white/10 text-white text-[11px] font-bold uppercase tracking-wider p-2 rounded-lg text-left transition-colors"
           >
             <Upload className="w-3.5 h-3.5 shrink-0 text-white/70" />
-            <span className="truncate">{t.loadJson}</span>
+            <span className="leading-tight text-center">{t.loadJson}</span>
           </button>
           <input
             ref={fileInputRef}
@@ -531,7 +531,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             className="flex items-center gap-2 bg-[#06B6D4] hover:bg-[#22D3EE] text-black text-[11px] font-black uppercase tracking-wider p-2 rounded-lg text-left mt-1 shadow-sm transition-colors"
           >
             <Smartphone className="w-3.5 h-3.5 shrink-0 stroke-[2.5]" />
-            <span className="truncate">{t.androidPrep}</span>
+            <span className="leading-tight text-center">{t.androidPrep}</span>
           </button>
         </div>
 

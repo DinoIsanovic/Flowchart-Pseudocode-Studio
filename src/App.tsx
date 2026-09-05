@@ -1314,6 +1314,8 @@ export default function App() {
             }));
           }}
           onResetView={() => fitViewBoxToContent(nodes)}
+          onAutoLayout={handleAutoLayout}
+          onCenterNodes={handleCenterNodes}
           canUndo={canUndo}
           canRedo={canRedo}
           onUndo={handleUndo}
