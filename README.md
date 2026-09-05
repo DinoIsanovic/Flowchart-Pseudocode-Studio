@@ -36,8 +36,12 @@ guiding question before handing over a solution. It can point at a specific node
 and the canvas highlights it. Requires your own API key (see below).
 
 **Python alongside the diagram.** A `Python` tab beside the pseudocode editor
-generates equivalent Python — `if/elif/else`, `while`, `for _ in range(n)`,
-`int(input())` — with real indentation rather than a flattened transcript.
+generates equivalent Python — `if/elif/else`, `while`, `for i in range(n)`,
+`int(input())` — with real indentation rather than a flattened transcript. The
+counter a count loop keeps implicit is given a name in the Python, since seeing
+the variable that does the counting is most of the reason to show the code;
+nested loops take `i`, `j`, `k` in turn, and a name the student already used is
+skipped so the loop cannot overwrite their own variable.
 
 **Step badges.** Every flowchart node carries a number, and the same number
 marks the line that produced it in the pseudocode and in the Python. Branches

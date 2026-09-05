@@ -37,6 +37,38 @@ function inputTargets(text: string): string[] {
     .filter(Boolean);
 }
 
+
+/** Names a count loop can use, in the order they are handed out. */
+const COUNTER_NAMES = ['i', 'j', 'k', 'l', 'm', 'n', 'p', 'q'];
+
+/**
+ * Every identifier the student wrote anywhere in the program. A loop counter
+ * must not reuse one of these, or `PONOVI 3 PUTA` would quietly overwrite a
+ * variable the algorithm depends on.
+ */
+function identifiersUsed(stmts: Statement[], out = new Set<string>()): Set<string> {
+  const scan = (text?: string) => {
+    (text ?? '').match(/[A-Za-z_\u00C0-\u024F][A-Za-z0-9_\u00C0-\u024F]*/g)?.forEach((w) => out.add(w));
+  };
+  stmts.forEach((stmt) => {
+    scan(stmt.text);
+    scan(stmt.cond);
+    if (stmt.type === 'if') {
+      identifiersUsed(stmt.thenBlock ?? [], out);
+      identifiersUsed(stmt.elseBlock ?? [], out);
+    } else if (stmt.body) {
+      identifiersUsed(stmt.body, out);
+    }
+  });
+  return out;
+}
+
+/** Picks the nth free counter name, so nested loops never share one. */
+function counterName(used: Set<string>, depth: number): string {
+  const free = COUNTER_NAMES.filter((n) => !used.has(n));
+  return free[depth] ?? `i${depth + 1}`;
+}
+
 function actionLines(stmt: Statement, depth: number, step?: number): PythonLine[] {
   const text = (stmt.text ?? '').trim();
 
@@ -61,7 +93,13 @@ function actionLines(stmt: Statement, depth: number, step?: number): PythonLine[
   return [{ text: `# ${text}`, depth, step }];
 }
 
-function walk(stmts: Statement[], depth: number, stepOf: Map<Statement, number>): PythonLine[] {
+function walk(
+  stmts: Statement[],
+  depth: number,
+  stepOf: Map<Statement, number>,
+  used: Set<string>,
+  loopDepth = 0
+): PythonLine[] {
   const out: PythonLine[] = [];
 
   stmts.forEach((stmt) => {
@@ -75,7 +113,7 @@ function walk(stmts: Statement[], depth: number, stepOf: Map<Statement, number>)
     if (stmt.type === 'if') {
       out.push({ text: `if ${conditionToPython(stmt.cond ?? '')}:`, depth, step });
       const thenBlock = stmt.thenBlock ?? [];
-      out.push(...(thenBlock.length ? walk(thenBlock, depth + 1, stepOf) : [{ text: 'pass', depth: depth + 1 }]));
+      out.push(...(thenBlock.length ? walk(thenBlock, depth + 1, stepOf, used, loopDepth) : [{ text: 'pass', depth: depth + 1 }]));
 
       const elseBlock = stmt.elseBlock ?? [];
       if (!elseBlock.length) return;
@@ -84,21 +122,27 @@ function walk(stmts: Statement[], depth: number, stepOf: Map<Statement, number>)
       // writes as elif rather than a nested block.
       const only = elseBlock.length === 1 ? elseBlock[0] : null;
       if (only && only.type === 'if') {
-        const chained = walk(elseBlock, depth, stepOf);
+        const chained = walk(elseBlock, depth, stepOf, used, loopDepth);
         chained[0] = { ...chained[0], text: chained[0].text.replace(/^if /, 'elif ') };
         out.push(...chained);
         return;
       }
 
       out.push({ text: 'else:', depth });
-      out.push(...walk(elseBlock, depth + 1, stepOf));
+      out.push(...walk(elseBlock, depth + 1, stepOf, used, loopDepth));
       return;
     }
 
     if (stmt.type === 'count_loop') {
-      out.push({ text: `for _ in range(${stmt.times ?? '3'}):`, depth, step });
+      // The pseudocode keeps the counter implicit, but naming it in Python is
+      // the point of showing Python at all: the student sees the variable that
+      // was doing the counting, and that it advances by one each pass.
+      const name = counterName(used, loopDepth);
+      out.push({ text: `for ${name} in range(${stmt.times ?? '3'}):`, depth, step });
       const body = stmt.body ?? [];
-      out.push(...(body.length ? walk(body, depth + 1, stepOf) : [{ text: 'pass', depth: depth + 1 }]));
+      out.push(...(body.length
+        ? walk(body, depth + 1, stepOf, used, loopDepth + 1)
+        : [{ text: 'pass', depth: depth + 1 }]));
       return;
     }
 
@@ -116,7 +160,9 @@ function walk(stmts: Statement[], depth: number, stepOf: Map<Statement, number>)
         : `while ${cond}:`;
       out.push({ text: header, depth, step });
       const body = stmt.body ?? [];
-      out.push(...(body.length ? walk(body, depth + 1, stepOf) : [{ text: 'pass', depth: depth + 1 }]));
+      out.push(...(body.length
+        ? walk(body, depth + 1, stepOf, used, loopDepth)
+        : [{ text: 'pass', depth: depth + 1 }]));
       return;
     }
   });
@@ -131,7 +177,7 @@ function walk(stmts: Statement[], depth: number, stepOf: Map<Statement, number>)
  */
 export function statementsToPython(statements: Statement[], _lang: Language = 'en'): PythonLine[] {
   const stepOf = assignStepNumbers(statements);
-  const body = walk(statements, 0, stepOf);
+  const body = walk(statements, 0, stepOf, identifiersUsed(statements));
   return body.length ? body : [{ text: 'pass', depth: 0 }];
 }
 
