@@ -12,7 +12,8 @@
     "tauri": "tauri",
     "check:expr": "tsx scripts/expr-check.ts",
     "check:interpreter": "tsx scripts/interpreter-check.ts",
-    "check:exercises": "tsx scripts/exercises-check.ts"
+    "check:exercises": "tsx scripts/exercises-check.ts",
+    "check:diagram": "tsx scripts/diagram-check.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

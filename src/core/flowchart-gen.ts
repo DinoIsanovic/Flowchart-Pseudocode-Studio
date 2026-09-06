@@ -68,19 +68,19 @@ function splitWords(line: string): string[] {
 }
 
 // Multilingual keyword sets
-const KEYWORDS_START = ['POCETAK', 'START', 'BEGIN', 'BEGINN'];
-const KEYWORDS_END = ['KRAJ', 'END', 'ENDE'];
-const KEYWORDS_INPUT = ['UNESI', 'INPUT', 'READ', 'EINGABE', 'LIES'];
-const KEYWORDS_OUTPUT = ['ISPISI', 'OUTPUT', 'PRINT', 'WRITE', 'AUSGABE', 'SCHREIBE', 'ZEIGE'];
+export const KEYWORDS_START = ['POCETAK', 'START', 'BEGIN', 'BEGINN'];
+export const KEYWORDS_END = ['KRAJ', 'END', 'ENDE'];
+export const KEYWORDS_INPUT = ['UNESI', 'INPUT', 'READ', 'EINGABE', 'LIES'];
+export const KEYWORDS_OUTPUT = ['ISPISI', 'OUTPUT', 'PRINT', 'WRITE', 'AUSGABE', 'SCHREIBE', 'ZEIGE'];
 const KEYWORDS_SET = ['POSTAVI', 'SET', 'LET', 'SETZE'];
 const KEYWORDS_CALC = ['RACUNAJ', 'CALCULATE', 'COMPUTE', 'BERECHNE'];
-const KEYWORDS_IF = ['AKO', 'IF', 'WENN'];
+export const KEYWORDS_IF = ['AKO', 'IF', 'WENN'];
 const KEYWORDS_YES = ['DA', 'YES', 'TRUE', 'THEN', 'JA', 'WAHR', 'DANN'];
 const KEYWORDS_NO = ['NE', 'NO', 'FALSE', 'NEIN', 'FALSCH'];
 const KEYWORDS_ELSE = ['INACE', 'ELSE', 'SONST'];
-const KEYWORDS_REPEAT = ['PONOVI', 'REPEAT', 'WIEDERHOLE'];
+export const KEYWORDS_REPEAT = ['PONOVI', 'REPEAT', 'WIEDERHOLE'];
 const KEYWORDS_WHILE_LOOP = ['PONAVLJAJ', 'LOOP'];
-const KEYWORDS_WHILE_COND = ['DOK', 'WHILE', 'SOLANGE'];
+export const KEYWORDS_WHILE_COND = ['DOK', 'WHILE', 'SOLANGE'];
 const KEYWORDS_UNTIL = ['UNTIL', 'BIS'];
 
 function isElseWord(w: string): boolean {
