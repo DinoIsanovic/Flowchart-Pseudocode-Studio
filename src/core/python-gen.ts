@@ -5,6 +5,7 @@
 
 import { Language, Statement } from '../types';
 import { assignStepNumbers } from './flowchart-gen';
+import { counterName, identifiersUsed } from './counters';
 
 export interface PythonLine {
   /** Source text without indentation. */
@@ -37,37 +38,6 @@ function inputTargets(text: string): string[] {
     .filter(Boolean);
 }
 
-
-/** Names a count loop can use, in the order they are handed out. */
-const COUNTER_NAMES = ['i', 'j', 'k', 'l', 'm', 'n', 'p', 'q'];
-
-/**
- * Every identifier the student wrote anywhere in the program. A loop counter
- * must not reuse one of these, or `PONOVI 3 PUTA` would quietly overwrite a
- * variable the algorithm depends on.
- */
-function identifiersUsed(stmts: Statement[], out = new Set<string>()): Set<string> {
-  const scan = (text?: string) => {
-    (text ?? '').match(/[A-Za-z_\u00C0-\u024F][A-Za-z0-9_\u00C0-\u024F]*/g)?.forEach((w) => out.add(w));
-  };
-  stmts.forEach((stmt) => {
-    scan(stmt.text);
-    scan(stmt.cond);
-    if (stmt.type === 'if') {
-      identifiersUsed(stmt.thenBlock ?? [], out);
-      identifiersUsed(stmt.elseBlock ?? [], out);
-    } else if (stmt.body) {
-      identifiersUsed(stmt.body, out);
-    }
-  });
-  return out;
-}
-
-/** Picks the nth free counter name, so nested loops never share one. */
-function counterName(used: Set<string>, depth: number): string {
-  const free = COUNTER_NAMES.filter((n) => !used.has(n));
-  return free[depth] ?? `i${depth + 1}`;
-}
 
 function actionLines(stmt: Statement, depth: number, step?: number): PythonLine[] {
   const text = (stmt.text ?? '').trim();

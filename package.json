@@ -10,7 +10,8 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "tauri": "tauri",
-    "check:expr": "tsx scripts/expr-check.ts"
+    "check:expr": "tsx scripts/expr-check.ts",
+    "check:interpreter": "tsx scripts/interpreter-check.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
