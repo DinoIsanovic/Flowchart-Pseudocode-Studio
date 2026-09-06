@@ -26,7 +26,9 @@ export type GradeReason =
   /** It ran to the end and printed something else. */
   | 'ispis'
   /** A cell of the state table holds the wrong value. */
-  | 'tabela';
+  | 'tabela'
+  /** The wrong shape was picked in a diagram. */
+  | 'dijagram';
 
 export interface Mismatch {
   inputs: string[];
@@ -116,7 +118,7 @@ export function describeGrade(result: GradeResult, lang: Language): string {
     return lang === 'en' ? 'Correct!' : lang === 'de' ? 'Richtig!' : 'Tačno!';
   }
   // Already a finished sentence from the caller, not a run result.
-  if (result.reason === 'nepotpuno') return result.message ?? '';
+  if (result.reason === 'nepotpuno' || result.reason === 'dijagram') return result.message ?? '';
   if (result.reason === 'ne-parsira') {
     const head = lang === 'en' ? 'this cannot be read as an algorithm' : lang === 'de' ? 'das lässt sich nicht als Algorithmus lesen' : 'ovo se ne može pročitati kao algoritam';
     return `${head} — ${result.message ?? ''}`;

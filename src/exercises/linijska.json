@@ -31,8 +31,10 @@
       ],
       "types": [
         "kockice",
-        "prepoznaj"
+        "prepoznaj",
+        "dijagram-greska"
       ],
+      "mistake": "oblik",
       "interchangeable": [
         [
           3,
@@ -74,8 +76,10 @@
         ]
       ],
       "types": [
-        "kockice"
+        "kockice",
+        "dijagram-greska"
       ],
+      "mistake": "strelica",
       "interchangeable": [
         [
           3,
@@ -123,8 +127,10 @@
         "prepoznaj",
         "kockice",
         "greska",
-        "tabela"
-      ]
+        "tabela",
+        "dijagram-greska"
+      ],
+      "mistake": "kraj"
     },
     {
       "id": "linijska-pravougaonik",
@@ -163,8 +169,10 @@
       "types": [
         "prepoznaj",
         "kockice",
-        "greska"
-      ]
+        "greska",
+        "dijagram-greska"
+      ],
+      "mistake": "prazan"
     },
     {
       "id": "linijska-kvadrat",
@@ -322,8 +330,10 @@
         "prepoznaj",
         "kockice",
         "greska",
-        "tabela"
-      ]
+        "tabela",
+        "dijagram-greska"
+      ],
+      "mistake": "oblik"
     },
     {
       "id": "linijska-prosjek",
@@ -405,8 +415,10 @@
         "prepoznaj",
         "kockice",
         "tabela",
-        "samostalno"
-      ]
+        "samostalno",
+        "dijagram-greska"
+      ],
+      "mistake": "strelica"
     },
     {
       "id": "linijska-cifre",
@@ -443,8 +455,10 @@
         "prepoznaj",
         "kockice",
         "greska",
-        "tabela"
+        "tabela",
+        "dijagram-greska"
       ],
+      "mistake": "kraj",
       "distractors": [
         "@CALC jedinice = n / 10",
         "@CALC desetice = n % 10"
@@ -621,8 +635,10 @@
         "kockice",
         "prepoznaj",
         "tabela",
-        "samostalno"
+        "samostalno",
+        "dijagram-greska"
       ],
+      "mistake": "prazan",
       "distractors": [
         "@SET a = pomocna",
         "@SET pomocna = b"

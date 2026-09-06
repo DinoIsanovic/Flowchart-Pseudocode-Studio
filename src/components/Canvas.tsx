@@ -5,6 +5,8 @@
 
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { FlowEdge, FlowNode, Language, ShapeType, ViewBox, Waypoint } from '../types';
+import { shapePolygonPoints } from '../core/shapes';
+import { layoutNodeText } from '../core/node-text';
 import {
   COMMENT_TYPE,
   cleanRoute,
@@ -53,29 +55,6 @@ const SHAPE_DEFS: Record<ShapeType, { fill: string; stroke: string }> = {
   comment: { fill: '#242218', stroke: '#FDE047' },
 };
 
-function shapePolygonPoints(type: ShapeType, w: number, h: number): [number, number][] | null {
-  switch (type) {
-    case 'start_end':
-      return null;
-    case 'io': {
-      const skew = w * 0.14;
-      return [[skew, 0], [w, 0], [w - skew, h], [0, h]];
-    }
-    case 'process':
-      return [[0, 0], [w, 0], [w, h], [0, h]];
-    case 'decision':
-      return [[w / 2, 0], [w, h / 2], [w / 2, h], [0, h / 2]];
-    case 'loop': {
-      const n = h * 0.22;
-      return [[n, 0], [w - n, 0], [w, h / 2], [w - n, h], [n, h], [0, h / 2]];
-    }
-    case 'subprocess':
-      return [[0, 0], [w, 0], [w, h], [0, h]];
-    default:
-      return [[0, 0], [w, 0], [w, h], [0, h]];
-  }
-}
-
 function commentSvgPath(w: number, h: number): string {
   const tailH = 16;
   const bh = h - tailH;
@@ -116,84 +95,6 @@ function outlineSidePoint(node: FlowNode, side: Side): { x: number; y: number } 
 }
 
 // Text measurement canvas
-let canvasMeasureCtx: CanvasRenderingContext2D | null = null;
-function getMeasureCtx(): CanvasRenderingContext2D {
-  if (!canvasMeasureCtx) {
-    const canvas = document.createElement('canvas');
-    canvasMeasureCtx = canvas.getContext('2d')!;
-  }
-  return canvasMeasureCtx;
-}
-
-function wrapNodeText(text: string, fontSize: number, maxW: number): string[] {
-  const ctx = getMeasureCtx();
-  ctx.font = `600 ${fontSize}px system-ui, sans-serif`;
-  const manualLines = String(text ?? '').split('\n');
-  const out: string[] = [];
-  manualLines.forEach((ml) => {
-    const words = ml.split(/\s+/).filter(Boolean);
-    if (!words.length) {
-      out.push('');
-      return;
-    }
-    let cur = words[0];
-    for (let i = 1; i < words.length; i++) {
-      const trial = `${cur} ${words[i]}`;
-      if (ctx.measureText(trial).width <= maxW) {
-        cur = trial;
-      } else {
-        out.push(cur);
-        cur = words[i];
-      }
-    }
-    out.push(cur);
-  });
-  return out.length ? out : [''];
-}
-
-/**
- * How wide the text may be inside a shape. Wrapping to the full node width
- * puts the longest line straight through the slanted sides of a parallelogram
- * or the corners of a diamond, which is what made labels poke out of their
- * blocks.
- */
-function textBoxWidth(type: ShapeType, w: number, h: number): number {
-  const pad = 12;
-  switch (type) {
-    case 'io':
-      // The skew eats the same amount off both ends of a centred line.
-      return w - 2 * (w * 0.14) - pad;
-    case 'decision':
-      // A diamond narrows quickly above and below its middle.
-      return w * 0.55;
-    case 'loop':
-      return w - 2 * (h * 0.22) - pad;
-    case 'start_end':
-      return w * 0.82 - pad;
-    case COMMENT_TYPE:
-      return w - 2 * pad;
-    default:
-      return w - 2 * pad;
-  }
-}
-
-/**
- * Wraps a node's label to the room its shape actually offers, shrinking the
- * text a step at a time when the wrapped lines would run past the bottom.
- * Node sizes come from the layout and cannot grow here, so the text yields.
- */
-function layoutNodeText(node: FlowNode, fontSize: number): { lines: string[]; size: number } {
-  const maxW = textBoxWidth(node.type, node.w, node.h);
-  const maxH = node.h - (node.type === COMMENT_TYPE ? 30 : 14);
-  let size = fontSize;
-  for (;;) {
-    const lines = wrapNodeText(node.text, size, maxW);
-    const height = (lines.length - 1) * size * 1.2 + size;
-    if (height <= maxH || size <= 10) return { lines, size };
-    size -= 1;
-  }
-}
-
 export const Canvas: React.FC<CanvasProps> = ({
   language,
   nodes,

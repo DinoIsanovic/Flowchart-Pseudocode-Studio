@@ -185,6 +185,8 @@ export interface Translations {
     hint: string;
     trace: string;
     traceStep: string;
+    findMistake: string;
+    wrongPick: string;
     predict: string;
     inputLabel: string;
     outputLabel: string;
@@ -365,6 +367,8 @@ export const translations: Record<Language, Translations> = {
       hint: 'Help',
       trace: 'Follow the run and fill in the state table.',
       traceStep: 'step',
+      findMistake: 'One symbol in this diagram is wrong. Tap it.',
+      wrongPick: 'that symbol is fine — look again',
       predict: 'Read the algorithm and write what it prints.',
       inputLabel: 'Input',
       outputLabel: 'Output',
@@ -376,6 +380,7 @@ export const translations: Record<Language, Translations> = {
         greska: 'find the mistake',
         tabela: 'state table',
         samostalno: 'write it yourself',
+        'dijagram-greska': 'mistake in the diagram',
       },
     },
     close: 'Close',
@@ -551,6 +556,8 @@ export const translations: Record<Language, Translations> = {
       hint: 'Hilfe',
       trace: 'Verfolge den Ablauf und fülle die Wertetabelle aus.',
       traceStep: 'Schritt',
+      findMistake: 'Ein Symbol in diesem Diagramm ist falsch. Tippe es an.',
+      wrongPick: 'dieses Symbol ist in Ordnung — schau noch einmal',
       predict: 'Lies den Algorithmus und schreibe auf, was er ausgibt.',
       inputLabel: 'Eingabe',
       outputLabel: 'Ausgabe',
@@ -562,6 +569,7 @@ export const translations: Record<Language, Translations> = {
         greska: 'Fehler finden',
         tabela: 'Wertetabelle',
         samostalno: 'selbst schreiben',
+        'dijagram-greska': 'Fehler im Diagramm',
       },
     },
     close: 'Schließen',
@@ -737,6 +745,8 @@ export const translations: Record<Language, Translations> = {
       hint: 'Pomoć',
       trace: 'Prati izvršavanje i popuni tabelu stanja.',
       traceStep: 'korak',
+      findMistake: 'Jedan simbol na ovom dijagramu nije u redu. Dodirni ga.',
+      wrongPick: 'taj simbol je u redu — pogledaj ponovo',
       predict: 'Pročitaj algoritam i upiši šta ispisuje.',
       inputLabel: 'Ulaz',
       outputLabel: 'Ispis',
@@ -748,6 +758,7 @@ export const translations: Record<Language, Translations> = {
         greska: 'pronađi grešku',
         tabela: 'tabela stanja',
         samostalno: 'napiši sam',
+        'dijagram-greska': 'greška u dijagramu',
       },
     },
     close: 'Zatvori',

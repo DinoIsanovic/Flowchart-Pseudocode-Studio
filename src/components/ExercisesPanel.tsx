@@ -7,12 +7,15 @@ import React, { useMemo, useState } from 'react';
 import { ArrowLeft, Check, CheckCircle2, GraduationCap, RotateCcw, Workflow, X } from 'lucide-react';
 import { Language } from '../types';
 import { translations } from '../i18n/translations';
-import { parsePseudocode } from '../core/flowchart-gen';
+import { buildFlowchart, parsePseudocode } from '../core/flowchart-gen';
+import { describeDiagramIssue } from '../core/diagram-check';
 import { Interpreter } from '../core/interpreter';
 import { Task, TaskPack, text } from '../exercises/types';
 import { blankedText, blanks, fillBlanks, solutionText, tiles } from '../exercises/render';
 import { GradeResult, describeGrade, gradeAttempt } from '../exercises/grade';
 import { gradeTrace, traceTask } from '../exercises/trace';
+import { MistakeKind, mistakeFor, plantMistake } from '../exercises/plant';
+import { MiniDiagram } from './MiniDiagram';
 import linijska from '../exercises/linijska.json';
 
 interface ExercisesPanelProps {
@@ -60,7 +63,7 @@ function shuffled(items: string[], seed: string): string[] {
 }
 
 /** The exercise types this panel can actually run, in the order they appear. */
-const IN_APP_TYPES = ['kockice', 'dopuni', 'prepoznaj', 'tabela'];
+const IN_APP_TYPES = ['kockice', 'dopuni', 'prepoznaj', 'tabela', 'dijagram-greska'];
 
 /** The exercise a task is built for — the first type its author listed. */
 function primaryType(task: Task): string {
@@ -84,6 +87,7 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
   const [predicted, setPredicted] = useState<string[]>([]);
   const [traced, setTraced] = useState<string[]>([]);
   const [activeType, setActiveType] = useState<string>('kockice');
+  const [pickedShape, setPickedShape] = useState<string | null>(null);
   const [result, setResult] = useState<GradeResult | null>(null);
 
   const task = useMemo(() => PACK.tasks.find((x) => x.id === openId) ?? null, [openId]);
@@ -102,6 +106,17 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
     });
   }, [task, solution, language]);
 
+  /**
+   * The diagram of this task with one mistake planted in it. The same task
+   * always gets the same mistake, so a class works on one picture.
+   */
+  const planted = useMemo(() => {
+    if (!task) return null;
+    const { statements } = parsePseudocode(solution, language);
+    const built = buildFlowchart(statements, language);
+    return plantMistake(built.nodes, built.edges, (task.mistake as MistakeKind) ?? mistakeFor(task.id));
+  }, [task, solution, language]);
+
   /** The run a state-table exercise is filled in against — the first test case. */
   const trace = useMemo(
     () => (task ? traceTask(task, language, task.tests[0] ?? []) : null),
@@ -116,6 +131,7 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
     setFilled([]);
     setPredicted([]);
     setTraced([]);
+    setPickedShape(null);
     setActiveType(primaryType(next));
     setResult(null);
   };
@@ -135,7 +151,16 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
     const kind = activeType;
     let outcome: GradeResult;
 
-    if (kind === 'tabela' && trace) {
+    if (kind === 'dijagram-greska' && planted) {
+      if (!pickedShape) {
+        outcome = { correct: false, reason: 'dijagram', message: t.findMistake };
+      } else if (planted.answerIds.includes(pickedShape)) {
+        const issue = planted.issues.find((i) => i.nodeId === pickedShape);
+        outcome = { correct: true, message: issue ? describeDiagramIssue(issue, language) : undefined };
+      } else {
+        outcome = { correct: false, reason: 'dijagram', message: t.wrongPick };
+      }
+    } else if (kind === 'tabela' && trace) {
       const marked = gradeTrace(trace, traced);
       const row = marked.firstWrong ?? 0;
       outcome = marked.correct
@@ -368,6 +393,22 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                 </>
               )}
 
+              {activeType === 'dijagram-greska' && planted && (
+                <>
+                  <p className="text-[11px] text-white/45">{t.findMistake}</p>
+                  <MiniDiagram
+                    nodes={planted.nodes}
+                    edges={planted.edges}
+                    selectedId={pickedShape}
+                    onSelect={(id) => {
+                      setPickedShape(id);
+                      setResult(null);
+                    }}
+                    markedIds={result?.correct ? planted.answerIds : []}
+                  />
+                </>
+              )}
+
               {activeType === 'tabela' && trace && (
                 <>
                   <p className="text-[11px] text-white/45">
@@ -444,6 +485,7 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                   }`}
                 >
                   {describeGrade(result, language)}
+                  {result.correct && result.message ? ` — ${result.message}` : ''}
                 </div>
               )}
 

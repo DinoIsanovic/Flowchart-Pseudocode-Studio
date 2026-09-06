@@ -61,6 +61,11 @@ export interface Task {
   interchangeable?: number[][];
   /** Wrong tiles offered alongside the real ones, from the middle level up. */
   distractors?: string[];
+  /**
+   * Which mistake the 'dijagram-greska' exercise plants — 'oblik', 'strelica',
+   * 'kraj' or 'prazan'. Left out, the task gets one picked from its id.
+   */
+  mistake?: string;
   /** A fact the student may need but is not expected to know by heart. */
   hint?: Text;
   /** A question for the class; nothing here is machine-graded. */

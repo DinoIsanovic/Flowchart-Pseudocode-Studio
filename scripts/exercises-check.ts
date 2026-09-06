@@ -17,6 +17,8 @@ import { Interpreter } from '../src/core/interpreter';
 import { Language } from '../src/types';
 import { Task, TaskPack, text } from '../src/exercises/types';
 import { blankedText, blanks, renderKeywords, solutionText, tiles } from '../src/exercises/render';
+import { MistakeKind, mistakeFor, plantMistake } from '../src/exercises/plant';
+import { buildFlowchart } from '../src/core/flowchart-gen';
 import linijska from '../src/exercises/linijska.json';
 
 const packs = [linijska as TaskPack];
@@ -115,6 +117,16 @@ for (const pack of packs) {
       for (const pos of group) {
         if (pos < 1 || pos > body) fail(task, `zamjenjivi korak ${pos} je izvan raspona 1..${body}`);
       }
+    }
+
+    // A diagram exercise is only usable if the planted mistake is one the
+    // checker can point at — otherwise the student has nothing to tap.
+    if (task.types.includes('dijagram-greska')) {
+      const built = buildFlowchart(statements, 'bs');
+      const kind = (task.mistake as MistakeKind) ?? mistakeFor(task.id);
+      const planted = plantMistake(built.nodes, built.edges, kind);
+      if (!planted.issues.length) fail(task, `zasađena greška "${kind}" ne proizvodi nijedan nalaz`);
+      if (!planted.answerIds.length) fail(task, `zasađena greška "${kind}" nije vezana ni za jedan oblik`);
     }
 
     const real = new Set(tiles(task, 'bs'));
