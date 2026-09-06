@@ -213,11 +213,11 @@
         "de": "Meter in Zentimeter und Millimeter"
       },
       "prompt": {
-        "bs": "Dužinu unesenu u metrima pretvori u centimetre i milimetre.",
-        "en": "Convert a length given in metres into centimetres and millimetres.",
-        "de": "Rechne eine in Metern angegebene Länge in Zentimeter und Millimeter um."
+        "bs": "Dopuni algoritam koji dužinu unesenu u metrima pretvara u centimetre i milimetre.",
+        "en": "Fill in the algorithm that converts a length given in metres into centimetres and millimetres.",
+        "de": "Ergänze den Algorithmus, der eine in Metern angegebene Länge in Zentimeter und Millimeter umrechnet."
       },
-      "solution": "@START\n@INPUT m\n@CALC cm = m * 100\n@CALC mm = m * 1000\n@OUTPUT m, \"m =\", cm, \"cm =\", mm, \"mm\"\n@END",
+      "solution": "@START\n@INPUT m\n@CALC cm = m * {{100}}\n@CALC mm = m * {{1000}}\n@OUTPUT cm\n@OUTPUT mm\n@END",
       "tests": [
         [
           "3"
@@ -230,13 +230,13 @@
         ]
       ],
       "types": [
-        "prepoznaj",
+        "dopuni",
         "kockice",
         "greska"
       ],
       "solutionByLang": {
-        "en": "@START\n@INPUT m\n@CALC cm = m * 100\n@CALC mm = m * 1000\n@OUTPUT m, \"m =\", cm, \"cm =\", mm, \"mm\"\n@END",
-        "de": "@START\n@INPUT m\n@CALC cm = m * 100\n@CALC mm = m * 1000\n@OUTPUT m, \"m =\", cm, \"cm =\", mm, \"mm\"\n@END"
+        "en": "@START\n@INPUT m\n@CALC cm = m * {{100}}\n@CALC mm = m * {{1000}}\n@OUTPUT cm\n@OUTPUT mm\n@END",
+        "de": "@START\n@INPUT m\n@CALC cm = m * {{100}}\n@CALC mm = m * {{1000}}\n@OUTPUT cm\n@OUTPUT mm\n@END"
       }
     },
     {
