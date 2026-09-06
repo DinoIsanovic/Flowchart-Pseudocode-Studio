@@ -14,7 +14,8 @@
     "check:interpreter": "tsx scripts/interpreter-check.ts",
     "check:exercises": "tsx scripts/exercises-check.ts",
     "check:diagram": "tsx scripts/diagram-check.ts",
-    "sveska": "tsx scripts/sveska-data.ts /tmp/sveska-podaci.json && python3 scripts/sveska.py /tmp/sveska-podaci.json radna-sveska-linijska.docx"
+    "sveska": "tsx scripts/sveska-data.ts /tmp/sveska-podaci.json && python3 scripts/sveska.py /tmp/sveska-podaci.json radna-sveska-linijska.docx",
+    "check:grade": "tsx scripts/grade-check.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

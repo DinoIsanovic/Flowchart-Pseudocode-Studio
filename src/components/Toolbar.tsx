@@ -25,6 +25,7 @@ import {
   Magnet,
   Workflow,
   AlignCenter,
+  GraduationCap,
 } from 'lucide-react';
 import { Language, ShapeType } from '../types';
 import { translations } from '../i18n/translations';
@@ -33,6 +34,7 @@ interface ToolbarProps {
   language: Language;
   isOpenOnMobile: boolean;
   onCloseMobile: () => void;
+  onOpenExercises?: () => void;
   viewMode?: 'split' | 'canvas' | 'code';
   onViewModeChange?: (mode: 'split' | 'canvas' | 'code') => void;
   snapToGrid?: boolean;
@@ -66,6 +68,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   language,
   isOpenOnMobile,
   onCloseMobile,
+  onOpenExercises,
   viewMode,
   onViewModeChange,
   snapToGrid = true,
@@ -174,6 +177,20 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 <span>{language === 'en' ? 'Code' : language === 'de' ? 'Code' : 'Pseudokod'}</span>
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Exercises — the entry point lives here rather than in the mobile
+            navigation bar, which already carries five items on a 360px screen. */}
+        {onOpenExercises && (
+          <div className="flex flex-col gap-1.5 pb-2 border-b border-white/10">
+            <button
+              onClick={onOpenExercises}
+              className="flex items-center justify-center gap-2 bg-[#A855F7]/15 hover:bg-[#A855F7]/25 text-[#D8B4FE] hover:text-white text-[11px] font-black uppercase tracking-wider p-2.5 rounded-lg border border-[#A855F7]/40 hover:border-[#A855F7] transition-all"
+            >
+              <GraduationCap className="w-4 h-4" />
+              <span>{t.vjezbe.title}</span>
+            </button>
           </div>
         )}
 

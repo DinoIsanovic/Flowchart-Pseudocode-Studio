@@ -166,6 +166,27 @@ export interface Translations {
     noOutput: string;
     inputFor: string;
   };
+  // Exercises
+  vjezbe: {
+    title: string;
+    intro: string;
+    progress: string;
+    back: string;
+    check: string;
+    solved: string;
+    reward: string;
+    reset: string;
+    pool: string;
+    answer: string;
+    poolEmpty: string;
+    answerEmpty: string;
+    fill: string;
+    fillAll: string;
+    predict: string;
+    inputLabel: string;
+    outputLabel: string;
+    noInput: string;
+  };
   close: string;
 }
 
@@ -322,6 +343,26 @@ export const translations: Record<Language, Translations> = {
       noOutput: 'nothing printed yet',
       inputFor: 'value for',
     },
+    vjezbe: {
+      title: 'Exercises',
+      intro: 'Linear structure — 15 tasks',
+      progress: 'solved',
+      back: 'Back',
+      check: 'Check',
+      solved: 'solved',
+      reward: 'See the flowchart',
+      reset: 'Start over',
+      pool: 'Tiles',
+      answer: 'Your algorithm',
+      poolEmpty: 'every tile is placed',
+      answerEmpty: 'tap a tile to place it here',
+      fill: 'Fill in what is missing.',
+      fillAll: 'fill in every blank first',
+      predict: 'Read the algorithm and write what it prints.',
+      inputLabel: 'Input',
+      outputLabel: 'Output',
+      noInput: 'no input',
+    },
     close: 'Close',
   },
 
@@ -477,6 +518,26 @@ export const translations: Record<Language, Translations> = {
       noOutput: 'noch keine Ausgabe',
       inputFor: 'Wert für',
     },
+    vjezbe: {
+      title: 'Übungen',
+      intro: 'Lineare Struktur — 15 Aufgaben',
+      progress: 'gelöst',
+      back: 'Zurück',
+      check: 'Prüfen',
+      solved: 'gelöst',
+      reward: 'Diagramm ansehen',
+      reset: 'Von vorn',
+      pool: 'Bausteine',
+      answer: 'Dein Algorithmus',
+      poolEmpty: 'alle Bausteine sind gesetzt',
+      answerEmpty: 'tippe einen Baustein an, um ihn hier abzulegen',
+      fill: 'Ergänze, was fehlt.',
+      fillAll: 'fülle zuerst alle Lücken aus',
+      predict: 'Lies den Algorithmus und schreibe auf, was er ausgibt.',
+      inputLabel: 'Eingabe',
+      outputLabel: 'Ausgabe',
+      noInput: 'keine Eingabe',
+    },
     close: 'Schließen',
   },
 
@@ -631,6 +692,26 @@ export const translations: Record<Language, Translations> = {
       noVars: 'još nema varijabli',
       noOutput: 'još nema ispisa',
       inputFor: 'vrijednost za',
+    },
+    vjezbe: {
+      title: 'Vježbe',
+      intro: 'Linijska struktura — 15 zadataka',
+      progress: 'riješeno',
+      back: 'Nazad',
+      check: 'Provjeri',
+      solved: 'riješeno',
+      reward: 'Pogledaj dijagram',
+      reset: 'Ispočetka',
+      pool: 'Kockice',
+      answer: 'Tvoj algoritam',
+      poolEmpty: 'sve kockice su postavljene',
+      answerEmpty: 'dodirni kockicu da je postaviš ovdje',
+      fill: 'Upiši ono što nedostaje.',
+      fillAll: 'prvo popuni sve praznine',
+      predict: 'Pročitaj algoritam i upiši šta ispisuje.',
+      inputLabel: 'Ulaz',
+      outputLabel: 'Ispis',
+      noInput: 'bez unosa',
     },
     close: 'Zatvori',
   },

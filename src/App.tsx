@@ -31,6 +31,7 @@ import { ConfirmModal, ConfirmDialogState } from './components/ConfirmModal';
 import { ToastContainer, ToastMessage } from './components/Toast';
 import { MobileNavBar } from './components/MobileNavBar';
 import { SimulatorPanel } from './components/SimulatorPanel';
+import { ExercisesPanel } from './components/ExercisesPanel';
 
 // Warnings describe the diagram that was drawn; only real errors withhold it.
 const isBlocking = (e: ParseError) => e.severity !== 'warning';
@@ -197,6 +198,7 @@ export default function App() {
   const [isAndroidModalOpen, setIsAndroidModalOpen] = useState(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
   const [isMobileToolbarOpen, setIsMobileToolbarOpen] = useState(false);
+  const [isExercisesOpen, setIsExercisesOpen] = useState(false);
   const [parseErrors, setParseErrors] = useState<ParseError[]>([]);
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -893,6 +895,23 @@ export default function App() {
     fitViewBoxToContent(built.nodes);
   };
 
+  /**
+   * A solved exercise hands its program back: the reward for getting it right
+   * is seeing the flowchart build itself, so it loads like a template.
+   */
+  const loadSolvedExercise = (code: string) => {
+    pushHistory();
+    const parsed = parsePseudocode(code, language);
+    const built = buildFlowchart(parsed.statements, language);
+    setNodes(built.nodes);
+    setEdges(built.edges);
+    setPseudocode(code);
+    setParseErrors([]);
+    bumpUidPast(built.nodes, built.edges);
+    fitViewBoxToContent(built.nodes);
+    setViewMode('canvas');
+  };
+
   // Template Loader
   const handleLoadTemplate = (templateKey: 'sequence' | 'branch' | 'while' | 'repeat') => {
     if (nodes.length > 0) {
@@ -1303,6 +1322,10 @@ export default function App() {
           language={language}
           isOpenOnMobile={isMobileToolbarOpen}
           onCloseMobile={() => setIsMobileToolbarOpen(false)}
+          onOpenExercises={() => {
+            setIsExercisesOpen(true);
+            setIsMobileToolbarOpen(false);
+          }}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           snapToGrid={snapToGrid}
@@ -1477,6 +1500,13 @@ export default function App() {
       />
 
       {/* Mobile Bottom Navigation Bar (Android & iOS) */}
+      <ExercisesPanel
+        language={language}
+        isOpen={isExercisesOpen}
+        onClose={() => setIsExercisesOpen(false)}
+        onReward={loadSolvedExercise}
+      />
+
       <MobileNavBar
         language={language}
         viewMode={viewMode}

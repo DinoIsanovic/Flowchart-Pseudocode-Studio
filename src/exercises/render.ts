@@ -79,6 +79,17 @@ export function blanks(task: Task, lang: Language): Blank[] {
 }
 
 /**
+ * The solution with the student's answers dropped into the blanks, in the
+ * order the blanks appear — what the marker actually runs.
+ */
+export function fillBlanks(task: Task, lang: Language, values: string[]): string {
+  const authored = task.solutionByLang?.[lang] ?? task.solution;
+  let i = 0;
+  const filled = authored.replace(BLANK, () => values[i++] ?? '');
+  return renderKeywords(filled, lang);
+}
+
+/**
  * The tiles of a Parsons exercise: one per statement, in solution order.
  * Shuffling is the caller's job, so a seeded shuffle can make the same task
  * reproducible for a whole class.
