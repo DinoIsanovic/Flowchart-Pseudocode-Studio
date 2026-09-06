@@ -1,0 +1,428 @@
+{
+  "topic": "linijska",
+  "title": {
+    "bs": "Linijska (sekvencijalna) struktura"
+  },
+  "tasks": [
+    {
+      "id": "linijska-01-jutro",
+      "topic": "linijska",
+      "kind": "svakodnevni",
+      "level": 1,
+      "title": {
+        "bs": "Jutarnja priprema za školu"
+      },
+      "prompt": {
+        "bs": "Poredaj korake jutarnje pripreme za školu tako da algoritam ima smisla."
+      },
+      "solution": "@START\n@OUTPUT \"Ustani i spremi krevet\"\n@OUTPUT \"Operi zube i umij se\"\n@OUTPUT \"Obuci školsku odjeću\"\n@OUTPUT \"Doručkuj\"\n@OUTPUT \"Uzmi školsku torbu i kreni\"\n@END",
+      "tests": [
+        []
+      ],
+      "types": [
+        "kockice",
+        "prepoznaj"
+      ],
+      "interchangeable": [
+        [
+          3,
+          4
+        ]
+      ],
+      "discussion": {
+        "bs": "Može li se zamijeniti redoslijed koraka 3 i 4? Šta bi se desilo ako bi korak „Uzmi torbu i kreni” stavio na prvo mjesto?"
+      },
+      "showPython": false
+    },
+    {
+      "id": "linijska-02-gmail",
+      "topic": "linijska",
+      "kind": "svakodnevni",
+      "level": 2,
+      "title": {
+        "bs": "Slanje e-mail poruke"
+      },
+      "prompt": {
+        "bs": "Poredaj korake slanja e-mail poruke u aplikaciji Gmail."
+      },
+      "solution": "@START\n@OUTPUT \"Otvori aplikaciju Gmail\"\n@OUTPUT \"Klikni na dugme 'Nova poruka' (+)\"\n@INPUT primalac_email\n@INPUT naslov_poruke\n@INPUT tekst_poruke\n@OUTPUT \"Klikni na dugme 'Pošalji' (Send)\"\n@END",
+      "tests": [
+        [
+          "dino@skola.ba",
+          "Domaća zadaća",
+          "Šaljem zadaću u prilogu."
+        ]
+      ],
+      "types": [
+        "kockice"
+      ],
+      "interchangeable": [
+        [
+          3,
+          4,
+          5
+        ]
+      ],
+      "showPython": false
+    },
+    {
+      "id": "linijska-03-zbir-razlika",
+      "topic": "linijska",
+      "kind": "racunski",
+      "level": 3,
+      "title": {
+        "bs": "Zbir i razlika"
+      },
+      "prompt": {
+        "bs": "Napiši algoritam koji za dva unesena broja računa i ispisuje njihov zbir i razliku."
+      },
+      "solution": "@START\n@INPUT a, b\n@CALC zbir = a + b\n@CALC razlika = a - b\n@OUTPUT \"Zbir je\", zbir\n@OUTPUT \"Razlika je\", razlika\n@END",
+      "tests": [
+        [
+          "12",
+          "5"
+        ],
+        [
+          "7",
+          "7"
+        ],
+        [
+          "3",
+          "10"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "greska",
+        "tabela"
+      ]
+    },
+    {
+      "id": "linijska-04-pravougaonik",
+      "topic": "linijska",
+      "kind": "racunski",
+      "level": 4,
+      "title": {
+        "bs": "Obim i površina pravougaonika"
+      },
+      "prompt": {
+        "bs": "Za unesene stranice pravougaonika izračunaj i ispiši obim i površinu."
+      },
+      "solution": "@START\n@INPUT a, b\n@CALC obim = 2 * (a + b)\n@CALC povrsina = a * b\n@OUTPUT \"Obim =\", obim\n@OUTPUT \"Površina =\", povrsina\n@END",
+      "tests": [
+        [
+          "5",
+          "3"
+        ],
+        [
+          "10",
+          "10"
+        ],
+        [
+          "2.5",
+          "4"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "greska"
+      ]
+    },
+    {
+      "id": "linijska-05-kvadrat",
+      "topic": "linijska",
+      "kind": "racunski",
+      "level": 5,
+      "title": {
+        "bs": "Obim i površina kvadrata"
+      },
+      "prompt": {
+        "bs": "Dopuni algoritam koji za unesenu dužinu stranice kvadrata računa njegov obim i površinu."
+      },
+      "solution": "@START\n@INPUT a\n@CALC O = {{4}} * a\n@CALC P = a * {{a}}\n@OUTPUT O\n{{@OUTPUT}} P\n@END",
+      "tests": [
+        [
+          "5"
+        ],
+        [
+          "1"
+        ],
+        [
+          "2.5"
+        ]
+      ],
+      "types": [
+        "dopuni",
+        "prepoznaj"
+      ]
+    },
+    {
+      "id": "linijska-06-metri",
+      "topic": "linijska",
+      "kind": "racunski",
+      "level": 6,
+      "title": {
+        "bs": "Metri u centimetre i milimetre"
+      },
+      "prompt": {
+        "bs": "Dužinu unesenu u metrima pretvori u centimetre i milimetre."
+      },
+      "solution": "@START\n@INPUT m\n@CALC cm = m * 100\n@CALC mm = m * 1000\n@OUTPUT m, \"m =\", cm, \"cm =\", mm, \"mm\"\n@END",
+      "tests": [
+        [
+          "3"
+        ],
+        [
+          "0.5"
+        ],
+        [
+          "12"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "greska"
+      ]
+    },
+    {
+      "id": "linijska-07-prodavnica",
+      "topic": "linijska",
+      "kind": "racunski",
+      "level": 7,
+      "title": {
+        "bs": "Račun u prodavnici"
+      },
+      "prompt": {
+        "bs": "Izračunaj koliko treba platiti za uneseni broj komada, uz cijenu dostave."
+      },
+      "solution": "@START\n@INPUT kolicina, cijena, dostava\n@CALC roba = kolicina * cijena\n@CALC ukupno = roba + dostava\n@OUTPUT \"Za platiti:\", ukupno\n@END",
+      "tests": [
+        [
+          "3",
+          "2.5",
+          "5"
+        ],
+        [
+          "1",
+          "10",
+          "0"
+        ],
+        [
+          "10",
+          "0.8",
+          "3"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "greska",
+        "tabela"
+      ]
+    },
+    {
+      "id": "linijska-08-prosjek",
+      "topic": "linijska",
+      "kind": "racunski",
+      "level": 8,
+      "title": {
+        "bs": "Prosjek tri ocjene"
+      },
+      "prompt": {
+        "bs": "Izračunaj i ispiši prosjek tri unesene ocjene."
+      },
+      "solution": "@START\n@INPUT o1, o2, o3\n@CALC prosjek = {{(o1 + o2 + o3)}} / 3\n@OUTPUT \"Prosjek je\", prosjek\n@END",
+      "tests": [
+        [
+          "4",
+          "5",
+          "3"
+        ],
+        [
+          "5",
+          "5",
+          "5"
+        ],
+        [
+          "2",
+          "3",
+          "2"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "greska",
+        "dopuni",
+        "samostalno"
+      ]
+    },
+    {
+      "id": "linijska-09-popust",
+      "topic": "linijska",
+      "kind": "racunski",
+      "level": 9,
+      "title": {
+        "bs": "Cijena s popustom"
+      },
+      "prompt": {
+        "bs": "Za unesenu cijenu i popust u procentima izračunaj iznos popusta i novu cijenu."
+      },
+      "solution": "@START\n@INPUT cijena, popust\n@CALC iznos = cijena * popust / 100\n@CALC nova = cijena - iznos\n@OUTPUT \"Popust iznosi\", iznos\n@OUTPUT \"Nova cijena je\", nova\n@END",
+      "tests": [
+        [
+          "200",
+          "15"
+        ],
+        [
+          "50",
+          "0"
+        ],
+        [
+          "80",
+          "50"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "greska",
+        "samostalno"
+      ]
+    },
+    {
+      "id": "linijska-10-stednja",
+      "topic": "linijska",
+      "kind": "racunski",
+      "level": 10,
+      "title": {
+        "bs": "Štednja džeparca"
+      },
+      "prompt": {
+        "bs": "Koliko ćeš uštedjeti za zadani broj sedmica i koliko ti ostaje nakon kupovine?"
+      },
+      "solution": "@START\n@INPUT sedmicno, sedmica, cijena\n@CALC usteda = sedmicno * sedmica\n@CALC ostatak = usteda - cijena\n@OUTPUT \"Uštedio si\", usteda, \"KM\"\n@OUTPUT \"Nakon kupovine ostaje\", ostatak, \"KM\"\n@END",
+      "tests": [
+        [
+          "15",
+          "8",
+          "80"
+        ],
+        [
+          "20",
+          "4",
+          "100"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "tabela",
+        "samostalno"
+      ]
+    },
+    {
+      "id": "linijska-11-cifre",
+      "topic": "linijska",
+      "kind": "racunski",
+      "level": 11,
+      "title": {
+        "bs": "Cifre dvocifrenog broja"
+      },
+      "prompt": {
+        "bs": "Za uneseni dvocifreni broj ispiši njegove cifre i njihov zbir."
+      },
+      "solution": "@START\n@INPUT n\n@CALC jedinice = n % 10\n@CALC desetice = int(n / 10)\n@CALC zbir = jedinice + desetice\n@OUTPUT \"Desetice:\", desetice, \"jedinice:\", jedinice\n@OUTPUT \"Zbir cifara:\", zbir\n@END",
+      "tests": [
+        [
+          "57"
+        ],
+        [
+          "90"
+        ],
+        [
+          "33"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "greska",
+        "tabela"
+      ],
+      "distractors": [
+        "@CALC jedinice = n / 10",
+        "@CALC desetice = n % 10"
+      ]
+    },
+    {
+      "id": "linijska-12-minute",
+      "topic": "linijska",
+      "kind": "racunski",
+      "level": 12,
+      "title": {
+        "bs": "Minute u sate i minute"
+      },
+      "prompt": {
+        "bs": "Uneseni broj minuta pretvori u sate i minute."
+      },
+      "solution": "@START\n@INPUT ukupno\n@CALC sati = {{int}}(ukupno / 60)\n@CALC minuta = ukupno {{%}} 60\n@OUTPUT ukupno, \"minuta =\", sati, \"h i\", minuta, \"min\"\n@END",
+      "tests": [
+        [
+          "135"
+        ],
+        [
+          "60"
+        ],
+        [
+          "45"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "greska",
+        "dopuni"
+      ],
+      "distractors": [
+        "@CALC sati = ukupno % 60",
+        "@CALC minuta = int(ukupno / 60)"
+      ]
+    },
+    {
+      "id": "linijska-13-zamjena",
+      "topic": "linijska",
+      "kind": "racunski",
+      "level": 13,
+      "title": {
+        "bs": "Zamjena vrijednosti"
+      },
+      "prompt": {
+        "bs": "Zamijeni vrijednosti dvije varijable i ispiši ih prije i poslije zamjene."
+      },
+      "solution": "@START\n@INPUT a, b\n@OUTPUT \"Prije zamjene:\", a, b\n@SET pomocna = a\n@SET a = b\n@SET b = pomocna\n@OUTPUT \"Poslije zamjene:\", a, b\n@END",
+      "tests": [
+        [
+          "7",
+          "2"
+        ],
+        [
+          "0",
+          "100"
+        ]
+      ],
+      "types": [
+        "kockice",
+        "prepoznaj",
+        "tabela",
+        "samostalno"
+      ],
+      "distractors": [
+        "@SET a = pomocna",
+        "@SET pomocna = b"
+      ]
+    }
+  ]
+}
