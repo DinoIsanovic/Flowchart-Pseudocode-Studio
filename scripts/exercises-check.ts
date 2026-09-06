@@ -44,10 +44,36 @@ for (const pack of packs) {
     if (/-\d+-/.test(task.id)) fail(task, 'id nosi redni broj — poredak pripada polju level');
     if (task.topic !== pack.topic) fail(task, `topic "${task.topic}" ne odgovara paketu`);
 
-    // The solution has to parse in every language, not just the authored one.
+    // Every language has to be complete: a missing translation silently falls
+    // back to Bosnian, which is invisible until a German student opens it.
     for (const lang of LANGS) {
-      const { errors } = parsePseudocode(solutionText(task, lang), lang);
-      if (errors.length) fail(task, `[${lang}] ${errors[0].line}: ${errors[0].message}`);
+      if (!task.title[lang]) fail(task, `naslov nije preveden na ${lang}`);
+      if (!task.prompt[lang]) fail(task, `tekst zadatka nije preveden na ${lang}`);
+      if (task.discussion && !task.discussion[lang]) fail(task, `pitanje za razmišljanje nije prevedeno na ${lang}`);
+    }
+
+    // The solution has to parse, run and blank identically in every language.
+    const holesBs = blanks(task, 'bs');
+    for (const lang of LANGS) {
+      const rendered = solutionText(task, lang);
+      const { statements: perLang, errors } = parsePseudocode(rendered, lang);
+      if (errors.length) {
+        fail(task, `[${lang}] ${errors[0].line}: ${errors[0].message}`);
+        continue;
+      }
+      for (const inputs of task.tests) {
+        const machine = new Interpreter(perLang);
+        const result = machine.runToEnd(inputs);
+        if (result.status !== 'done') {
+          fail(task, `[${lang}] ulaz [${inputs.join(', ')}] → ${result.status} ${result.error?.code ?? ''}`);
+        }
+      }
+      const holes = blanks(task, lang);
+      if (holes.length !== holesBs.length) {
+        fail(task, `[${lang}] ima ${holes.length} praznina, a bosanski ${holesBs.length}`);
+      } else if (holes.some((h, i) => h.kind !== holesBs[i].kind)) {
+        fail(task, `[${lang}] praznine nisu iste vrste kao u bosanskom`);
+      }
     }
 
     const { statements } = parsePseudocode(solutionText(task, 'bs'), 'bs');

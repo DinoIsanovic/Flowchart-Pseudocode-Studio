@@ -194,7 +194,7 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                         {text(item.title, language)}
                       </span>
                       <span className="block text-[10px] uppercase tracking-wider text-white/35">
-                        {primaryType(item)}
+                        {t.types[primaryType(item)] ?? primaryType(item)}
                       </span>
                     </span>
                     {progress[item.id] && <CheckCircle2 className="w-4 h-4 text-[#4ADE80] shrink-0" />}

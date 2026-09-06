@@ -186,6 +186,7 @@ export interface Translations {
     inputLabel: string;
     outputLabel: string;
     noInput: string;
+    types: Record<string, string>;
   };
   close: string;
 }
@@ -362,6 +363,14 @@ export const translations: Record<Language, Translations> = {
       inputLabel: 'Input',
       outputLabel: 'Output',
       noInput: 'no input',
+      types: {
+        kockice: 'put in order',
+        dopuni: 'fill in',
+        prepoznaj: 'predict the output',
+        greska: 'find the mistake',
+        tabela: 'state table',
+        samostalno: 'write it yourself',
+      },
     },
     close: 'Close',
   },
@@ -537,6 +546,14 @@ export const translations: Record<Language, Translations> = {
       inputLabel: 'Eingabe',
       outputLabel: 'Ausgabe',
       noInput: 'keine Eingabe',
+      types: {
+        kockice: 'ordnen',
+        dopuni: 'ergänzen',
+        prepoznaj: 'Ausgabe vorhersagen',
+        greska: 'Fehler finden',
+        tabela: 'Wertetabelle',
+        samostalno: 'selbst schreiben',
+      },
     },
     close: 'Schließen',
   },
@@ -712,6 +729,14 @@ export const translations: Record<Language, Translations> = {
       inputLabel: 'Ulaz',
       outputLabel: 'Ispis',
       noInput: 'bez unosa',
+      types: {
+        kockice: 'složi kockice',
+        dopuni: 'dopuni',
+        prepoznaj: 'predvidi ispis',
+        greska: 'pronađi grešku',
+        tabela: 'tabela stanja',
+        samostalno: 'napiši sam',
+      },
     },
     close: 'Zatvori',
   },
