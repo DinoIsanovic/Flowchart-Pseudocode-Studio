@@ -5,7 +5,7 @@
   },
   "tasks": [
     {
-      "id": "linijska-01-jutro",
+      "id": "linijska-jutro",
       "topic": "linijska",
       "kind": "svakodnevni",
       "level": 1,
@@ -35,7 +35,7 @@
       "showPython": false
     },
     {
-      "id": "linijska-02-gmail",
+      "id": "linijska-gmail",
       "topic": "linijska",
       "kind": "svakodnevni",
       "level": 2,
@@ -66,7 +66,7 @@
       "showPython": false
     },
     {
-      "id": "linijska-03-zbir-razlika",
+      "id": "linijska-zbir-razlika",
       "topic": "linijska",
       "kind": "racunski",
       "level": 3,
@@ -99,7 +99,7 @@
       ]
     },
     {
-      "id": "linijska-04-pravougaonik",
+      "id": "linijska-pravougaonik",
       "topic": "linijska",
       "kind": "racunski",
       "level": 4,
@@ -131,7 +131,7 @@
       ]
     },
     {
-      "id": "linijska-05-kvadrat",
+      "id": "linijska-kvadrat",
       "topic": "linijska",
       "kind": "racunski",
       "level": 5,
@@ -159,7 +159,7 @@
       ]
     },
     {
-      "id": "linijska-06-metri",
+      "id": "linijska-metri",
       "topic": "linijska",
       "kind": "racunski",
       "level": 6,
@@ -188,10 +188,39 @@
       ]
     },
     {
-      "id": "linijska-07-prodavnica",
+      "id": "linijska-mjerilo",
       "topic": "linijska",
       "kind": "racunski",
       "level": 7,
+      "title": {
+        "bs": "Mjerilo karte i stvarna udaljenost"
+      },
+      "prompt": {
+        "bs": "Na karti mjerila 1 : 100.000, 1 cm u prirodi iznosi 1 km. Dopuni formulu za računanje stvarne udaljenosti u kilometrima na osnovu izmjerenih centimetara na karti."
+      },
+      "solution": "@START\n@OUTPUT \"Unesi udaljenost na karti u centimetrima:\"\n{{@INPUT}} cm_na_karti\n@CALC km_u_prirodi = cm_na_karti * {{1}}\n@OUTPUT km_u_prirodi\n@END",
+      "tests": [
+        [
+          "4"
+        ],
+        [
+          "12.5"
+        ],
+        [
+          "30"
+        ]
+      ],
+      "types": [
+        "dopuni",
+        "prepoznaj",
+        "samostalno"
+      ]
+    },
+    {
+      "id": "linijska-prodavnica",
+      "topic": "linijska",
+      "kind": "racunski",
+      "level": 8,
       "title": {
         "bs": "Račun u prodavnici"
       },
@@ -224,10 +253,10 @@
       ]
     },
     {
-      "id": "linijska-08-prosjek",
+      "id": "linijska-prosjek",
       "topic": "linijska",
       "kind": "racunski",
-      "level": 8,
+      "level": 9,
       "title": {
         "bs": "Prosjek tri ocjene"
       },
@@ -260,10 +289,10 @@
       ]
     },
     {
-      "id": "linijska-09-popust",
+      "id": "linijska-popust",
       "topic": "linijska",
       "kind": "racunski",
-      "level": 9,
+      "level": 10,
       "title": {
         "bs": "Cijena s popustom"
       },
@@ -293,10 +322,10 @@
       ]
     },
     {
-      "id": "linijska-10-stednja",
+      "id": "linijska-stednja",
       "topic": "linijska",
       "kind": "racunski",
-      "level": 10,
+      "level": 11,
       "title": {
         "bs": "Štednja džeparca"
       },
@@ -324,10 +353,10 @@
       ]
     },
     {
-      "id": "linijska-11-cifre",
+      "id": "linijska-cifre",
       "topic": "linijska",
       "kind": "racunski",
-      "level": 11,
+      "level": 12,
       "title": {
         "bs": "Cifre dvocifrenog broja"
       },
@@ -358,10 +387,10 @@
       ]
     },
     {
-      "id": "linijska-12-minute",
+      "id": "linijska-minute",
       "topic": "linijska",
       "kind": "racunski",
-      "level": 12,
+      "level": 13,
       "title": {
         "bs": "Minute u sate i minute"
       },
@@ -392,10 +421,10 @@
       ]
     },
     {
-      "id": "linijska-13-zamjena",
+      "id": "linijska-zamjena",
       "topic": "linijska",
       "kind": "racunski",
-      "level": 13,
+      "level": 14,
       "title": {
         "bs": "Zamjena vrijednosti"
       },

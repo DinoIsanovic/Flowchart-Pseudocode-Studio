@@ -39,6 +39,9 @@ for (const pack of packs) {
     seen.add(task.id);
     if (levels.has(task.level)) fail(task, `nivo ${task.level} već zauzet`);
     levels.add(task.level);
+    // Inserting a task in the middle is routine, so a gap in the numbering is
+    // almost always a renumbering that was left half done.
+    if (/-\d+-/.test(task.id)) fail(task, 'id nosi redni broj — poredak pripada polju level');
     if (task.topic !== pack.topic) fail(task, `topic "${task.topic}" ne odgovara paketu`);
 
     // The solution has to parse in every language, not just the authored one.
@@ -97,6 +100,14 @@ for (const pack of packs) {
     if (holes.length) console.log(`     praznine: ${holes.map((h) => `${h.kind}:${h.answer}`).join(', ')}`);
     if (task.interchangeable) console.log(`     zamjenjivi koraci: ${task.interchangeable.map((g) => g.join('↔')).join(', ')}`);
   }
+
+  const sorted = [...levels].sort((a, b) => a - b);
+  sorted.forEach((lvl, i) => {
+    if (lvl !== i + 1) {
+      problems++;
+      console.log(`  ✗ ${pack.topic}: nivoi imaju rupu — očekivano ${i + 1}, nađeno ${lvl}`);
+    }
+  });
 }
 
 console.log(problems ? `\n${problems} problema` : '\nsvi zadaci ispravni');
