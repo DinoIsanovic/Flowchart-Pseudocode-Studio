@@ -289,43 +289,10 @@
       ]
     },
     {
-      "id": "linijska-popust",
-      "topic": "linijska",
-      "kind": "racunski",
-      "level": 10,
-      "title": {
-        "bs": "Cijena s popustom"
-      },
-      "prompt": {
-        "bs": "Za unesenu cijenu i popust u procentima izračunaj iznos popusta i novu cijenu."
-      },
-      "solution": "@START\n@INPUT cijena, popust\n@CALC iznos = cijena * popust / 100\n@CALC nova = cijena - iznos\n@OUTPUT \"Popust iznosi\", iznos\n@OUTPUT \"Nova cijena je\", nova\n@END",
-      "tests": [
-        [
-          "200",
-          "15"
-        ],
-        [
-          "50",
-          "0"
-        ],
-        [
-          "80",
-          "50"
-        ]
-      ],
-      "types": [
-        "prepoznaj",
-        "kockice",
-        "greska",
-        "samostalno"
-      ]
-    },
-    {
       "id": "linijska-stednja",
       "topic": "linijska",
       "kind": "racunski",
-      "level": 11,
+      "level": 10,
       "title": {
         "bs": "Štednja džeparca"
       },
@@ -356,7 +323,7 @@
       "id": "linijska-cifre",
       "topic": "linijska",
       "kind": "racunski",
-      "level": 12,
+      "level": 11,
       "title": {
         "bs": "Cifre dvocifrenog broja"
       },
@@ -390,7 +357,7 @@
       "id": "linijska-minute",
       "topic": "linijska",
       "kind": "racunski",
-      "level": 13,
+      "level": 12,
       "title": {
         "bs": "Minute u sate i minute"
       },
@@ -424,7 +391,7 @@
       "id": "linijska-zamjena",
       "topic": "linijska",
       "kind": "racunski",
-      "level": 14,
+      "level": 13,
       "title": {
         "bs": "Zamjena vrijednosti"
       },
