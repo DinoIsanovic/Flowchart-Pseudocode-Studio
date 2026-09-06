@@ -24,7 +24,9 @@ export type GradeReason =
   /** It ran but stopped with an error. */
   | 'greska-u-radu'
   /** It ran to the end and printed something else. */
-  | 'ispis';
+  | 'ispis'
+  /** A cell of the state table holds the wrong value. */
+  | 'tabela';
 
 export interface Mismatch {
   inputs: string[];
@@ -122,6 +124,17 @@ export function describeGrade(result: GradeResult, lang: Language): string {
   if (result.reason === 'greska-u-radu') {
     const head = lang === 'en' ? 'it stops with an error' : lang === 'de' ? 'es bricht mit einem Fehler ab' : 'prekida se greškom';
     return `${head}: ${result.message ?? ''}`;
+  }
+  const cell = result.mismatch;
+  if (result.reason === 'tabela' && cell) {
+    // The caller passes the bare step number: each language puts it in its own
+    // case, and "u korak 4" would be wrong in Bosnian.
+    const step = cell.inputs[0] ?? '';
+    const got = cell.got.join('') || '—';
+    const want = cell.expected.join('');
+    if (lang === 'en') return `at step ${step} you wrote ${got}, but it should be ${want}`;
+    if (lang === 'de') return `bei Schritt ${step} steht ${got}, richtig wäre ${want}`;
+    return `u koraku ${step} si upisao ${got}, a treba ${want}`;
   }
   const m = result.mismatch;
   if (!m) return lang === 'en' ? 'not right yet' : lang === 'de' ? 'noch nicht richtig' : 'još nije tačno';

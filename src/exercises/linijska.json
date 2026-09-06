@@ -465,6 +465,11 @@
         "en": "Fill in the algorithm that turns a number of seconds into minutes and the seconds left over.",
         "de": "Ergänze den Algorithmus, der eine Anzahl Sekunden in Minuten und die übrigen Sekunden umrechnet."
       },
+      "hint": {
+        "bs": "1 minuta ima 60 sekundi. Cijeli dio dijeljenja daje minute, a ostatak sekunde.",
+        "en": "1 minute is 60 seconds. The whole part of the division gives the minutes, the remainder the seconds.",
+        "de": "1 Minute hat 60 Sekunden. Der ganzzahlige Teil der Division ergibt die Minuten, der Rest die Sekunden."
+      },
       "solution": "@START\n@OUTPUT \"Unesi broj sekundi:\"\n@INPUT sekunde\n@CALC minuta = {{int}}(sekunde / 60)\n@CALC ostatak = sekunde {{%}} 60\n@OUTPUT sekunde, \"s =\", minuta, \"min i\", ostatak, \"s\"\n@END",
       "solutionByLang": {
         "en": "@START\n@OUTPUT \"Enter the number of seconds:\"\n@INPUT seconds\n@CALC minutes = {{int}}(seconds / 60)\n@CALC rest = seconds {{%}} 60\n@OUTPUT seconds, \"s =\", minutes, \"min and\", rest, \"s\"\n@END",
@@ -501,6 +506,11 @@
         "bs": "Uneseni broj minuta pretvori u sate i minute.",
         "en": "Convert a number of minutes into hours and minutes.",
         "de": "Rechne eine Anzahl von Minuten in Stunden und Minuten um."
+      },
+      "hint": {
+        "bs": "1 sat ima 60 minuta. Cijeli dio dijeljenja daje sate, a ostatak minute.",
+        "en": "1 hour is 60 minutes. The whole part of the division gives the hours, the remainder the minutes.",
+        "de": "1 Stunde hat 60 Minuten. Der ganzzahlige Teil der Division ergibt die Stunden, der Rest die Minuten."
       },
       "solution": "@START\n@INPUT ukupno\n@CALC sati = int(ukupno / 60)\n@CALC minuta = ukupno % 60\n@OUTPUT ukupno, \"minuta =\", sati, \"h i\", minuta, \"min\"\n@END",
       "solutionByLang": {

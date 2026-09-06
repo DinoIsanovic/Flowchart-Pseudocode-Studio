@@ -12,6 +12,7 @@ import { Interpreter } from '../core/interpreter';
 import { Task, TaskPack, text } from '../exercises/types';
 import { blankedText, blanks, fillBlanks, solutionText, tiles } from '../exercises/render';
 import { GradeResult, describeGrade, gradeAttempt } from '../exercises/grade';
+import { gradeTrace, traceTask } from '../exercises/trace';
 import linijska from '../exercises/linijska.json';
 
 interface ExercisesPanelProps {
@@ -58,9 +59,20 @@ function shuffled(items: string[], seed: string): string[] {
   return out;
 }
 
+/** The exercise types this panel can actually run, in the order they appear. */
+const IN_APP_TYPES = ['kockice', 'dopuni', 'prepoznaj', 'tabela'];
+
 /** The exercise a task is built for — the first type its author listed. */
 function primaryType(task: Task): string {
-  return task.types[0] ?? 'samostalno';
+  return task.types.find((x) => IN_APP_TYPES.includes(x)) ?? 'samostalno';
+}
+
+/**
+ * Everything this task offers on screen. 'greska' and 'samostalno' are
+ * authored but have no exercise here yet, so they stay on paper.
+ */
+function availableTypes(task: Task): string[] {
+  return task.types.filter((x) => IN_APP_TYPES.includes(x));
 }
 
 export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen, onClose, onReward }) => {
@@ -70,6 +82,8 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
   const [placed, setPlaced] = useState<number[]>([]);
   const [filled, setFilled] = useState<string[]>([]);
   const [predicted, setPredicted] = useState<string[]>([]);
+  const [traced, setTraced] = useState<string[]>([]);
+  const [activeType, setActiveType] = useState<string>('kockice');
   const [result, setResult] = useState<GradeResult | null>(null);
 
   const task = useMemo(() => PACK.tasks.find((x) => x.id === openId) ?? null, [openId]);
@@ -88,6 +102,12 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
     });
   }, [task, solution, language]);
 
+  /** The run a state-table exercise is filled in against — the first test case. */
+  const trace = useMemo(
+    () => (task ? traceTask(task, language, task.tests[0] ?? []) : null),
+    [task, language]
+  );
+
   if (!isOpen) return null;
 
   const openTask = (next: Task) => {
@@ -95,6 +115,8 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
     setPlaced([]);
     setFilled([]);
     setPredicted([]);
+    setTraced([]);
+    setActiveType(primaryType(next));
     setResult(null);
   };
 
@@ -110,10 +132,24 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
 
   const check = () => {
     if (!task) return;
-    const kind = primaryType(task);
+    const kind = activeType;
     let outcome: GradeResult;
 
-    if (kind === 'prepoznaj') {
+    if (kind === 'tabela' && trace) {
+      const marked = gradeTrace(trace, traced);
+      const row = marked.firstWrong ?? 0;
+      outcome = marked.correct
+        ? { correct: true }
+        : {
+            correct: false,
+            reason: 'tabela',
+            mismatch: {
+              inputs: [String(trace.rows[row].step ?? row + 1)],
+              expected: [trace.rows[row].values[trace.rows[row].changed]],
+              got: [(traced[row] ?? '').trim() || '—'],
+            },
+          };
+    } else if (kind === 'prepoznaj') {
       const wrong = expected.findIndex((want, i) => (predicted[i] ?? '').trim() !== want);
       outcome =
         wrong < 0
@@ -219,7 +255,27 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                 )}
               </div>
 
-              {primaryType(task) === 'kockice' && (
+              {availableTypes(task).length > 1 && (
+                <div className="flex gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/10">
+                  {availableTypes(task).map((kind) => (
+                    <button
+                      key={kind}
+                      type="button"
+                      onClick={() => {
+                        setActiveType(kind);
+                        setResult(null);
+                      }}
+                      className={`flex-1 min-w-0 truncate px-2 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
+                        activeType === kind ? 'bg-white text-black' : 'text-white/60 hover:text-white'
+                      }`}
+                    >
+                      {t.types[kind] ?? kind}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {activeType === 'kockice' && (
                 <>
                   <Section label={t.answer}>
                     {placed.length === 0 && <Hint>{t.answerEmpty}</Hint>}
@@ -243,7 +299,7 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                 </>
               )}
 
-              {primaryType(task) === 'dopuni' && (
+              {activeType === 'dopuni' && (
                 <>
                   <p className="text-[11px] text-white/45">{t.fill}</p>
                   <div className="rounded-xl border border-white/10 bg-black/50 p-3 font-mono text-[12px] leading-8 text-white/85 overflow-x-auto">
@@ -284,7 +340,7 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                 </>
               )}
 
-              {primaryType(task) === 'prepoznaj' && (
+              {activeType === 'prepoznaj' && (
                 <>
                   <p className="text-[11px] text-white/45">{t.predict}</p>
                   <pre className="rounded-xl border border-white/10 bg-black/50 p-3 font-mono text-[12px] leading-6 text-white/85 overflow-x-auto whitespace-pre">
@@ -308,6 +364,67 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                         />
                       </div>
                     ))}
+                  </div>
+                </>
+              )}
+
+              {activeType === 'tabela' && trace && (
+                <>
+                  <p className="text-[11px] text-white/45">
+                    {t.trace}{' '}
+                    {trace.inputVars.length > 0 && (
+                      <span className="text-white/70 font-mono">
+                        {trace.inputVars
+                          .map((name, i) => `${name} = ${trace.inputs[i] ?? ''}`)
+                          .join(', ')}
+                      </span>
+                    )}
+                  </p>
+                  <div className="overflow-x-auto rounded-xl border border-white/10 bg-black/40">
+                    <table className="w-full text-[11.5px]">
+                      <thead>
+                        <tr className="text-white/45">
+                          <th className="text-left font-black uppercase tracking-wider text-[9.5px] px-2 py-1.5">
+                            {t.traceStep}
+                          </th>
+                          {trace.columns.map((name) => (
+                            <th key={name} className="px-2 py-1.5 font-mono font-bold text-[#67E8F9]">
+                              {name}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {trace.rows.map((row, i) => (
+                          <tr key={i} className="border-t border-white/[0.07]">
+                            <td className="px-2 py-1 font-mono text-white/60 whitespace-nowrap">
+                              {row.step !== undefined && (
+                                <span className="text-[#06B6D4] mr-1.5">{row.step}</span>
+                              )}
+                              {row.label}
+                            </td>
+                            {trace.columns.map((name) => (
+                              <td key={name} className="px-1.5 py-1 text-center">
+                                {name === row.changed ? (
+                                  <input
+                                    value={traced[i] ?? ''}
+                                    onChange={(e) => {
+                                      const next = [...traced];
+                                      next[i] = e.target.value;
+                                      setTraced(next);
+                                    }}
+                                    aria-label={`${name} @ ${row.label}`}
+                                    className="w-16 px-1 py-0.5 rounded-md bg-white/10 border border-[#06B6D4]/40 text-[#67E8F9] text-[11.5px] font-mono text-center outline-none focus:border-[#06B6D4]"
+                                  />
+                                ) : (
+                                  <span className="text-white/25 font-mono">·</span>
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </>
               )}

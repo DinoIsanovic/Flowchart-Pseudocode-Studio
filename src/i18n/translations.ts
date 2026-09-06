@@ -183,6 +183,8 @@ export interface Translations {
     fill: string;
     fillAll: string;
     hint: string;
+    trace: string;
+    traceStep: string;
     predict: string;
     inputLabel: string;
     outputLabel: string;
@@ -361,6 +363,8 @@ export const translations: Record<Language, Translations> = {
       fill: 'Fill in what is missing.',
       fillAll: 'fill in every blank first',
       hint: 'Help',
+      trace: 'Follow the run and fill in the state table.',
+      traceStep: 'step',
       predict: 'Read the algorithm and write what it prints.',
       inputLabel: 'Input',
       outputLabel: 'Output',
@@ -545,6 +549,8 @@ export const translations: Record<Language, Translations> = {
       fill: 'Ergänze, was fehlt.',
       fillAll: 'fülle zuerst alle Lücken aus',
       hint: 'Hilfe',
+      trace: 'Verfolge den Ablauf und fülle die Wertetabelle aus.',
+      traceStep: 'Schritt',
       predict: 'Lies den Algorithmus und schreibe auf, was er ausgibt.',
       inputLabel: 'Eingabe',
       outputLabel: 'Ausgabe',
@@ -729,6 +735,8 @@ export const translations: Record<Language, Translations> = {
       fill: 'Upiši ono što nedostaje.',
       fillAll: 'prvo popuni sve praznine',
       hint: 'Pomoć',
+      trace: 'Prati izvršavanje i popuni tabelu stanja.',
+      traceStep: 'korak',
       predict: 'Pročitaj algoritam i upiši šta ispisuje.',
       inputLabel: 'Ulaz',
       outputLabel: 'Ispis',
