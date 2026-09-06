@@ -217,10 +217,40 @@
       ]
     },
     {
-      "id": "linijska-prodavnica",
+      "id": "linijska-temperatura",
       "topic": "linijska",
       "kind": "racunski",
       "level": 8,
+      "title": {
+        "bs": "Celzijusi u Farenhajte"
+      },
+      "prompt": {
+        "bs": "Temperaturu unesenu u stepenima Celzijusa pretvori u stepene Farenhajta."
+      },
+      "solution": "@START\n@OUTPUT \"Unesi temperaturu u stepenima Celzijusa:\"\n@INPUT c\n@CALC f = {{c * 9 / 5}} + 32\n@OUTPUT c, \"°C =\", f, \"°F\"\n@END",
+      "tests": [
+        [
+          "100"
+        ],
+        [
+          "0"
+        ],
+        [
+          "37"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "greska",
+        "dopuni"
+      ]
+    },
+    {
+      "id": "linijska-prodavnica",
+      "topic": "linijska",
+      "kind": "racunski",
+      "level": 9,
       "title": {
         "bs": "Račun u prodavnici"
       },
@@ -256,7 +286,7 @@
       "id": "linijska-prosjek",
       "topic": "linijska",
       "kind": "racunski",
-      "level": 9,
+      "level": 10,
       "title": {
         "bs": "Prosjek tri ocjene"
       },
@@ -292,7 +322,7 @@
       "id": "linijska-stednja",
       "topic": "linijska",
       "kind": "racunski",
-      "level": 10,
+      "level": 11,
       "title": {
         "bs": "Štednja džeparca"
       },
@@ -323,7 +353,7 @@
       "id": "linijska-cifre",
       "topic": "linijska",
       "kind": "racunski",
-      "level": 11,
+      "level": 12,
       "title": {
         "bs": "Cifre dvocifrenog broja"
       },
@@ -357,7 +387,7 @@
       "id": "linijska-minute",
       "topic": "linijska",
       "kind": "racunski",
-      "level": 12,
+      "level": 13,
       "title": {
         "bs": "Minute u sate i minute"
       },
@@ -388,10 +418,50 @@
       ]
     },
     {
+      "id": "linijska-jednacina",
+      "topic": "linijska",
+      "kind": "racunski",
+      "level": 14,
+      "title": {
+        "bs": "Riješi jednačinu"
+      },
+      "prompt": {
+        "bs": "Riješi jednačinu oblika a · x + b = c. Unesi brojeve a, b i c, pa ispiši rješenje x."
+      },
+      "solution": "@START\n@OUTPUT \"Rješavamo jednačinu a * x + b = c\"\n@INPUT a, b, c\n@CALC x = (c - b) / a\n@OUTPUT \"x =\", x\n@END",
+      "tests": [
+        [
+          "2",
+          "3",
+          "11"
+        ],
+        [
+          "1",
+          "5",
+          "5"
+        ],
+        [
+          "4",
+          "-2",
+          "10"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "greska",
+        "samostalno"
+      ],
+      "distractors": [
+        "@CALC x = c - b / a",
+        "@CALC x = (c + b) / a"
+      ]
+    },
+    {
       "id": "linijska-zamjena",
       "topic": "linijska",
       "kind": "racunski",
-      "level": 13,
+      "level": 15,
       "title": {
         "bs": "Zamjena vrijednosti"
       },
