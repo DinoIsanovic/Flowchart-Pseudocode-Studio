@@ -38,6 +38,7 @@ const data = {
       types: task.types,
       title: text(task.title, 'bs'),
       prompt: text(task.prompt, 'bs'),
+      hint: task.hint ? text(task.hint, 'bs') : null,
       discussion: task.discussion ? text(task.discussion, 'bs') : null,
       solution,
       blanked: blankedText(task, 'bs'),

@@ -22,6 +22,10 @@
         "de": "Bringe die Schritte des Fertigmachens für die Schule in eine sinnvolle Reihenfolge."
       },
       "solution": "@START\n@OUTPUT \"Ustani i spremi krevet\"\n@OUTPUT \"Operi zube i umij se\"\n@OUTPUT \"Obuci školsku odjeću\"\n@OUTPUT \"Doručkuj\"\n@OUTPUT \"Uzmi školsku torbu i kreni\"\n@END",
+      "solutionByLang": {
+        "en": "@START\n@OUTPUT \"Get up and make your bed\"\n@OUTPUT \"Brush your teeth and wash your face\"\n@OUTPUT \"Put on your school clothes\"\n@OUTPUT \"Have breakfast\"\n@OUTPUT \"Take your school bag and go\"\n@END",
+        "de": "@START\n@OUTPUT \"Steh auf und mach dein Bett\"\n@OUTPUT \"Putz die Zaehne und wasch dich\"\n@OUTPUT \"Zieh die Schulsachen an\"\n@OUTPUT \"Fruehstuecke\"\n@OUTPUT \"Nimm die Schultasche und geh\"\n@END"
+      },
       "tests": [
         []
       ],
@@ -40,11 +44,7 @@
         "en": "Could steps 3 and 4 swap places? What would happen if \"Take your school bag and go\" came first?",
         "de": "Können die Schritte 3 und 4 die Plätze tauschen? Was passiert, wenn „Nimm die Schultasche und geh\" an erster Stelle steht?"
       },
-      "showPython": false,
-      "solutionByLang": {
-        "en": "@START\n@OUTPUT \"Get up and make your bed\"\n@OUTPUT \"Brush your teeth and wash your face\"\n@OUTPUT \"Put on your school clothes\"\n@OUTPUT \"Have breakfast\"\n@OUTPUT \"Take your school bag and go\"\n@END",
-        "de": "@START\n@OUTPUT \"Steh auf und mach dein Bett\"\n@OUTPUT \"Putz die Zaehne und wasch dich\"\n@OUTPUT \"Zieh die Schulsachen an\"\n@OUTPUT \"Fruehstuecke\"\n@OUTPUT \"Nimm die Schultasche und geh\"\n@END"
-      }
+      "showPython": false
     },
     {
       "id": "linijska-gmail",
@@ -62,6 +62,10 @@
         "de": "Bringe die Schritte zum Senden einer E-Mail in der Gmail-App in die richtige Reihenfolge."
       },
       "solution": "@START\n@OUTPUT \"Otvori aplikaciju Gmail\"\n@OUTPUT \"Klikni na dugme 'Nova poruka' (+)\"\n@INPUT primalac_email\n@INPUT naslov_poruke\n@INPUT tekst_poruke\n@OUTPUT \"Klikni na dugme 'Pošalji' (Send)\"\n@END",
+      "solutionByLang": {
+        "en": "@START\n@OUTPUT \"Open the Gmail app\"\n@OUTPUT \"Tap the 'Compose' button (+)\"\n@INPUT recipient_email\n@INPUT subject\n@INPUT message_text\n@OUTPUT \"Tap the 'Send' button\"\n@END",
+        "de": "@START\n@OUTPUT \"Oeffne die Gmail-App\"\n@OUTPUT \"Tippe auf 'Neue Nachricht' (+)\"\n@INPUT empfaenger_email\n@INPUT betreff\n@INPUT nachricht\n@OUTPUT \"Tippe auf 'Senden'\"\n@END"
+      },
       "tests": [
         [
           "dino@skola.ba",
@@ -79,11 +83,7 @@
           5
         ]
       ],
-      "showPython": false,
-      "solutionByLang": {
-        "en": "@START\n@OUTPUT \"Open the Gmail app\"\n@OUTPUT \"Tap the 'Compose' button (+)\"\n@INPUT recipient_email\n@INPUT subject\n@INPUT message_text\n@OUTPUT \"Tap the 'Send' button\"\n@END",
-        "de": "@START\n@OUTPUT \"Oeffne die Gmail-App\"\n@OUTPUT \"Tippe auf 'Neue Nachricht' (+)\"\n@INPUT empfaenger_email\n@INPUT betreff\n@INPUT nachricht\n@OUTPUT \"Tippe auf 'Senden'\"\n@END"
-      }
+      "showPython": false
     },
     {
       "id": "linijska-zbir-razlika",
@@ -101,6 +101,10 @@
         "de": "Schreibe einen Algorithmus, der zwei Zahlen einliest und ihre Summe und ihre Differenz ausgibt."
       },
       "solution": "@START\n@INPUT a, b\n@CALC zbir = a + b\n@CALC razlika = a - b\n@OUTPUT \"Zbir je\", zbir\n@OUTPUT \"Razlika je\", razlika\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT a, b\n@CALC sum = a + b\n@CALC difference = a - b\n@OUTPUT \"The sum is\", sum\n@OUTPUT \"The difference is\", difference\n@END",
+        "de": "@START\n@INPUT a, b\n@CALC summe = a + b\n@CALC differenz = a - b\n@OUTPUT \"Die Summe ist\", summe\n@OUTPUT \"Die Differenz ist\", differenz\n@END"
+      },
       "tests": [
         [
           "12",
@@ -120,11 +124,7 @@
         "kockice",
         "greska",
         "tabela"
-      ],
-      "solutionByLang": {
-        "en": "@START\n@INPUT a, b\n@CALC sum = a + b\n@CALC difference = a - b\n@OUTPUT \"The sum is\", sum\n@OUTPUT \"The difference is\", difference\n@END",
-        "de": "@START\n@INPUT a, b\n@CALC summe = a + b\n@CALC differenz = a - b\n@OUTPUT \"Die Summe ist\", summe\n@OUTPUT \"Die Differenz ist\", differenz\n@END"
-      }
+      ]
     },
     {
       "id": "linijska-pravougaonik",
@@ -142,6 +142,10 @@
         "de": "Berechne für die Seiten eines Rechtecks den Umfang und die Fläche und gib beide aus."
       },
       "solution": "@START\n@INPUT a, b\n@CALC obim = 2 * (a + b)\n@CALC povrsina = a * b\n@OUTPUT \"Obim =\", obim\n@OUTPUT \"Površina =\", povrsina\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT a, b\n@CALC perimeter = 2 * (a + b)\n@CALC area = a * b\n@OUTPUT \"Perimeter =\", perimeter\n@OUTPUT \"Area =\", area\n@END",
+        "de": "@START\n@INPUT a, b\n@CALC umfang = 2 * (a + b)\n@CALC flaeche = a * b\n@OUTPUT \"Umfang =\", umfang\n@OUTPUT \"Flaeche =\", flaeche\n@END"
+      },
       "tests": [
         [
           "5",
@@ -160,11 +164,7 @@
         "prepoznaj",
         "kockice",
         "greska"
-      ],
-      "solutionByLang": {
-        "en": "@START\n@INPUT a, b\n@CALC perimeter = 2 * (a + b)\n@CALC area = a * b\n@OUTPUT \"Perimeter =\", perimeter\n@OUTPUT \"Area =\", area\n@END",
-        "de": "@START\n@INPUT a, b\n@CALC umfang = 2 * (a + b)\n@CALC flaeche = a * b\n@OUTPUT \"Umfang =\", umfang\n@OUTPUT \"Flaeche =\", flaeche\n@END"
-      }
+      ]
     },
     {
       "id": "linijska-kvadrat",
@@ -182,6 +182,10 @@
         "de": "Ergänze den Algorithmus, der aus der Seitenlänge eines Quadrats den Umfang und die Fläche berechnet."
       },
       "solution": "@START\n@INPUT a\n@CALC O = {{4}} * a\n@CALC P = a * {{a}}\n@OUTPUT O\n{{@OUTPUT}} P\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT a\n@CALC P = {{4}} * a\n@CALC A = a * {{a}}\n@OUTPUT P\n{{@OUTPUT}} A\n@END",
+        "de": "@START\n@INPUT a\n@CALC U = {{4}} * a\n@CALC F = a * {{a}}\n@OUTPUT U\n{{@OUTPUT}} F\n@END"
+      },
       "tests": [
         [
           "5"
@@ -196,11 +200,7 @@
       "types": [
         "dopuni",
         "prepoznaj"
-      ],
-      "solutionByLang": {
-        "en": "@START\n@INPUT a\n@CALC P = {{4}} * a\n@CALC A = a * {{a}}\n@OUTPUT P\n{{@OUTPUT}} A\n@END",
-        "de": "@START\n@INPUT a\n@CALC U = {{4}} * a\n@CALC F = a * {{a}}\n@OUTPUT U\n{{@OUTPUT}} F\n@END"
-      }
+      ]
     },
     {
       "id": "linijska-metri",
@@ -217,7 +217,16 @@
         "en": "Fill in the algorithm that converts a length given in metres into centimetres and millimetres.",
         "de": "Ergänze den Algorithmus, der eine in Metern angegebene Länge in Zentimeter und Millimeter umrechnet."
       },
+      "hint": {
+        "bs": "1 m ima 100 cm, a 1 m ima 1000 mm.",
+        "en": "1 m is 100 cm, and 1 m is 1000 mm.",
+        "de": "1 m sind 100 cm, und 1 m sind 1000 mm."
+      },
       "solution": "@START\n@INPUT m\n@CALC cm = m * {{100}}\n@CALC mm = m * {{1000}}\n@OUTPUT cm\n@OUTPUT mm\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT m\n@CALC cm = m * {{100}}\n@CALC mm = m * {{1000}}\n@OUTPUT cm\n@OUTPUT mm\n@END",
+        "de": "@START\n@INPUT m\n@CALC cm = m * {{100}}\n@CALC mm = m * {{1000}}\n@OUTPUT cm\n@OUTPUT mm\n@END"
+      },
       "tests": [
         [
           "3"
@@ -233,11 +242,7 @@
         "dopuni",
         "kockice",
         "greska"
-      ],
-      "solutionByLang": {
-        "en": "@START\n@INPUT m\n@CALC cm = m * {{100}}\n@CALC mm = m * {{1000}}\n@OUTPUT cm\n@OUTPUT mm\n@END",
-        "de": "@START\n@INPUT m\n@CALC cm = m * {{100}}\n@CALC mm = m * {{1000}}\n@OUTPUT cm\n@OUTPUT mm\n@END"
-      }
+      ]
     },
     {
       "id": "linijska-mjerilo",
@@ -255,6 +260,10 @@
         "de": "Auf einer Karte im Maßstab 1 : 100.000 entspricht ein Zentimeter einem Kilometer in der Wirklichkeit. Ergänze die Formel, die auf der Karte gemessene Zentimeter in Kilometer umrechnet."
       },
       "solution": "@START\n@OUTPUT \"Unesi udaljenost na karti u centimetrima:\"\n{{@INPUT}} cm_na_karti\n@CALC km_u_prirodi = cm_na_karti * {{1}}\n@OUTPUT km_u_prirodi\n@END",
+      "solutionByLang": {
+        "en": "@START\n@OUTPUT \"Enter the distance on the map in centimetres:\"\n{{@INPUT}} cm_on_map\n@CALC km_in_reality = cm_on_map * {{1}}\n@OUTPUT km_in_reality\n@END",
+        "de": "@START\n@OUTPUT \"Gib die Entfernung auf der Karte in Zentimetern ein:\"\n{{@INPUT}} cm_auf_karte\n@CALC km_in_wirklichkeit = cm_auf_karte * {{1}}\n@OUTPUT km_in_wirklichkeit\n@END"
+      },
       "tests": [
         [
           "4"
@@ -270,11 +279,7 @@
         "dopuni",
         "prepoznaj",
         "samostalno"
-      ],
-      "solutionByLang": {
-        "en": "@START\n@OUTPUT \"Enter the distance on the map in centimetres:\"\n{{@INPUT}} cm_on_map\n@CALC km_in_reality = cm_on_map * {{1}}\n@OUTPUT km_in_reality\n@END",
-        "de": "@START\n@OUTPUT \"Gib die Entfernung auf der Karte in Zentimetern ein:\"\n{{@INPUT}} cm_auf_karte\n@CALC km_in_wirklichkeit = cm_auf_karte * {{1}}\n@OUTPUT km_in_wirklichkeit\n@END"
-      }
+      ]
     },
     {
       "id": "linijska-prodavnica",
@@ -292,6 +297,10 @@
         "de": "Berechne, wie viel für eine Anzahl von Artikeln zu zahlen ist, zuzüglich der Lieferkosten."
       },
       "solution": "@START\n@INPUT kolicina, cijena, dostava\n@CALC roba = kolicina * cijena\n@CALC ukupno = roba + dostava\n@OUTPUT \"Za platiti:\", ukupno\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT quantity, price, delivery\n@CALC goods = quantity * price\n@CALC total = goods + delivery\n@OUTPUT \"To pay:\", total\n@END",
+        "de": "@START\n@INPUT menge, preis, versand\n@CALC waren = menge * preis\n@CALC gesamt = waren + versand\n@OUTPUT \"Zu zahlen:\", gesamt\n@END"
+      },
       "tests": [
         [
           "3",
@@ -314,11 +323,7 @@
         "kockice",
         "greska",
         "tabela"
-      ],
-      "solutionByLang": {
-        "en": "@START\n@INPUT quantity, price, delivery\n@CALC goods = quantity * price\n@CALC total = goods + delivery\n@OUTPUT \"To pay:\", total\n@END",
-        "de": "@START\n@INPUT menge, preis, versand\n@CALC waren = menge * preis\n@CALC gesamt = waren + versand\n@OUTPUT \"Zu zahlen:\", gesamt\n@END"
-      }
+      ]
     },
     {
       "id": "linijska-prosjek",
@@ -336,6 +341,10 @@
         "de": "Berechne den Durchschnitt von drei Noten und gib ihn aus."
       },
       "solution": "@START\n@INPUT o1, o2, o3\n@CALC prosjek = {{(o1 + o2 + o3)}} / 3\n@OUTPUT \"Prosjek je\", prosjek\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT m1, m2, m3\n@CALC average = {{(m1 + m2 + m3)}} / 3\n@OUTPUT \"The average is\", average\n@END",
+        "de": "@START\n@INPUT n1, n2, n3\n@CALC durchschnitt = {{(n1 + n2 + n3)}} / 3\n@OUTPUT \"Der Durchschnitt ist\", durchschnitt\n@END"
+      },
       "tests": [
         [
           "4",
@@ -358,11 +367,7 @@
         "greska",
         "dopuni",
         "samostalno"
-      ],
-      "solutionByLang": {
-        "en": "@START\n@INPUT m1, m2, m3\n@CALC average = {{(m1 + m2 + m3)}} / 3\n@OUTPUT \"The average is\", average\n@END",
-        "de": "@START\n@INPUT n1, n2, n3\n@CALC durchschnitt = {{(n1 + n2 + n3)}} / 3\n@OUTPUT \"Der Durchschnitt ist\", durchschnitt\n@END"
-      }
+      ]
     },
     {
       "id": "linijska-stednja",
@@ -380,6 +385,10 @@
         "de": "Wie viel sparst du in einer Anzahl von Wochen, und wie viel bleibt nach dem Kauf übrig?"
       },
       "solution": "@START\n@INPUT sedmicno, sedmica, cijena\n@CALC usteda = sedmicno * sedmica\n@CALC ostatak = usteda - cijena\n@OUTPUT \"Uštedio si\", usteda, \"KM\"\n@OUTPUT \"Nakon kupovine ostaje\", ostatak, \"KM\"\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT weekly, weeks, price\n@CALC saved = weekly * weeks\n@CALC left = saved - price\n@OUTPUT \"You saved\", saved, \"KM\"\n@OUTPUT \"After the purchase you have\", left, \"KM\"\n@END",
+        "de": "@START\n@INPUT woechentlich, wochen, preis\n@CALC gespart = woechentlich * wochen\n@CALC rest = gespart - preis\n@OUTPUT \"Du hast\", gespart, \"KM gespart\"\n@OUTPUT \"Nach dem Kauf bleiben\", rest, \"KM\"\n@END"
+      },
       "tests": [
         [
           "15",
@@ -397,11 +406,7 @@
         "kockice",
         "tabela",
         "samostalno"
-      ],
-      "solutionByLang": {
-        "en": "@START\n@INPUT weekly, weeks, price\n@CALC saved = weekly * weeks\n@CALC left = saved - price\n@OUTPUT \"You saved\", saved, \"KM\"\n@OUTPUT \"After the purchase you have\", left, \"KM\"\n@END",
-        "de": "@START\n@INPUT woechentlich, wochen, preis\n@CALC gespart = woechentlich * wochen\n@CALC rest = gespart - preis\n@OUTPUT \"Du hast\", gespart, \"KM gespart\"\n@OUTPUT \"Nach dem Kauf bleiben\", rest, \"KM\"\n@END"
-      }
+      ]
     },
     {
       "id": "linijska-cifre",
@@ -419,6 +424,10 @@
         "de": "Gib für eine zweistellige Zahl ihre Ziffern und deren Summe aus."
       },
       "solution": "@START\n@INPUT n\n@CALC jedinice = n % 10\n@CALC desetice = int(n / 10)\n@CALC zbir = jedinice + desetice\n@OUTPUT \"Desetice:\", desetice, \"jedinice:\", jedinice\n@OUTPUT \"Zbir cifara:\", zbir\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT n\n@CALC ones = n % 10\n@CALC tens = int(n / 10)\n@CALC sum = ones + tens\n@OUTPUT \"Tens:\", tens, \"ones:\", ones\n@OUTPUT \"Sum of the digits:\", sum\n@END",
+        "de": "@START\n@INPUT n\n@CALC einer = n % 10\n@CALC zehner = int(n / 10)\n@CALC summe = einer + zehner\n@OUTPUT \"Zehner:\", zehner, \"Einer:\", einer\n@OUTPUT \"Summe der Ziffern:\", summe\n@END"
+      },
       "tests": [
         [
           "57"
@@ -439,11 +448,7 @@
       "distractors": [
         "@CALC jedinice = n / 10",
         "@CALC desetice = n % 10"
-      ],
-      "solutionByLang": {
-        "en": "@START\n@INPUT n\n@CALC ones = n % 10\n@CALC tens = int(n / 10)\n@CALC sum = ones + tens\n@OUTPUT \"Tens:\", tens, \"ones:\", ones\n@OUTPUT \"Sum of the digits:\", sum\n@END",
-        "de": "@START\n@INPUT n\n@CALC einer = n % 10\n@CALC zehner = int(n / 10)\n@CALC summe = einer + zehner\n@OUTPUT \"Zehner:\", zehner, \"Einer:\", einer\n@OUTPUT \"Summe der Ziffern:\", summe\n@END"
-      }
+      ]
     },
     {
       "id": "linijska-sekunde",
@@ -461,6 +466,10 @@
         "de": "Ergänze den Algorithmus, der eine Anzahl Sekunden in Minuten und die übrigen Sekunden umrechnet."
       },
       "solution": "@START\n@OUTPUT \"Unesi broj sekundi:\"\n@INPUT sekunde\n@CALC minuta = {{int}}(sekunde / 60)\n@CALC ostatak = sekunde {{%}} 60\n@OUTPUT sekunde, \"s =\", minuta, \"min i\", ostatak, \"s\"\n@END",
+      "solutionByLang": {
+        "en": "@START\n@OUTPUT \"Enter the number of seconds:\"\n@INPUT seconds\n@CALC minutes = {{int}}(seconds / 60)\n@CALC rest = seconds {{%}} 60\n@OUTPUT seconds, \"s =\", minutes, \"min and\", rest, \"s\"\n@END",
+        "de": "@START\n@OUTPUT \"Gib die Anzahl der Sekunden ein:\"\n@INPUT sekunden\n@CALC minuten = {{int}}(sekunden / 60)\n@CALC rest = sekunden {{%}} 60\n@OUTPUT sekunden, \"s =\", minuten, \"min und\", rest, \"s\"\n@END"
+      },
       "tests": [
         [
           "90"
@@ -476,11 +485,7 @@
         "dopuni",
         "prepoznaj",
         "kockice"
-      ],
-      "solutionByLang": {
-        "en": "@START\n@OUTPUT \"Enter the number of seconds:\"\n@INPUT seconds\n@CALC minutes = {{int}}(seconds / 60)\n@CALC rest = seconds {{%}} 60\n@OUTPUT seconds, \"s =\", minutes, \"min and\", rest, \"s\"\n@END",
-        "de": "@START\n@OUTPUT \"Gib die Anzahl der Sekunden ein:\"\n@INPUT sekunden\n@CALC minuten = {{int}}(sekunden / 60)\n@CALC rest = sekunden {{%}} 60\n@OUTPUT sekunden, \"s =\", minuten, \"min und\", rest, \"s\"\n@END"
-      }
+      ]
     },
     {
       "id": "linijska-minute",
@@ -498,6 +503,10 @@
         "de": "Rechne eine Anzahl von Minuten in Stunden und Minuten um."
       },
       "solution": "@START\n@INPUT ukupno\n@CALC sati = int(ukupno / 60)\n@CALC minuta = ukupno % 60\n@OUTPUT ukupno, \"minuta =\", sati, \"h i\", minuta, \"min\"\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT total\n@CALC hours = int(total / 60)\n@CALC minutes = total % 60\n@OUTPUT total, \"minutes =\", hours, \"h and\", minutes, \"min\"\n@END",
+        "de": "@START\n@INPUT gesamt\n@CALC stunden = int(gesamt / 60)\n@CALC minuten = gesamt % 60\n@OUTPUT gesamt, \"Minuten =\", stunden, \"h und\", minuten, \"min\"\n@END"
+      },
       "tests": [
         [
           "135"
@@ -518,11 +527,7 @@
       "distractors": [
         "@CALC sati = ukupno % 60",
         "@CALC minuta = int(ukupno / 60)"
-      ],
-      "solutionByLang": {
-        "en": "@START\n@INPUT total\n@CALC hours = int(total / 60)\n@CALC minutes = total % 60\n@OUTPUT total, \"minutes =\", hours, \"h and\", minutes, \"min\"\n@END",
-        "de": "@START\n@INPUT gesamt\n@CALC stunden = int(gesamt / 60)\n@CALC minuten = gesamt % 60\n@OUTPUT gesamt, \"Minuten =\", stunden, \"h und\", minuten, \"min\"\n@END"
-      }
+      ]
     },
     {
       "id": "linijska-jednacina",
@@ -540,6 +545,10 @@
         "de": "Löse eine Gleichung der Form a · x + b = c. Lies a, b und c ein und gib die Lösung x aus."
       },
       "solution": "@START\n@OUTPUT \"Rješavamo jednačinu a * x + b = c\"\n@INPUT a, b, c\n@CALC x = (c - b) / a\n@OUTPUT \"x =\", x\n@END",
+      "solutionByLang": {
+        "en": "@START\n@OUTPUT \"Solving the equation a * x + b = c\"\n@INPUT a, b, c\n@CALC x = (c - b) / a\n@OUTPUT \"x =\", x\n@END",
+        "de": "@START\n@OUTPUT \"Wir loesen die Gleichung a * x + b = c\"\n@INPUT a, b, c\n@CALC x = (c - b) / a\n@OUTPUT \"x =\", x\n@END"
+      },
       "tests": [
         [
           "2",
@@ -566,11 +575,7 @@
       "distractors": [
         "@CALC x = c - b / a",
         "@CALC x = (c + b) / a"
-      ],
-      "solutionByLang": {
-        "en": "@START\n@OUTPUT \"Solving the equation a * x + b = c\"\n@INPUT a, b, c\n@CALC x = (c - b) / a\n@OUTPUT \"x =\", x\n@END",
-        "de": "@START\n@OUTPUT \"Wir loesen die Gleichung a * x + b = c\"\n@INPUT a, b, c\n@CALC x = (c - b) / a\n@OUTPUT \"x =\", x\n@END"
-      }
+      ]
     },
     {
       "id": "linijska-zamjena",
@@ -588,6 +593,10 @@
         "de": "Vertausche die Werte zweier Variablen und gib sie vor und nach dem Tausch aus."
       },
       "solution": "@START\n@INPUT a, b\n@OUTPUT \"Prije zamjene:\", a, b\n@SET pomocna = a\n@SET a = b\n@SET b = pomocna\n@OUTPUT \"Poslije zamjene:\", a, b\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT a, b\n@OUTPUT \"Before the swap:\", a, b\n@SET temp = a\n@SET a = b\n@SET b = temp\n@OUTPUT \"After the swap:\", a, b\n@END",
+        "de": "@START\n@INPUT a, b\n@OUTPUT \"Vor dem Tausch:\", a, b\n@SET hilfe = a\n@SET a = b\n@SET b = hilfe\n@OUTPUT \"Nach dem Tausch:\", a, b\n@END"
+      },
       "tests": [
         [
           "7",
@@ -607,11 +616,7 @@
       "distractors": [
         "@SET a = pomocna",
         "@SET pomocna = b"
-      ],
-      "solutionByLang": {
-        "en": "@START\n@INPUT a, b\n@OUTPUT \"Before the swap:\", a, b\n@SET temp = a\n@SET a = b\n@SET b = temp\n@OUTPUT \"After the swap:\", a, b\n@END",
-        "de": "@START\n@INPUT a, b\n@OUTPUT \"Vor dem Tausch:\", a, b\n@SET hilfe = a\n@SET a = b\n@SET b = hilfe\n@OUTPUT \"Nach dem Tausch:\", a, b\n@END"
-      }
+      ]
     }
   ]
 }

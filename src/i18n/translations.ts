@@ -182,6 +182,7 @@ export interface Translations {
     answerEmpty: string;
     fill: string;
     fillAll: string;
+    hint: string;
     predict: string;
     inputLabel: string;
     outputLabel: string;
@@ -359,6 +360,7 @@ export const translations: Record<Language, Translations> = {
       answerEmpty: 'tap a tile to place it here',
       fill: 'Fill in what is missing.',
       fillAll: 'fill in every blank first',
+      hint: 'Help',
       predict: 'Read the algorithm and write what it prints.',
       inputLabel: 'Input',
       outputLabel: 'Output',
@@ -542,6 +544,7 @@ export const translations: Record<Language, Translations> = {
       answerEmpty: 'tippe einen Baustein an, um ihn hier abzulegen',
       fill: 'Ergänze, was fehlt.',
       fillAll: 'fülle zuerst alle Lücken aus',
+      hint: 'Hilfe',
       predict: 'Lies den Algorithmus und schreibe auf, was er ausgibt.',
       inputLabel: 'Eingabe',
       outputLabel: 'Ausgabe',
@@ -725,6 +728,7 @@ export const translations: Record<Language, Translations> = {
       answerEmpty: 'dodirni kockicu da je postaviš ovdje',
       fill: 'Upiši ono što nedostaje.',
       fillAll: 'prvo popuni sve praznine',
+      hint: 'Pomoć',
       predict: 'Pročitaj algoritam i upiši šta ispisuje.',
       inputLabel: 'Ulaz',
       outputLabel: 'Ispis',

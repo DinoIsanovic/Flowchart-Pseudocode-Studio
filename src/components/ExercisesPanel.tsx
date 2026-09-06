@@ -209,6 +209,14 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
               <div>
                 <h2 className="text-white font-black text-[15px]">{text(task.title, language)}</h2>
                 <p className="text-[12px] text-white/60 mt-1">{text(task.prompt, language)}</p>
+                {task.hint && (
+                  <p className="mt-2 rounded-lg border border-[#06B6D4]/30 bg-[#06B6D4]/10 px-2.5 py-1.5 text-[11.5px] text-[#A5F3FC]">
+                    <span className="font-black uppercase tracking-wider text-[9.5px] text-[#06B6D4] mr-1.5">
+                      {t.hint}
+                    </span>
+                    {text(task.hint, language)}
+                  </p>
+                )}
               </div>
 
               {primaryType(task) === 'kockice' && (

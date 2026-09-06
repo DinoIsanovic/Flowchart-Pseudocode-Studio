@@ -49,6 +49,7 @@ for (const pack of packs) {
     for (const lang of LANGS) {
       if (!task.title[lang]) fail(task, `naslov nije preveden na ${lang}`);
       if (!task.prompt[lang]) fail(task, `tekst zadatka nije preveden na ${lang}`);
+      if (task.hint && !task.hint[lang]) fail(task, `pomoć nije prevedena na ${lang}`);
       if (task.discussion && !task.discussion[lang]) fail(task, `pitanje za razmišljanje nije prevedeno na ${lang}`);
     }
 

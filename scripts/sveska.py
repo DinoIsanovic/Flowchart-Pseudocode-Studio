@@ -186,7 +186,10 @@ def exercise_tabela(task):
 
 def task_page(task, rng):
     out = [para(run(f'{task["level"]}. {task["title"]}', bold=True, size=26), after=80)]
-    out.append(para(run(task['prompt'], size=21), after=160))
+    out.append(para(run(task['prompt'], size=21), after=100 if task.get('hint') else 160))
+    if task.get('hint'):
+        out.append(para(run('Pomoć: ', bold=True, size=19) + run(task['hint'], size=19),
+                        after=160, border=True, shade='F2F8FA'))
 
     types = task['types']
     # The first type an author listed is the one the task was built for.
