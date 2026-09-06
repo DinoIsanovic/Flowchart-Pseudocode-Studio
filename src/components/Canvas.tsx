@@ -151,6 +151,49 @@ function wrapNodeText(text: string, fontSize: number, maxW: number): string[] {
   return out.length ? out : [''];
 }
 
+/**
+ * How wide the text may be inside a shape. Wrapping to the full node width
+ * puts the longest line straight through the slanted sides of a parallelogram
+ * or the corners of a diamond, which is what made labels poke out of their
+ * blocks.
+ */
+function textBoxWidth(type: ShapeType, w: number, h: number): number {
+  const pad = 12;
+  switch (type) {
+    case 'io':
+      // The skew eats the same amount off both ends of a centred line.
+      return w - 2 * (w * 0.14) - pad;
+    case 'decision':
+      // A diamond narrows quickly above and below its middle.
+      return w * 0.55;
+    case 'loop':
+      return w - 2 * (h * 0.22) - pad;
+    case 'start_end':
+      return w * 0.82 - pad;
+    case COMMENT_TYPE:
+      return w - 2 * pad;
+    default:
+      return w - 2 * pad;
+  }
+}
+
+/**
+ * Wraps a node's label to the room its shape actually offers, shrinking the
+ * text a step at a time when the wrapped lines would run past the bottom.
+ * Node sizes come from the layout and cannot grow here, so the text yields.
+ */
+function layoutNodeText(node: FlowNode, fontSize: number): { lines: string[]; size: number } {
+  const maxW = textBoxWidth(node.type, node.w, node.h);
+  const maxH = node.h - (node.type === COMMENT_TYPE ? 30 : 14);
+  let size = fontSize;
+  for (;;) {
+    const lines = wrapNodeText(node.text, size, maxW);
+    const height = (lines.length - 1) * size * 1.2 + size;
+    if (height <= maxH || size <= 10) return { lines, size };
+    size -= 1;
+  }
+}
+
 export const Canvas: React.FC<CanvasProps> = ({
   language,
   nodes,
@@ -683,11 +726,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             const isTutorTarget = tutorHighlightId === node.id;
             const def = SHAPE_DEFS[node.type];
             const poly = shapePolygonPoints(node.type, node.w, node.h);
-            const wrappedLines = wrapNodeText(
-              node.text,
-              fontSize,
-              node.type === COMMENT_TYPE ? 280 : 190
-            );
+            const { lines: wrappedLines, size: textSize } = layoutNodeText(node, fontSize);
 
             return (
               <g
@@ -798,19 +837,19 @@ export const Canvas: React.FC<CanvasProps> = ({
                 {/* Text Lines */}
                 <text
                   textAnchor="middle"
-                  fontSize={fontSize}
+                  fontSize={textSize}
                   fill="#FFFFFF"
                   fontWeight="700"
                   className="pointer-events-none select-none font-sans tracking-tight"
                   transform={node.type === COMMENT_TYPE ? 'translate(0,-8)' : undefined}
                 >
                   {wrappedLines.map((line, idx) => {
-                    const startY = -(wrappedLines.length - 1) * (fontSize * 0.6);
+                    const startY = -(wrappedLines.length - 1) * (textSize * 0.6);
                     return (
                       <tspan
                         key={idx}
                         x="0"
-                        y={startY + idx * fontSize * 1.2}
+                        y={startY + idx * textSize * 1.2}
                       >
                         {line}
                       </tspan>
