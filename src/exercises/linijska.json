@@ -217,40 +217,10 @@
       ]
     },
     {
-      "id": "linijska-temperatura",
-      "topic": "linijska",
-      "kind": "racunski",
-      "level": 8,
-      "title": {
-        "bs": "Celzijusi u Farenhajte"
-      },
-      "prompt": {
-        "bs": "Temperaturu unesenu u stepenima Celzijusa pretvori u stepene Farenhajta."
-      },
-      "solution": "@START\n@OUTPUT \"Unesi temperaturu u stepenima Celzijusa:\"\n@INPUT c\n@CALC f = {{c * 9 / 5}} + 32\n@OUTPUT c, \"°C =\", f, \"°F\"\n@END",
-      "tests": [
-        [
-          "100"
-        ],
-        [
-          "0"
-        ],
-        [
-          "37"
-        ]
-      ],
-      "types": [
-        "prepoznaj",
-        "kockice",
-        "greska",
-        "dopuni"
-      ]
-    },
-    {
       "id": "linijska-prodavnica",
       "topic": "linijska",
       "kind": "racunski",
-      "level": 9,
+      "level": 8,
       "title": {
         "bs": "Račun u prodavnici"
       },
@@ -286,7 +256,7 @@
       "id": "linijska-prosjek",
       "topic": "linijska",
       "kind": "racunski",
-      "level": 10,
+      "level": 9,
       "title": {
         "bs": "Prosjek tri ocjene"
       },
@@ -322,7 +292,7 @@
       "id": "linijska-stednja",
       "topic": "linijska",
       "kind": "racunski",
-      "level": 11,
+      "level": 10,
       "title": {
         "bs": "Štednja džeparca"
       },
@@ -353,7 +323,7 @@
       "id": "linijska-cifre",
       "topic": "linijska",
       "kind": "racunski",
-      "level": 12,
+      "level": 11,
       "title": {
         "bs": "Cifre dvocifrenog broja"
       },
@@ -384,6 +354,35 @@
       ]
     },
     {
+      "id": "linijska-sekunde",
+      "topic": "linijska",
+      "kind": "racunski",
+      "level": 12,
+      "title": {
+        "bs": "Sekunde u minute i sekunde"
+      },
+      "prompt": {
+        "bs": "Dopuni algoritam koji uneseni broj sekundi pretvara u minute i preostale sekunde."
+      },
+      "solution": "@START\n@OUTPUT \"Unesi broj sekundi:\"\n@INPUT sekunde\n@CALC minuta = {{int}}(sekunde / 60)\n@CALC ostatak = sekunde {{%}} 60\n@OUTPUT sekunde, \"s =\", minuta, \"min i\", ostatak, \"s\"\n@END",
+      "tests": [
+        [
+          "90"
+        ],
+        [
+          "200"
+        ],
+        [
+          "59"
+        ]
+      ],
+      "types": [
+        "dopuni",
+        "prepoznaj",
+        "kockice"
+      ]
+    },
+    {
       "id": "linijska-minute",
       "topic": "linijska",
       "kind": "racunski",
@@ -394,7 +393,7 @@
       "prompt": {
         "bs": "Uneseni broj minuta pretvori u sate i minute."
       },
-      "solution": "@START\n@INPUT ukupno\n@CALC sati = {{int}}(ukupno / 60)\n@CALC minuta = ukupno {{%}} 60\n@OUTPUT ukupno, \"minuta =\", sati, \"h i\", minuta, \"min\"\n@END",
+      "solution": "@START\n@INPUT ukupno\n@CALC sati = int(ukupno / 60)\n@CALC minuta = ukupno % 60\n@OUTPUT ukupno, \"minuta =\", sati, \"h i\", minuta, \"min\"\n@END",
       "tests": [
         [
           "135"
@@ -410,7 +409,7 @@
         "prepoznaj",
         "kockice",
         "greska",
-        "dopuni"
+        "samostalno"
       ],
       "distractors": [
         "@CALC sati = ukupno % 60",
