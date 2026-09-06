@@ -151,6 +151,21 @@ export interface Translations {
   androidCapacitorDesc: string;
   androidCopyCmd: string;
   copied: string;
+  // Simulator
+  sim: {
+    title: string;
+    run: string;
+    pause: string;
+    step: string;
+    reset: string;
+    panel: string;
+    stepLabel: string;
+    ready: string;
+    done: string;
+    noVars: string;
+    noOutput: string;
+    inputFor: string;
+  };
   close: string;
 }
 
@@ -293,6 +308,20 @@ export const translations: Record<Language, Translations> = {
     androidCapacitorDesc: 'Convert into an Android Studio Gradle project with native Android SDK access:',
     androidCopyCmd: 'Copy commands',
     copied: 'Copied to clipboard!',
+    sim: {
+      title: 'Simulation',
+      run: 'Run',
+      pause: 'Pause',
+      step: 'Step',
+      reset: 'Reset',
+      panel: 'Variables and console',
+      stepLabel: 'step',
+      ready: 'ready',
+      done: 'finished',
+      noVars: 'no variables yet',
+      noOutput: 'nothing printed yet',
+      inputFor: 'value for',
+    },
     close: 'Close',
   },
 
@@ -434,6 +463,20 @@ export const translations: Record<Language, Translations> = {
     androidCapacitorDesc: 'In ein natives Android-Studio Gradle-Projekt umwandeln:',
     androidCopyCmd: 'Befehle kopieren',
     copied: 'In die Zwischenablage kopiert!',
+    sim: {
+      title: 'Simulation',
+      run: 'Start',
+      pause: 'Pause',
+      step: 'Schritt',
+      reset: 'Zurücksetzen',
+      panel: 'Variablen und Konsole',
+      stepLabel: 'Schritt',
+      ready: 'bereit',
+      done: 'fertig',
+      noVars: 'noch keine Variablen',
+      noOutput: 'noch keine Ausgabe',
+      inputFor: 'Wert für',
+    },
     close: 'Schließen',
   },
 
@@ -575,6 +618,20 @@ export const translations: Record<Language, Translations> = {
     androidCapacitorDesc: 'Pretvori u puni Android Studio projekat sa Gradle konfiguracijom:',
     androidCopyCmd: 'Kopiraj komande',
     copied: 'Kopirano u međuspremnik!',
+    sim: {
+      title: 'Simulacija',
+      run: 'Pokreni',
+      pause: 'Pauza',
+      step: 'Korak',
+      reset: 'Ispočetka',
+      panel: 'Varijable i konzola',
+      stepLabel: 'korak',
+      ready: 'spremno',
+      done: 'gotovo',
+      noVars: 'još nema varijabli',
+      noOutput: 'još nema ispisa',
+      inputFor: 'vrijednost za',
+    },
     close: 'Zatvori',
   },
 };

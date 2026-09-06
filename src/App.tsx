@@ -30,6 +30,7 @@ import { ShortcutsModal } from './components/ShortcutsModal';
 import { ConfirmModal, ConfirmDialogState } from './components/ConfirmModal';
 import { ToastContainer, ToastMessage } from './components/Toast';
 import { MobileNavBar } from './components/MobileNavBar';
+import { SimulatorPanel } from './components/SimulatorPanel';
 
 // Warnings describe the diagram that was drawn; only real errors withhold it.
 const isBlocking = (e: ParseError) => e.severity !== 'warning';
@@ -179,6 +180,11 @@ export default function App() {
   const [selectedKind, setSelectedKind] = useState<'node' | 'edge' | null>(null);
   const [pendingConnectFrom, setPendingConnectFrom] = useState<string | null>(null);
   const [tutorHighlightId, setTutorHighlightId] = useState<string | null>(null);
+  // Step badge of the node the simulator is executing. Kept as a number rather
+  // than a node id so the panel never has to know about the canvas, and the
+  // setter stays stable — a changing callback would restart the run.
+  const [simStep, setSimStep] = useState<number | null>(null);
+  const lastSimStep = useRef<number | null>(null);
 
   // UI Panels & Modals
   const [viewMode, setViewMode] = useState<'split' | 'canvas' | 'code'>(() => {
@@ -405,6 +411,20 @@ export default function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleUndo, handleRedo, pushHistory, selectedId, selectedKind, toggleSnapToGrid]);
+
+  // The simulator marks the running node by reusing the tutor's highlight, so
+  // the canvas needs no second notion of "look here". It only writes while a
+  // run is active, leaving a tutor highlight alone the rest of the time.
+  useEffect(() => {
+    if (simStep === null) {
+      if (lastSimStep.current !== null) setTutorHighlightId(null);
+      lastSimStep.current = null;
+      return;
+    }
+    lastSimStep.current = simStep;
+    const node = nodes.find((n) => n.step === simStep);
+    setTutorHighlightId(node ? node.id : null);
+  }, [simStep, nodes]);
 
   // Language Change Handler
   const handleLanguageChange = (newLang: Language) => {
@@ -1335,55 +1355,58 @@ export default function App() {
 
         {/* Center: Canvas */}
         {viewMode !== 'code' && (
-          <Canvas
-            language={language}
-            nodes={nodes}
-            edges={edges}
-            mode={mode}
-            fontSize={fontSize}
-            selectedId={selectedId}
-            selectedKind={selectedKind}
-            pendingConnectFrom={pendingConnectFrom}
-            onSetPendingConnectFrom={setPendingConnectFrom}
-            tutorHighlightId={tutorHighlightId}
-            onSelectNode={(id) => {
-              if (mode === 'connect') {
-                if (!pendingConnectFrom) {
-                  setPendingConnectFrom(id);
+          <div className="relative flex-1 min-w-0 flex h-full">
+            <Canvas
+              language={language}
+              nodes={nodes}
+              edges={edges}
+              mode={mode}
+              fontSize={fontSize}
+              selectedId={selectedId}
+              selectedKind={selectedKind}
+              pendingConnectFrom={pendingConnectFrom}
+              onSetPendingConnectFrom={setPendingConnectFrom}
+              tutorHighlightId={tutorHighlightId}
+              onSelectNode={(id) => {
+                if (mode === 'connect') {
+                  if (!pendingConnectFrom) {
+                    setPendingConnectFrom(id);
+                    setSelectedKind('node');
+                    setSelectedId(id);
+                  } else if (pendingConnectFrom === id) {
+                    setPendingConnectFrom(null);
+                    setSelectedId(null);
+                    setSelectedKind(null);
+                  } else {
+                    handleConnectNodes(pendingConnectFrom, id);
+                  }
+                } else {
                   setSelectedKind('node');
                   setSelectedId(id);
-                } else if (pendingConnectFrom === id) {
-                  setPendingConnectFrom(null);
-                  setSelectedId(null);
-                  setSelectedKind(null);
-                } else {
-                  handleConnectNodes(pendingConnectFrom, id);
                 }
-              } else {
-                setSelectedKind('node');
+              }}
+              onSelectEdge={(id) => {
+                setSelectedKind('edge');
                 setSelectedId(id);
-              }
-            }}
-            onSelectEdge={(id) => {
-              setSelectedKind('edge');
-              setSelectedId(id);
-              setPendingConnectFrom(null);
-            }}
-            onClearSelection={() => {
-              setSelectedKind(null);
-              setSelectedId(null);
-              setPendingConnectFrom(null);
-            }}
-            onNodeMove={handleNodeMove}
-            onEdgeSegmentMove={handleEdgeSegmentMove}
-            onConnectNodes={handleConnectNodes}
-            onUpdateNodeText={handleUpdateNodeText}
-            onUpdateEdgeLabel={handleUpdateEdgeLabel}
-            viewBox={viewBox}
-            onViewBoxChange={setViewBox}
-            snapGuides={snapGuides}
-            onClearSnapGuides={() => setSnapGuides(null)}
-          />
+                setPendingConnectFrom(null);
+              }}
+              onClearSelection={() => {
+                setSelectedKind(null);
+                setSelectedId(null);
+                setPendingConnectFrom(null);
+              }}
+              onNodeMove={handleNodeMove}
+              onEdgeSegmentMove={handleEdgeSegmentMove}
+              onConnectNodes={handleConnectNodes}
+              onUpdateNodeText={handleUpdateNodeText}
+              onUpdateEdgeLabel={handleUpdateEdgeLabel}
+              viewBox={viewBox}
+              onViewBoxChange={setViewBox}
+              snapGuides={snapGuides}
+              onClearSnapGuides={() => setSnapGuides(null)}
+            />
+            <SimulatorPanel language={language} pseudocode={pseudocode} onActiveStep={setSimStep} />
+          </div>
         )}
 
         {/* Right: Pseudocode Panel */}
