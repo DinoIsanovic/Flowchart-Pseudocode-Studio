@@ -281,7 +281,9 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
         <div className="flex-1 overflow-y-auto px-3 py-3">
           {!task && (
             <>
-              <p className="text-[11px] text-white/45 mb-3 px-1">{t.intro}</p>
+              <p className="text-[11px] text-white/45 mb-3 px-1">
+                {text(pack.title, language)} — {pack.tasks.length} {t.tasks}
+              </p>
               {PACKS.length > 1 && (
                 <div className="flex gap-1.5 mb-3">
                   {PACKS.map((p) => (

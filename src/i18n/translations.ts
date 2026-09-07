@@ -169,7 +169,8 @@ export interface Translations {
   // Exercises
   vjezbe: {
     title: string;
-    intro: string;
+    /** Follows the chosen topic: "<title> — N tasks". */
+    tasks: string;
     progress: string;
     back: string;
     check: string;
@@ -352,7 +353,7 @@ export const translations: Record<Language, Translations> = {
     },
     vjezbe: {
       title: 'Exercises',
-      intro: 'Linear structure — 15 tasks',
+      tasks: 'tasks',
       progress: 'solved',
       back: 'Back',
       check: 'Check',
@@ -542,7 +543,7 @@ export const translations: Record<Language, Translations> = {
     },
     vjezbe: {
       title: 'Übungen',
-      intro: 'Lineare Struktur — 15 Aufgaben',
+      tasks: 'Aufgaben',
       progress: 'gelöst',
       back: 'Zurück',
       check: 'Prüfen',
@@ -732,7 +733,7 @@ export const translations: Record<Language, Translations> = {
     },
     vjezbe: {
       title: 'Vježbe',
-      intro: 'Linijska struktura — 15 zadataka',
+      tasks: 'zadataka',
       progress: 'riješeno',
       back: 'Nazad',
       check: 'Provjeri',
