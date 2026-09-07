@@ -73,6 +73,13 @@ export interface Task {
   types: ExerciseType[];
   /** Everyday procedures show no Python; code would only be noise there. */
   showPython?: boolean;
+  /**
+   * How the Parsons exercise hands the task over. 'sidra' fixes the branch
+   * frame — `AKO` and its labels — so the student places only the steps inside
+   * it; the default leaves every tile loose and its depth to be chosen, which
+   * is the harder and more honest form once branches are the point.
+   */
+  kockice?: 'sidra' | 'nivoi';
 }
 
 export interface TaskPack {

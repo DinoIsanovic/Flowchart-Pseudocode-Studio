@@ -6,8 +6,9 @@
 import { Language } from '../types';
 import { parsePseudocode } from '../core/flowchart-gen';
 import { Interpreter, describeRunError } from '../core/interpreter';
+import { indentWidth } from '../core/flowchart-gen';
 import { Task } from './types';
-import { solutionText, tiles } from './render';
+import { STEP, Tile, solutionText, tiles } from './render';
 
 /**
  * Marks a student's attempt by running it, not by comparing it to the text of
@@ -57,9 +58,22 @@ function outputsFor(code: string, inputs: string[], lang: Language):
   return { output: machine.output };
 }
 
+/**
+ * A tile as the one string an ordering is compared on. Depth is part of the
+ * key, not decoration: `ISPIŠI a` inside a branch and the same line after it
+ * are different programs, and a key of text alone would call them equal.
+ */
+function key(text: string, level: number): string {
+  return `${level}|${text}`;
+}
+
+function tileKey(tile: Tile): string {
+  return key(tile.text, tile.level);
+}
+
 /** The lines of a solution, without the wrapper, in the order they must run. */
 function bodyLines(task: Task, lang: Language): string[] {
-  return tiles(task, lang).slice(1, -1);
+  return tiles(task, lang).slice(1, -1).map(tileKey);
 }
 
 /**
@@ -70,7 +84,10 @@ function bodyLines(task: Task, lang: Language): string[] {
  */
 export function orderMatches(task: Task, attempt: string[], lang: Language): boolean {
   const wanted = bodyLines(task, lang);
-  const got = attempt.map((l) => l.trim()).filter(Boolean).slice(1, -1);
+  const got = attempt
+    .filter((l) => l.trim())
+    .map((l) => key(l.trim(), Math.round(indentWidth(l) / STEP.length)))
+    .slice(1, -1);
   if (got.length !== wanted.length) return false;
 
   // Positions are 1-based in the authored data.

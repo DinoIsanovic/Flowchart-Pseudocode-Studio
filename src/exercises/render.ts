@@ -4,6 +4,7 @@
  */
 
 import { Language } from '../types';
+import { indentWidth } from '../core/flowchart-gen';
 import { Task } from './types';
 
 /**
@@ -89,14 +90,51 @@ export function fillBlanks(task: Task, lang: Language, values: string[]): string
   return renderKeywords(filled, lang);
 }
 
+/** One tile of a Parsons exercise. */
+export interface Tile {
+  /** The statement itself, with no leading spaces. */
+  text: string;
+  /**
+   * How deep the statement sits, in levels of two spaces. In a branching task
+   * this is half the answer: the same tiles at different depths are different
+   * programs, so a tile that carried only its text would be unmarkable.
+   */
+  level: number;
+  /**
+   * Part of the frame the task hands over already built. A 'sidra' task fixes
+   * `AKO` and its branch labels so the student places only the steps inside
+   * them; everywhere else nothing is fixed and the depth is theirs to choose.
+   */
+  anchor: boolean;
+}
+
+/** The keywords that draw the shape of a branch rather than do any work. */
+const FRAME = new Set(['@START', '@END', '@IF', '@YES', '@ELSE', '@WHILE', '@REPEAT']);
+
+/** Two spaces per level — the indentation the authored solutions are written in. */
+export const STEP = '  ';
+
 /**
  * The tiles of a Parsons exercise: one per statement, in solution order.
  * Shuffling is the caller's job, so a seeded shuffle can make the same task
  * reproducible for a whole class.
  */
-export function tiles(task: Task, lang: Language): string[] {
-  return solutionText(task, lang)
+export function tiles(task: Task, lang: Language): Tile[] {
+  const authored = (task.solutionByLang?.[lang] ?? task.solution).replace(BLANK, '$1');
+  const framed = task.kockice === 'sidra';
+  return authored
     .split('\n')
-    .map((l) => l.trim())
-    .filter(Boolean);
+    .filter((l) => l.trim())
+    .map((raw) => ({
+      text: renderKeywords(raw.trim(), lang),
+      level: Math.round(indentWidth(raw) / STEP.length),
+      // Read before the keywords are rendered: '@IF' is one token in every
+      // language, 'AKO JE' / 'ELSE IF' would each need their own test.
+      anchor: framed && FRAME.has(raw.trim().split(/\s+/)[0]),
+    }));
+}
+
+/** A tile as one line of pseudocode, indentation included. */
+export function tileLine(tile: Tile): string {
+  return STEP.repeat(tile.level) + tile.text;
 }

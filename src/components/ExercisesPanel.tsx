@@ -4,14 +4,14 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { ArrowLeft, Check, CheckCircle2, GraduationCap, RotateCcw, Workflow, X } from 'lucide-react';
+import { ArrowLeft, Check, CheckCircle2, ChevronLeft, ChevronRight, GraduationCap, RotateCcw, Workflow, X } from 'lucide-react';
 import { Language } from '../types';
 import { translations } from '../i18n/translations';
 import { buildFlowchart, parsePseudocode } from '../core/flowchart-gen';
 import { describeDiagramIssue } from '../core/diagram-check';
 import { Interpreter } from '../core/interpreter';
 import { Task, TaskPack, text } from '../exercises/types';
-import { blankedText, blanks, fillBlanks, solutionText, tiles } from '../exercises/render';
+import { blankedText, blanks, fillBlanks, solutionText, tileLine, tiles } from '../exercises/render';
 import { GradeResult, describeGrade, gradeAttempt } from '../exercises/grade';
 import { gradeTrace, traceTask } from '../exercises/trace';
 import { MistakeKind, mistakeFor, plantMistake } from '../exercises/plant';
@@ -48,7 +48,7 @@ function loadProgress(): Record<string, boolean> {
  * Shuffled once per task and always the same way, so a class working from the
  * printed worksheet sees the tiles in the order the screen shows them.
  */
-function shuffled(items: string[], seed: string): string[] {
+function shuffled<T>(items: T[], seed: string): T[] {
   let h = 2166136261;
   for (let i = 0; i < seed.length; i++) {
     h = Math.imul(h ^ seed.charCodeAt(i), 16777619);
@@ -60,6 +60,16 @@ function shuffled(items: string[], seed: string): string[] {
     [out[i], out[j]] = [out[j], out[i]];
   }
   return out;
+}
+
+/**
+ * One tile the student has laid down: which tile it is, and how deep they put
+ * it. Depth is answer, not layout — the marker compares it.
+ */
+interface Placed {
+  /** Index into the shuffled pool. */
+  i: number;
+  level: number;
 }
 
 /** The exercise types this panel can actually run, in the order they appear. */
@@ -82,7 +92,7 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
   const t = translations[language].vjezbe;
   const [openId, setOpenId] = useState<string | null>(null);
   const [progress, setProgress] = useState<Record<string, boolean>>(loadProgress);
-  const [placed, setPlaced] = useState<number[]>([]);
+  const [placed, setPlaced] = useState<Placed[]>([]);
   const [filled, setFilled] = useState<string[]>([]);
   const [predicted, setPredicted] = useState<string[]>([]);
   const [traced, setTraced] = useState<string[]>([]);
@@ -92,7 +102,32 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
 
   const task = useMemo(() => PACK.tasks.find((x) => x.id === openId) ?? null, [openId]);
   const solution = task ? solutionText(task, language) : '';
-  const pool = useMemo(() => (task ? shuffled(tiles(task, language), task.id) : []), [task, language]);
+  /** Every tile of the solution, frame included, in the order it must run. */
+  const all = useMemo(() => (task ? tiles(task, language) : []), [task, language]);
+  /** The tiles the student actually places; a 'sidra' task keeps the rest fixed. */
+  const movable = useMemo(() => all.filter((x) => !x.anchor), [all]);
+  const framed = all.some((x) => x.anchor);
+  const pool = useMemo(() => (task ? shuffled(movable, task.id) : []), [movable, task]);
+
+  /**
+   * The assembled attempt. In a framed task the fixed rows come from the
+   * solution and the student's tiles drop into the gaps between them, so the
+   * depth of those rows is given; everywhere else the depth is the student's
+   * own answer and travels on the placed tile.
+   */
+  const assembled = useMemo(() => {
+    if (!framed) return placed.map((p) => tileLine({ ...pool[p.i], level: p.level })).join('\n');
+    let hole = -1;
+    return all
+      .map((tile) => {
+        if (tile.anchor) return tileLine(tile);
+        hole += 1;
+        const p = placed[hole];
+        return p ? tileLine({ ...pool[p.i], level: movable[hole].level }) : null;
+      })
+      .filter((l): l is string => l !== null)
+      .join('\n');
+  }, [framed, all, movable, pool, placed]);
   const holes = useMemo(() => (task ? blanks(task, language) : []), [task, language]);
 
   /** What each test case prints — the answer key for a 'prepoznaj' exercise. */
@@ -192,9 +227,10 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
       // An empty blank collapses the line and the parser complains about
       // indentation, which tells the student nothing about what to do.
       outcome = { correct: false, reason: 'nepotpuno', message: t.fillAll };
+    } else if (kind === 'kockice' && placed.length < movable.length) {
+      outcome = { correct: false, reason: 'nepotpuno', message: t.placeAll };
     } else {
-      const code =
-        kind === 'kockice' ? placed.map((i) => pool[i]).join('\n') : fillBlanks(task, language, filled);
+      const code = kind === 'kockice' ? assembled : fillBlanks(task, language, filled);
       outcome = gradeAttempt(task, code, language);
     }
 
@@ -303,21 +339,63 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
               {activeType === 'kockice' && (
                 <>
                   <Section label={t.answer}>
-                    {placed.length === 0 && <Hint>{t.answerEmpty}</Hint>}
-                    {placed.map((idx, position) => (
-                      <Tile
-                        key={`${idx}-${position}`}
-                        line={pool[idx]}
-                        index={position + 1}
-                        onClick={() => setPlaced(placed.filter((_, i) => i !== position))}
-                      />
-                    ))}
+                    {!framed && placed.length === 0 && <Hint>{t.answerEmpty}</Hint>}
+                    {framed
+                      ? (() => {
+                          let hole = -1;
+                          return all.map((tile, row) => {
+                            if (tile.anchor) return <TileRow key={row} line={tile.text} level={tile.level} fixed />;
+                            hole += 1;
+                            const at = hole;
+                            const p = placed[at];
+                            return p ? (
+                              <TileRow
+                                key={row}
+                                line={pool[p.i].text}
+                                level={movable[at].level}
+                                index={at + 1}
+                                onClick={() => setPlaced(placed.filter((_, i) => i !== at))}
+                              />
+                            ) : (
+                              <div
+                                key={row}
+                                className="h-9 rounded-lg border border-dashed border-white/15"
+                                style={{ marginLeft: movable[at].level * 18 }}
+                              />
+                            );
+                          });
+                        })()
+                      : placed.map((p, position) => (
+                          <TileRow
+                            key={`${p.i}-${position}`}
+                            line={pool[p.i].text}
+                            level={p.level}
+                            index={position + 1}
+                            onClick={() => setPlaced(placed.filter((_, i) => i !== position))}
+                            onLevel={(step) =>
+                              setPlaced(
+                                placed.map((x, i) =>
+                                  i === position ? { ...x, level: Math.min(MAX_LEVEL, Math.max(0, x.level + step)) } : x
+                                )
+                              )
+                            }
+                          />
+                        ))}
                   </Section>
                   <Section label={t.pool}>
-                    {pool.every((_, i) => placed.includes(i)) && <Hint>{t.poolEmpty}</Hint>}
-                    {pool.map((line, i) =>
-                      placed.includes(i) ? null : (
-                        <Tile key={i} line={line} onClick={() => setPlaced([...placed, i])} />
+                    {placed.length === pool.length && <Hint>{t.poolEmpty}</Hint>}
+                    {pool.map((tile, i) =>
+                      placed.some((p) => p.i === i) ? null : (
+                        <TileRow
+                          key={i}
+                          line={tile.text}
+                          onClick={() =>
+                            // A new tile lands beside the one before it: the
+                            // depth only has to be changed where the shape of
+                            // the program changes, not on every line.
+                            setPlaced([...placed, { i, level: framed ? 0 : placed[placed.length - 1]?.level ?? 0 }])
+                          }
+                        />
                       )
                     )}
                   </Section>
@@ -539,15 +617,55 @@ const Hint: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <span className="text-[11px] italic text-white/30 py-1">{children}</span>
 );
 
-const Tile: React.FC<{ line: string; index?: number; onClick: () => void }> = ({ line, index, onClick }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className="flex items-center gap-2 w-full p-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-left transition-colors active:scale-[0.99]"
-  >
-    {index !== undefined && (
-      <span className="w-5 shrink-0 text-center text-[10px] font-black text-[#06B6D4]">{index}</span>
+interface TileRowProps {
+  line: string;
+  /** Depth in levels; drawn as an indent so the tile reads like code. */
+  level?: number;
+  index?: number;
+  onClick?: () => void;
+  /** Present only where the depth is the student's to choose. */
+  onLevel?: (step: number) => void;
+  /** Part of the frame the task gave away: shown, but not to be touched. */
+  fixed?: boolean;
+}
+
+const MAX_LEVEL = 4;
+const LEVEL_PX = 18;
+
+const TileRow: React.FC<TileRowProps> = ({ line, level = 0, index, onClick, onLevel, fixed }) => (
+  <div className="flex items-center gap-1" style={{ marginLeft: level * LEVEL_PX }}>
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={fixed}
+      className={`flex items-center gap-2 flex-1 min-w-0 p-2 rounded-lg border text-left transition-colors ${
+        fixed
+          ? 'bg-white/[0.02] border-white/5 cursor-default'
+          : 'bg-white/[0.06] hover:bg-white/[0.12] border-white/10 active:scale-[0.99]'
+      }`}
+    >
+      {index !== undefined && (
+        <span className="w-5 shrink-0 text-center text-[10px] font-black text-[#06B6D4]">{index}</span>
+      )}
+      <span className={`font-mono text-[12px] truncate ${fixed ? 'text-white/40' : 'text-white/85'}`}>{line}</span>
+    </button>
+    {onLevel && (
+      <span className="flex shrink-0">
+        <button
+          type="button"
+          onClick={() => onLevel(-1)}
+          className="w-7 h-9 grid place-items-center rounded-lg text-white/40 hover:text-white hover:bg-white/10"
+        >
+          <ChevronLeft size={14} />
+        </button>
+        <button
+          type="button"
+          onClick={() => onLevel(1)}
+          className="w-7 h-9 grid place-items-center rounded-lg text-white/40 hover:text-white hover:bg-white/10"
+        >
+          <ChevronRight size={14} />
+        </button>
+      </span>
     )}
-    <span className="font-mono text-[12px] text-white/85 truncate">{line}</span>
-  </button>
+  </div>
 );

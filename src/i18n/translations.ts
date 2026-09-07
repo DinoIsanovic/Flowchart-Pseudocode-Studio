@@ -182,6 +182,7 @@ export interface Translations {
     answerEmpty: string;
     fill: string;
     fillAll: string;
+    placeAll: string;
     hint: string;
     trace: string;
     traceStep: string;
@@ -364,6 +365,7 @@ export const translations: Record<Language, Translations> = {
       answerEmpty: 'tap a tile to place it here',
       fill: 'Fill in what is missing.',
       fillAll: 'fill in every blank first',
+      placeAll: 'place every tile first',
       hint: 'Help',
       trace: 'Follow the run and fill in the state table.',
       traceStep: 'step',
@@ -553,6 +555,7 @@ export const translations: Record<Language, Translations> = {
       answerEmpty: 'tippe einen Baustein an, um ihn hier abzulegen',
       fill: 'Ergänze, was fehlt.',
       fillAll: 'fülle zuerst alle Lücken aus',
+      placeAll: 'lege zuerst alle Kärtchen ab',
       hint: 'Hilfe',
       trace: 'Verfolge den Ablauf und fülle die Wertetabelle aus.',
       traceStep: 'Schritt',
@@ -742,6 +745,7 @@ export const translations: Record<Language, Translations> = {
       answerEmpty: 'dodirni kockicu da je postaviš ovdje',
       fill: 'Upiši ono što nedostaje.',
       fillAll: 'prvo popuni sve praznine',
+      placeAll: 'prvo postavi sve kockice',
       hint: 'Pomoć',
       trace: 'Prati izvršavanje i popuni tabelu stanja.',
       traceStep: 'korak',
