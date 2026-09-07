@@ -109,10 +109,10 @@
         "en": "Read two numbers and print the larger one.",
         "de": "Lies zwei Zahlen ein und gib die größere aus."
       },
-      "solution": "@START\n@INPUT a, b\n@IF a > b\n  @YES\n    @OUTPUT \"Veći je\", a\n  @ELSE\n    @OUTPUT \"Veći je\", b\n@END",
+      "solution": "@START\n@INPUT a, b\n@IF a > b\n  @YES\n    @OUTPUT \"Veći je\", a\n@IF b > a\n  @YES\n    @OUTPUT \"Veći je\", b\n@END",
       "solutionByLang": {
-        "en": "@START\n@INPUT a, b\n@IF a > b\n  @YES\n    @OUTPUT \"The larger is\", a\n  @ELSE\n    @OUTPUT \"The larger is\", b\n@END",
-        "de": "@START\n@INPUT a, b\n@IF a > b\n  @YES\n    @OUTPUT \"Größer ist\", a\n  @ELSE\n    @OUTPUT \"Größer ist\", b\n@END"
+        "en": "@START\n@INPUT a, b\n@IF a > b\n  @YES\n    @OUTPUT \"The larger is\", a\n@IF b > a\n  @YES\n    @OUTPUT \"The larger is\", b\n@END",
+        "de": "@START\n@INPUT a, b\n@IF a > b\n  @YES\n    @OUTPUT \"Größer ist\", a\n@IF b > a\n  @YES\n    @OUTPUT \"Größer ist\", b\n@END"
       },
       "tests": [
         [
@@ -139,9 +139,9 @@
         "@IF a < b"
       ],
       "discussion": {
-        "bs": "Za a = 5 i b = 5 program ispisuje 5, a brojevi su jednaki. Je li odgovor pogrešan ili je pitanje loše postavljeno?",
-        "en": "For a = 5 and b = 5 it prints 5, but the numbers are equal. Is the answer wrong, or is the question?",
-        "de": "Für a = 5 und b = 5 gibt es 5 aus, obwohl sie gleich sind. Ist die Antwort falsch oder die Frage?"
+        "bs": "Za a = 5 i b = 5 program ne ispiše ništa. Je li to greška u algoritmu ili tačan odgovor na pitanje koje nema odgovora?",
+        "en": "For a = 5 and b = 5 the program prints nothing at all. Is that a fault in the algorithm, or the right answer to a question that has none?",
+        "de": "Für a = 5 und b = 5 gibt das Programm gar nichts aus. Ist das ein Fehler im Algorithmus oder die richtige Antwort auf eine Frage, die keine hat?"
       },
       "topic": "grananje",
       "level": 3
