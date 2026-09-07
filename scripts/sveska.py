@@ -160,6 +160,10 @@ def blank_lines(n=1, width=64):
 OVAL_W, OVAL_H = 1400, 470        # before the turn; on the page these swap
 ARROW = 405                       # a quarter shorter than the first version
 FOOT_W, FOOT_H = OVAL_H, OVAL_W   # what the turned ellipse actually occupies
+# Counter-clockwise, so the caption reads bottom to top: the page is turned
+# clockwise to read it, which is the way vertical labels run on a drawing.
+# At +90 the letters run the other way and read upside down.
+TURN = -90
 GROUP_W = FOOT_W + ARROW
 PT_PER_UNIT = 0.05
 
@@ -181,7 +185,7 @@ def start_block(caption):
         f'<v:group style="width:{GROUP_W * PT_PER_UNIT:.2f}pt;'
         f'height:{FOOT_H * PT_PER_UNIT:.2f}pt" coordsize="{GROUP_W},{FOOT_H}">'
         f'<v:oval style="position:absolute;left:{left};top:{top};'
-        f'width:{OVAL_W};height:{OVAL_H};rotation:90" '
+        f'width:{OVAL_W};height:{OVAL_H};rotation:{TURN}" '
         f'fillcolor="#{SOFT}" strokecolor="#{ACCENT}" strokeweight="1.5pt">'
         '<v:textbox inset="0,0,0,0"><w:txbxContent>'
         '<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="0"/></w:pPr>'
