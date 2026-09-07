@@ -10,3 +10,19 @@ body {
   background-color: #050505;
   color: #F5F5F5;
 }
+
+/*
+ * JetBrains Mono draws >= as ≥ and != as ≠. That is a ligature, not a
+ * substitution — the text is still two characters — but a student comparing
+ * what they typed with what the algorithm says sees two different symbols, and
+ * a beginner has no reason to believe those are the same thing. Pseudocode is
+ * read here as it is written.
+ */
+.font-mono,
+code,
+pre,
+textarea,
+input {
+  font-variant-ligatures: none;
+  font-feature-settings: 'liga' 0, 'clig' 0, 'calt' 0;
+}
