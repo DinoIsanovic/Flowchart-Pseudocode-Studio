@@ -14,11 +14,10 @@
     "check:interpreter": "tsx scripts/interpreter-check.ts",
     "check:exercises": "tsx scripts/exercises-check.ts",
     "check:diagram": "tsx scripts/diagram-check.ts",
-    "sveska": "tsx scripts/sveska-data.ts /tmp/sveska-podaci.json linijska bs && python3 scripts/sveska.py /tmp/sveska-podaci.json radna-sveska-linijska.docx",
+    "sveska": "tsx scripts/sveska-data.ts /tmp/sveska-podaci.json linijska && python3 scripts/sveska.py /tmp/sveska-podaci.json radna-sveska-linijska.docx",
     "check:grade": "tsx scripts/grade-check.ts",
-    "sveska:grananje": "tsx scripts/sveska-data.ts /tmp/sveska-grananje.json grananje bs && python3 scripts/sveska.py /tmp/sveska-grananje.json radna-sveska-grananje.docx",
-    "check:croatian": "tsx scripts/croatian-check.ts",
-    "sveska:hr": "tsx scripts/sveska-data.ts /tmp/sveska-hr.json linijska hr && python3 scripts/sveska.py /tmp/sveska-hr.json radna-sveska-linijska-hr.docx && tsx scripts/sveska-data.ts /tmp/sveska-grananje-hr.json grananje hr && python3 scripts/sveska.py /tmp/sveska-grananje-hr.json radna-sveska-grananje-hr.docx"
+    "sveska:grananje": "tsx scripts/sveska-data.ts /tmp/sveska-grananje.json grananje && python3 scripts/sveska.py /tmp/sveska-grananje.json radna-sveska-grananje.docx",
+    "check:croatian": "tsx scripts/croatian-check.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

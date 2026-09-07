@@ -12,8 +12,6 @@
 import { writeFileSync } from 'node:fs';
 import { buildFlowchart, parsePseudocode } from '../src/core/flowchart-gen';
 import { Interpreter } from '../src/core/interpreter';
-import { Language } from '../src/types';
-import { CROATIAN_WORDS } from '../src/i18n/croatian';
 import { TaskPack, text } from '../src/exercises/types';
 import { blankedText, solutionText, tiles } from '../src/exercises/render';
 import linijska from '../src/exercises/linijska.json';
@@ -27,22 +25,17 @@ const PACKS: Record<string, TaskPack> = {
   grananje: grananje as TaskPack,
 };
 
+// The workbook is printed in Bosnian only; the app is where the other
+// languages live.
 const topic = process.argv[3] ?? 'linijska';
-// The workbook's own prose is written in Bosnian; Croatian reads it through
-// the same variant map the app uses, handed over with the data so the two can
-// never drift apart.
-const lang = (process.argv[4] ?? 'bs') as Language;
-if (lang !== 'bs' && lang !== 'hr') throw new Error('sveska postoji na bs i hr');
 const pack = PACKS[topic];
 if (!pack) throw new Error(`nepoznata tema "${topic}" — postoje: ${Object.keys(PACKS).join(', ')}`);
 
 const data = {
-  lang,
-  words: lang === 'hr' ? CROATIAN_WORDS : {},
-  topic: text(pack.title, lang),
+  topic: text(pack.title, 'bs'),
   tasks: pack.tasks.map((task) => {
-    const solution = solutionText(task, lang);
-    const { statements } = parsePseudocode(solution, lang);
+    const solution = solutionText(task, 'bs');
+    const { statements } = parsePseudocode(solution, 'bs');
     const results = task.tests.map((inputs) => {
       const machine = new Interpreter(statements);
       machine.runToEnd(inputs);
@@ -53,15 +46,15 @@ const data = {
       id: task.id,
       kind: task.kind,
       types: task.types,
-      title: text(task.title, lang),
-      prompt: text(task.prompt, lang),
-      hint: task.hint ? text(task.hint, lang) : null,
-      discussion: task.discussion ? text(task.discussion, lang) : null,
+      title: text(task.title, 'bs'),
+      prompt: text(task.prompt, 'bs'),
+      hint: task.hint ? text(task.hint, 'bs') : null,
+      discussion: task.discussion ? text(task.discussion, 'bs') : null,
       solution,
-      blanked: blankedText(task, lang),
-      tiles: tiles(task, lang).map((tile) => ({ text: tile.text, level: tile.level })),
+      blanked: blankedText(task, 'bs'),
+      tiles: tiles(task, 'bs').map((tile) => ({ text: tile.text, level: tile.level })),
       interchangeable: task.interchangeable ?? [],
-      distractors: (task.distractors ?? []).map((d) => solutionText({ ...task, solution: d }, lang)),
+      distractors: (task.distractors ?? []).map((d) => solutionText({ ...task, solution: d }, 'bs')),
       results,
       /**
        * The laid-out diagram, so the workbook can print the solution as a
@@ -69,7 +62,7 @@ const data = {
        * compare their own drawing against otherwise.
        */
       diagram: (() => {
-        const { nodes, edges } = buildFlowchart(statements, lang);
+        const { nodes, edges } = buildFlowchart(statements, 'bs');
         return {
           nodes: nodes.map((n) => ({ id: n.id, type: n.type, x: n.x, y: n.y, w: n.w, h: n.h, text: n.text })),
           edges: edges.map((e) => ({ from: e.from, to: e.to, label: e.label ?? '' })),
