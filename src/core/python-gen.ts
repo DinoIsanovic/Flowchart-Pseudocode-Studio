@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Language, Statement } from '../types';
+import { Language, SourceLang, Statement } from '../types';
+import { sourceLang } from '../i18n/croatian';
 import { assignStepNumbers } from './flowchart-gen';
 import { counterName, identifiersUsed } from './counters';
 
@@ -34,7 +35,7 @@ export function conditionToPython(cond: string): string {
  * The name of the input helper, spelled the way the student's own pseudocode
  * spells the keyword — all three are words `parsePseudocode` already accepts.
  */
-const READ_FN: Record<Language, string> = { bs: 'unesi', en: 'read', de: 'lies' };
+const READ_FN: Record<SourceLang, string> = { bs: 'unesi', en: 'read', de: 'lies' };
 
 /**
  * `int(input())` is wrong for any exercise whose test values have a decimal
@@ -45,12 +46,12 @@ const READ_FN: Record<Language, string> = { bs: 'unesi', en: 'read', de: 'lies' 
  */
 function readHelper(lang: Language): PythonLine[] {
   const fn = READ_FN[lang];
-  const note: Record<Language, string> = {
+  const note: Record<SourceLang, string> = {
     bs: '# Pročita jednu vrijednost: cijeli broj, decimalni broj ili tekst.',
     en: '# Reads one value: a whole number, a decimal number, or text.',
     de: '# Liest einen Wert: ganze Zahl, Dezimalzahl oder Text.',
   };
-  const v: Record<Language, string> = { bs: 'tekst', en: 'text', de: 'text' };
+  const v: Record<SourceLang, string> = { bs: 'tekst', en: 'text', de: 'text' };
   const t = v[lang];
   return [
     { text: note[lang], depth: 0 },

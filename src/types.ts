@@ -3,7 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type Language = 'en' | 'de' | 'bs';
+export type Language = 'en' | 'de' | 'bs' | 'hr';
+
+/**
+ * The languages the app actually holds strings for. Croatian is written as a
+ * variant of Bosnian in `i18n/croatian.ts`, so a table of translations is keyed
+ * by this and read through `sourceLang()`.
+ */
+export type SourceLang = Exclude<Language, 'hr'>;
 
 export type ShapeType =
   | 'start_end'

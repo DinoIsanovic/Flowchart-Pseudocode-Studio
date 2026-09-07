@@ -4,6 +4,7 @@
  */
 
 import { Language } from '../types';
+import { toCroatian } from '../i18n/croatian';
 
 /**
  * Shape of one exercise task.
@@ -90,5 +91,8 @@ export interface TaskPack {
 
 /** The student-facing text, falling back to Bosnian while a translation is missing. */
 export function text(t: Text, lang: Language): string {
-  return t[lang] ?? t.bs;
+  if (t[lang]) return t[lang] as string;
+  // Croatian is the Bosnian text read through the variant map, unless a task
+  // spells it out itself.
+  return lang === 'hr' ? toCroatian(t.bs) : t.bs;
 }

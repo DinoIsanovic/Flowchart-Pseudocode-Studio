@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Language } from '../types';
+import { Language, SourceLang } from '../types';
+import { toCroatian } from './croatian';
 
 export interface Translations {
   appName: string;
@@ -198,7 +199,7 @@ export interface Translations {
   close: string;
 }
 
-export const translations: Record<Language, Translations> = {
+const SOURCE: Record<SourceLang, Translations> = {
   en: {
     appName: 'Flowchart & Pseudocode Studio',
     appSubtitle: 'Bi-directional Flowchart & Pseudocode Converter',
@@ -768,4 +769,25 @@ export const translations: Record<Language, Translations> = {
     },
     close: 'Zatvori',
   },
+};
+
+/**
+ * Every string of a translation, read the Croatian way. The table is nested a
+ * few levels deep, so this walks it rather than listing the keys — a key added
+ * to `Translations` is carried into Croatian without anyone remembering to.
+ */
+function croatianCopy<T>(value: T): T {
+  if (typeof value === 'string') return toCroatian(value) as unknown as T;
+  if (Array.isArray(value)) return value.map(croatianCopy) as unknown as T;
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value)) out[k] = croatianCopy(v);
+    return out as T;
+  }
+  return value;
+}
+
+export const translations: Record<Language, Translations> = {
+  ...SOURCE,
+  hr: { ...croatianCopy(SOURCE.bs), languageName: 'Hrvatski' },
 };

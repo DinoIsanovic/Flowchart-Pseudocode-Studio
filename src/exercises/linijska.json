@@ -392,12 +392,14 @@
       "prompt": {
         "bs": "Koliko ćeš uštedjeti za zadani broj sedmica i koliko ti ostaje nakon kupovine?",
         "en": "How much will you save over a number of weeks, and how much is left after the purchase?",
-        "de": "Wie viel sparst du in einer Anzahl von Wochen, und wie viel bleibt nach dem Kauf übrig?"
+        "de": "Wie viel sparst du in einer Anzahl von Wochen, und wie viel bleibt nach dem Kauf übrig?",
+        "hr": "Koliko ćeš uštedjeti za zadani broj tjedana i koliko ti ostaje nakon kupovine?"
       },
       "solution": "@START\n@INPUT sedmicno, sedmica, cijena\n@CALC usteda = sedmicno * sedmica\n@CALC ostatak = usteda - cijena\n@OUTPUT \"Uštedio si\", usteda, \"KM\"\n@OUTPUT \"Nakon kupovine ostaje\", ostatak, \"KM\"\n@END",
       "solutionByLang": {
         "en": "@START\n@INPUT weekly, weeks, price\n@CALC saved = weekly * weeks\n@CALC left = saved - price\n@OUTPUT \"You saved\", saved, \"KM\"\n@OUTPUT \"After the purchase you have\", left, \"KM\"\n@END",
-        "de": "@START\n@INPUT woechentlich, wochen, preis\n@CALC gespart = woechentlich * wochen\n@CALC rest = gespart - preis\n@OUTPUT \"Du hast\", gespart, \"KM gespart\"\n@OUTPUT \"Nach dem Kauf bleiben\", rest, \"KM\"\n@END"
+        "de": "@START\n@INPUT woechentlich, wochen, preis\n@CALC gespart = woechentlich * wochen\n@CALC rest = gespart - preis\n@OUTPUT \"Du hast\", gespart, \"KM gespart\"\n@OUTPUT \"Nach dem Kauf bleiben\", rest, \"KM\"\n@END",
+        "hr": "@START\n@INPUT tjedno, tjedana, cijena\n@CALC usteda = tjedno * tjedana\n@CALC ostatak = usteda - cijena\n@OUTPUT \"Uštedio si\", usteda, \"KM\"\n@OUTPUT \"Nakon kupovine ostaje\", ostatak, \"KM\"\n@END"
       },
       "tests": [
         [

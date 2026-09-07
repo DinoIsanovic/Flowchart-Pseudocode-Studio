@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { localize } from '../i18n/croatian';
 import { X, Keyboard, Touchpad } from 'lucide-react';
 import { Language } from '../types';
 
@@ -79,7 +80,7 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({
           <div className="flex items-center gap-2">
             <Keyboard className="w-5 h-5 text-white" />
             <h2 className="font-black text-sm sm:text-base uppercase tracking-wider">
-              {language === 'en' ? 'Shortcuts & Gestures' : language === 'de' ? 'Tastatur & Gesten' : 'Prečice i geste'}
+              {localize(language, language === 'en' ? 'Shortcuts & Gestures' : language === 'de' ? 'Tastatur & Gesten' : 'Prečice i geste')}
             </h2>
           </div>
           <button
@@ -95,7 +96,7 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({
           <div>
             <h3 className="font-black text-white/80 uppercase text-[10.5px] tracking-[0.15em] mb-2 flex items-center gap-1.5">
               <Keyboard className="w-3.5 h-3.5 text-[#06B6D4]" />
-              <span>{language === 'en' ? 'Keyboard Shortcuts' : language === 'de' ? 'Tastenkombinationen' : 'Tastaturne prečice'}</span>
+              <span>{localize(language, language === 'en' ? 'Keyboard Shortcuts' : language === 'de' ? 'Tastenkombinationen' : 'Tastaturne prečice')}</span>
             </h3>
             <div className="space-y-1.5 bg-[#141414] p-3 rounded-xl border border-white/10">
               {shortcuts.map((s, i) => (

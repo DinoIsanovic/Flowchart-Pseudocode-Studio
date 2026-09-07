@@ -23,7 +23,7 @@ import linijska from '../src/exercises/linijska.json';
 import grananje from '../src/exercises/grananje.json';
 
 const packs = [linijska as TaskPack, grananje as TaskPack];
-const LANGS: Language[] = ['bs', 'en', 'de'];
+const LANGS: Language[] = ['bs', 'en', 'de', 'hr'];
 
 let problems = 0;
 const fail = (task: Task, msg: string) => {
@@ -50,6 +50,9 @@ for (const pack of packs) {
     // Every language has to be complete: a missing translation silently falls
     // back to Bosnian, which is invisible until a German student opens it.
     for (const lang of LANGS) {
+      // Croatian is derived from the Bosnian text rather than written out;
+      // check:croatian is what guards it.
+      if (lang === 'hr') continue;
       if (!task.title[lang]) fail(task, `naslov nije preveden na ${lang}`);
       if (!task.prompt[lang]) fail(task, `tekst zadatka nije preveden na ${lang}`);
       if (task.hint && !task.hint[lang]) fail(task, `pomoć nije prevedena na ${lang}`);

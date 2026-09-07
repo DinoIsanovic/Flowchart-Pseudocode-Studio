@@ -61,6 +61,7 @@ export const Header: React.FC<HeaderProps> = ({
     en: { label: 'English', flag: '🇬🇧' },
     de: { label: 'Deutsch', flag: '🇩🇪' },
     bs: { label: 'Bosanski', flag: '🇧🇦' },
+    hr: { label: 'Hrvatski', flag: '🇭🇷' },
   };
 
   return (
@@ -158,7 +159,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={() => setLangMenuOpen(false)}
               />
               <div className="absolute right-0 mt-1.5 w-40 bg-[#121212] border border-white/20 rounded-xl shadow-2xl py-1.5 z-50 overflow-hidden text-xs">
-                {(['en', 'de', 'bs'] as Language[]).map((langKey) => (
+                {(['en', 'de', 'bs', 'hr'] as Language[]).map((langKey) => (
                   <button
                     key={langKey}
                     onClick={() => {

@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { FlowEdge, FlowNode, Language, ParseError, Statement, ViewBox, Waypoint } from '../types';
+import { FlowEdge, FlowNode, Language, ParseError, SourceLang, Statement, ViewBox, Waypoint } from '../types';
+import { localize, sourceLang } from '../i18n/croatian';
 
 export function stripDiacritics(s: string): string {
   return String(s || '')
@@ -99,7 +100,7 @@ const ALL_KEYWORDS = new Set<string>([
 // cheatsheet and the templates rather than the normalised internal spelling.
 // Bottom-tested loop words (UNTIL / BIS / PONAVLJAJ) are deliberately absent:
 // they still parse, but a hint should point at the pre-test form we teach.
-const KEYWORD_SUGGESTIONS: Record<Language, string[]> = {
+const KEYWORD_SUGGESTIONS: Record<SourceLang, string[]> = {
   en: ['START', 'END', 'INPUT', 'READ', 'OUTPUT', 'PRINT', 'WRITE', 'SET', 'LET', 'CALCULATE', 'COMPUTE', 'IF', 'YES', 'THEN', 'NO', 'ELSE', 'REPEAT', 'WHILE'],
   de: ['START', 'BEGINN', 'ENDE', 'EINGABE', 'LIES', 'AUSGABE', 'SCHREIBE', 'ZEIGE', 'SETZE', 'BERECHNE', 'WENN', 'JA', 'DANN', 'NEIN', 'SONST', 'WIEDERHOLE', 'SOLANGE'],
   bs: ['POČETAK', 'KRAJ', 'UNESI', 'ISPIŠI', 'POSTAVI', 'RAČUNAJ', 'AKO JE', 'DA', 'NE', 'INAČE', 'PONOVI', 'DOK JE'],
@@ -722,7 +723,7 @@ export function buildFlowchart(statements: Statement[], lang: Language = 'en'): 
         y: y + DECISION_H / 2,
         w: DECISION_W,
         h: DECISION_H,
-        text: `${stmt.cond || (lang === 'de' ? 'bedingung' : lang === 'en' ? 'condition' : 'uslov')} ?`,
+        text: `${stmt.cond || localize(lang, lang === 'de' ? 'bedingung' : lang === 'en' ? 'condition' : 'uslov')} ?`,
         step: stepOf.get(stmt),
       };
       const branchY = y + DECISION_H + GAP;
@@ -783,7 +784,7 @@ export function buildFlowchart(statements: Statement[], lang: Language = 'en'): 
         y: y + DECISION_H / 2,
         w: DECISION_W,
         h: DECISION_H,
-        text: `${stmt.cond || (lang === 'de' ? 'bedingung' : lang === 'en' ? 'condition' : 'uslov')} ?`,
+        text: `${stmt.cond || localize(lang, lang === 'de' ? 'bedingung' : lang === 'en' ? 'condition' : 'uslov')} ?`,
         step: stepOf.get(stmt),
       };
       const noLbl = getLocalizedNo(lang);

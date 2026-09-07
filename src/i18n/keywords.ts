@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Language } from '../types';
+import { Language, SourceLang } from '../types';
+import { toCroatian } from './croatian';
 
 export interface KeywordItem {
   word: string;
@@ -11,7 +12,7 @@ export interface KeywordItem {
   hint: string;
 }
 
-export const AUTOCOMPLETE_KEYWORDS: Record<Language, KeywordItem[]> = {
+const SOURCE_KEYWORDS: Record<SourceLang, KeywordItem[]> = {
   en: [
     { word: 'START', arg: false, hint: 'start of algorithm' },
     { word: 'INPUT', arg: true, hint: 'read input, e.g. INPUT a, b' },
@@ -64,7 +65,7 @@ export const AUTOCOMPLETE_KEYWORDS: Record<Language, KeywordItem[]> = {
   ],
 };
 
-export const TEMPLATE_CODE: Record<Language, { sequence: string; branch: string; while: string; repeat: string }> = {
+const SOURCE_TEMPLATES: Record<SourceLang, { sequence: string; branch: string; while: string; repeat: string }> = {
   en: {
     sequence: 'START\nINPUT a, b\nCALCULATE sum = a + b\nOUTPUT sum\nEND',
     branch: 'START\nINPUT a, b\nIF a > b\n  YES\n    OUTPUT a\n  ELSE\n    OUTPUT b\nEND',
@@ -85,7 +86,7 @@ export const TEMPLATE_CODE: Record<Language, { sequence: string; branch: string;
   },
 };
 
-export const TUTOR_PROMPTS: Record<Language, string> = {
+const SOURCE_PROMPTS: Record<SourceLang, string> = {
   en: `You are a warm, encouraging computer science teacher helping high school or university students learn pseudocode and flowcharts.
 Respond strictly in English, in a friendly and positive tone, kept concise (a few sentences, rarely longer).
 When a student makes a mistake, first praise what they did well, then gently point out the issue — mistakes are a normal part of learning.
@@ -147,4 +148,28 @@ Ključne riječi:
 - PONAVLJAJ ... DOK JE uslov (petlja s uslovom na dnu — prihvata se ako je učenik tako napiše, ali je nemoj sam predlagati; preoblikuj je u zaglavlje PONOVI DOK JE)
 
 Kad se poruka konkretno odnosi na jedan čvor na platnu, na sam kraj u novom redu dodaj [[CVOR:id]] kako bi ga platno vizuelno istaklo.`,
+};
+
+/**
+ * Croatian reads the Bosnian tables through the variant map: the keywords
+ * themselves are the same words, the hints and the tutor's briefing are prose.
+ */
+export const AUTOCOMPLETE_KEYWORDS: Record<Language, KeywordItem[]> = {
+  ...SOURCE_KEYWORDS,
+  hr: SOURCE_KEYWORDS.bs.map((k) => ({ ...k, hint: toCroatian(k.hint) })),
+};
+
+export const TEMPLATE_CODE: Record<Language, { sequence: string; branch: string; while: string; repeat: string }> = {
+  ...SOURCE_TEMPLATES,
+  hr: {
+    sequence: toCroatian(SOURCE_TEMPLATES.bs.sequence),
+    branch: toCroatian(SOURCE_TEMPLATES.bs.branch),
+    while: toCroatian(SOURCE_TEMPLATES.bs.while),
+    repeat: toCroatian(SOURCE_TEMPLATES.bs.repeat),
+  },
+};
+
+export const TUTOR_PROMPTS: Record<Language, string> = {
+  ...SOURCE_PROMPTS,
+  hr: toCroatian(SOURCE_PROMPTS.bs),
 };

@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Language } from '../types';
+import { Language, SourceLang } from '../types';
+import { sourceLang, toCroatian } from '../i18n/croatian';
 import { indentWidth } from '../core/flowchart-gen';
 import { Task } from './types';
 
@@ -16,7 +17,7 @@ import { Task } from './types';
  * templates the student already sees; `AUTOCOMPLETE_KEYWORDS` holds the same
  * words but keyed for display, not by concept, so the mapping lives here.
  */
-const KEYWORDS: Record<string, Record<Language, string>> = {
+const KEYWORDS: Record<string, Record<SourceLang, string>> = {
   '@START': { bs: 'POČETAK', en: 'START', de: 'START' },
   '@END': { bs: 'KRAJ', en: 'END', de: 'ENDE' },
   '@INPUT': { bs: 'UNESI', en: 'INPUT', de: 'EINGABE' },
@@ -49,28 +50,43 @@ export interface Blank {
   line: number;
 }
 
+/**
+ * The authored source for one language, before keywords are rendered.
+ *
+ * Croatian has no solutions of its own: the Bosnian one is read through the
+ * variant map, which carries the message text and the variable names together
+ * — `zbir` becomes `zbroj` in the calculation and in what it prints, so the two
+ * still agree.
+ */
+function authored(task: Task, lang: Language): string {
+  const own = task.solutionByLang?.[lang];
+  if (own) return own;
+  return lang === 'hr' ? toCroatian(task.solution) : task.solution;
+}
+
 /** Replaces the keyword tokens with the words of one language. */
 export function renderKeywords(source: string, lang: Language): string {
-  return source.replace(TOKEN, (tok) => KEYWORDS[tok]?.[lang] ?? tok);
+  const base = sourceLang(lang);
+  return source.replace(TOKEN, (tok) => KEYWORDS[tok]?.[base] ?? tok);
 }
 
 /** The complete, runnable solution — blanks filled in, keywords in `lang`. */
 export function solutionText(task: Task, lang: Language): string {
-  const authored = task.solutionByLang?.[lang] ?? task.solution;
-  return renderKeywords(authored.replace(BLANK, '$1'), lang);
+  const source = authored(task, lang);
+  return renderKeywords(source.replace(BLANK, '$1'), lang);
 }
 
 /** The same solution with the blanks left open, for the 'dopuni' exercise. */
 export function blankedText(task: Task, lang: Language, placeholder = '___'): string {
-  const authored = task.solutionByLang?.[lang] ?? task.solution;
-  return renderKeywords(authored.replace(BLANK, placeholder), lang);
+  const source = authored(task, lang);
+  return renderKeywords(source.replace(BLANK, placeholder), lang);
 }
 
 /** What each blank expects, in the order the student meets them. */
 export function blanks(task: Task, lang: Language): Blank[] {
-  const authored = task.solutionByLang?.[lang] ?? task.solution;
+  const source = authored(task, lang);
   const out: Blank[] = [];
-  authored.split('\n').forEach((line, i) => {
+  source.split('\n').forEach((line, i) => {
     for (const m of line.matchAll(BLANK)) {
       const raw = m[1].trim();
       out.push({
@@ -89,9 +105,9 @@ export function blanks(task: Task, lang: Language): Blank[] {
  * order the blanks appear — what the marker actually runs.
  */
 export function fillBlanks(task: Task, lang: Language, values: string[]): string {
-  const authored = task.solutionByLang?.[lang] ?? task.solution;
+  const source = authored(task, lang);
   let i = 0;
-  const filled = authored.replace(BLANK, () => values[i++] ?? '');
+  const filled = source.replace(BLANK, () => values[i++] ?? '');
   return renderKeywords(filled, lang);
 }
 
@@ -125,9 +141,9 @@ export const STEP = '  ';
  * reproducible for a whole class.
  */
 export function tiles(task: Task, lang: Language): Tile[] {
-  const authored = (task.solutionByLang?.[lang] ?? task.solution).replace(BLANK, '$1');
+  const source = authored(task, lang).replace(BLANK, '$1');
   const framed = task.kockice === 'sidra';
-  return authored
+  return source
     .split('\n')
     .filter((l) => l.trim())
     .map((raw) => ({

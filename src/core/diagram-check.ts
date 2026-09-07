@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { FlowEdge, FlowNode, Language, ShapeType } from '../types';
+import { FlowEdge, FlowNode, Language, ShapeType, SourceLang } from '../types';
+import { localize, sourceLang } from '../i18n/croatian';
 import {
   COMMENT_TYPE,
   KEYWORDS_END,
@@ -189,7 +190,7 @@ export function hasErrors(issues: DiagramIssue[]): boolean {
   return issues.some((i) => i.severity === 'greska');
 }
 
-const SHAPE_NAMES: Record<ShapeType, Record<Language, string>> = {
+const SHAPE_NAMES: Record<ShapeType, Record<SourceLang, string>> = {
   start_end: { bs: 'elipsa (početak/kraj)', en: 'oval (start/end)', de: 'Ellipse (Start/Ende)' },
   io: { bs: 'paralelogram (unos/ispis)', en: 'parallelogram (input/output)', de: 'Parallelogramm (Eingabe/Ausgabe)' },
   process: { bs: 'pravougaonik (obrada)', en: 'rectangle (process)', de: 'Rechteck (Verarbeitung)' },
@@ -201,9 +202,13 @@ const SHAPE_NAMES: Record<ShapeType, Record<Language, string>> = {
 
 /** The student-facing sentence for one finding. */
 export function describeDiagramIssue(issue: DiagramIssue, lang: Language): string {
+  return localize(lang, describeDiagramIssueIn(issue, sourceLang(lang)));
+}
+
+function describeDiagramIssueIn(issue: DiagramIssue, lang: SourceLang): string {
   const q = issue.token;
   const shape = issue.expected ? SHAPE_NAMES[issue.expected][lang] : '';
-  const messages: Record<DiagramIssueCode, Record<Language, string>> = {
+  const messages: Record<DiagramIssueCode, Record<SourceLang, string>> = {
     'nema-pocetka': {
       bs: 'dijagram nema početak — dodaj elipsu s riječi POČETAK',
       en: 'the diagram has no start — add an oval that says START',

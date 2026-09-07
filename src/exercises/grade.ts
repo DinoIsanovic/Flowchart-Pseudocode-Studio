@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Language } from '../types';
+import { Language, SourceLang } from '../types';
 import { parsePseudocode } from '../core/flowchart-gen';
 import { Interpreter, describeRunError } from '../core/interpreter';
 import { indentWidth } from '../core/flowchart-gen';
+import { localize, sourceLang } from '../i18n/croatian';
 import { Task } from './types';
 import { STEP, Tile, solutionText, tiles } from './render';
 
@@ -131,6 +132,10 @@ export function gradeAttempt(task: Task, code: string, lang: Language): GradeRes
 
 /** The sentence shown under a wrong attempt. */
 export function describeGrade(result: GradeResult, lang: Language): string {
+  return localize(lang, describeGradeIn(result, sourceLang(lang)));
+}
+
+function describeGradeIn(result: GradeResult, lang: SourceLang): string {
   if (result.correct) {
     return lang === 'en' ? 'Correct!' : lang === 'de' ? 'Richtig!' : 'Tačno!';
   }

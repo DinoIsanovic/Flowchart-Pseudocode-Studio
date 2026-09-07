@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Language, Statement } from '../types';
+import { Language, SourceLang, Statement } from '../types';
+import { localize, sourceLang } from '../i18n/croatian';
 import { assignStepNumbers } from './flowchart-gen';
 import { counterName, identifiersUsed } from './counters';
 import { Env, ExprError, ExprErrorCode, Value, describeExprError, evaluateExpression, formatValue, toBoolean } from './expr';
@@ -400,6 +401,10 @@ export class Interpreter {
 
 /** The student-facing sentence for a run error, in their own language. */
 export function describeRunError(err: RunError, lang: Language): string {
+  return localize(lang, describeRunErrorIn(err, sourceLang(lang)));
+}
+
+function describeRunErrorIn(err: RunError, lang: SourceLang): string {
   if (err.code === 'too-many-steps') {
     return lang === 'en'
       ? 'the program is still running after very many steps — a loop probably never ends'

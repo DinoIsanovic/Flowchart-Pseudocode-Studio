@@ -17,6 +17,7 @@ drawing the wrong thing.
 
 import json
 import random
+import re
 import sys
 import zipfile
 from xml.sax.saxutils import escape
@@ -49,8 +50,34 @@ NS = ('xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" '
       'xmlns:w10="urn:schemas-microsoft-com:office:word"')
 
 
+# Words this workbook's own Bosnian prose is read through. Empty unless the
+# data says otherwise, and filled from the same map the application uses.
+VARIANT: dict = {}
+_WORD = re.compile(r"[^\W\d_]+", re.UNICODE)
+
+
+def variant(text):
+    """The workbook's prose in whichever of the two it is being printed in."""
+    if not VARIANT:
+        return text
+
+    def one(m):
+        w = m.group(0)
+        hit = VARIANT.get(w.lower())
+        if not hit:
+            return w
+        if w.isupper():
+            return hit.upper()
+        if w[:1].isupper():
+            return hit[:1].upper() + hit[1:]
+        return hit
+
+    return _WORD.sub(one, text)
+
+
 def run(t, *, bold=False, italic=False, size=22, mono=False, color=INK, spacing=0, caps=False):
     """One text run. `size` is in half-points, so 22 is 11 pt."""
+    t = variant(t)
     props = []
     if mono:
         props.append('<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas" w:cs="Consolas"/>')
@@ -279,7 +306,7 @@ def vml_node(kind, cx, cy, w, h, text, size=13, k=0.5):
         '<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="0" '
         'w:line="240" w:lineRule="auto"/></w:pPr>'
         f'<w:r><w:rPr><w:sz w:val="{pt}"/><w:color w:val="{ACCENT}"/></w:rPr>'
-        f'<w:t>{escape(line)}</w:t></w:r></w:p>' for line in lines) +
+        f'<w:t>{escape(variant(line))}</w:t></w:r></w:p>' for line in lines) +
         '</w:txbxContent></v:textbox>')
     if kind == 'start_end':
         return f'<v:oval style="{st}" {skin}>{caption}</v:oval>'
@@ -895,6 +922,8 @@ FOOTER = ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
 
 
 def build(data, path):
+    global VARIANT
+    VARIANT = data.get('words') or {}
     rng = random.Random(20260906)
     # The worked example is the first computational task: everyday tasks have
     # no numbers to check against, which is half of what the example shows.

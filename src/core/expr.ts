@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Language } from '../types';
+import { Language, SourceLang } from '../types';
+import { localize, sourceLang } from '../i18n/croatian';
 import { normWord } from './flowchart-gen';
 
 /**
@@ -521,8 +522,12 @@ export function formatValue(v: Value): string {
 
 /** The student-facing sentence for a thrown `ExprError`. */
 export function describeExprError(err: ExprError, lang: Language): string {
+  return localize(lang, describeExprErrorIn(err, sourceLang(lang)));
+}
+
+function describeExprErrorIn(err: ExprError, lang: SourceLang): string {
   const q = err.token;
-  const messages: Record<ExprErrorCode, Record<Language, string>> = {
+  const messages: Record<ExprErrorCode, Record<SourceLang, string>> = {
     empty: {
       en: 'this line has no expression to evaluate',
       de: 'in dieser Zeile steht kein auswertbarer Ausdruck',
