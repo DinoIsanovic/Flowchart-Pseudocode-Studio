@@ -13,3 +13,4 @@ radna-sveska-*.docx
 
 # python venv (python-docx za generisanje radne sveske)
 .venv/
+__pycache__/

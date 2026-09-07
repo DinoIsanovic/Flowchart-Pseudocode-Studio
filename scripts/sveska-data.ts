@@ -42,7 +42,7 @@ const data = {
       discussion: task.discussion ? text(task.discussion, 'bs') : null,
       solution,
       blanked: blankedText(task, 'bs'),
-      tiles: tiles(task, 'bs'),
+      tiles: tiles(task, 'bs').map((tile) => ({ text: tile.text, level: tile.level })),
       interchangeable: task.interchangeable ?? [],
       distractors: (task.distractors ?? []).map((d) => solutionText({ ...task, solution: d }, 'bs')),
       results,
