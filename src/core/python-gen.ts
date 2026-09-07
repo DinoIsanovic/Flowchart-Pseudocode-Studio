@@ -30,6 +30,39 @@ export function conditionToPython(cond: string): string {
   return (cond || '').replace(/(^|[^=!<>])=(?!=)/g, '$1==').trim();
 }
 
+/**
+ * The name of the input helper, spelled the way the student's own pseudocode
+ * spells the keyword — all three are words `parsePseudocode` already accepts.
+ */
+const READ_FN: Record<Language, string> = { bs: 'unesi', en: 'read', de: 'lies' };
+
+/**
+ * `int(input())` is wrong for any exercise whose test values have a decimal
+ * point, and `float(input())` is wrong for any count a loop later feeds to
+ * `range()`. This helper does what the simulator's `readValue` does: a whole
+ * number stays whole, a decimal stays decimal, and anything else stays text.
+ * It is emitted only when the program actually reads something.
+ */
+function readHelper(lang: Language): PythonLine[] {
+  const fn = READ_FN[lang];
+  const note: Record<Language, string> = {
+    bs: '# Pročita jednu vrijednost: cijeli broj, decimalni broj ili tekst.',
+    en: '# Reads one value: a whole number, a decimal number, or text.',
+    de: '# Liest einen Wert: ganze Zahl, Dezimalzahl oder Text.',
+  };
+  const v: Record<Language, string> = { bs: 'tekst', en: 'text', de: 'text' };
+  const t = v[lang];
+  return [
+    { text: note[lang], depth: 0 },
+    { text: `def ${fn}():`, depth: 0 },
+    { text: `${t} = input().strip()`, depth: 1 },
+    { text: `if ${t}.lstrip("+-").replace(".", "", 1).isdigit():`, depth: 1 },
+    { text: `return float(${t}) if "." in ${t} else int(${t})`, depth: 2 },
+    { text: `return ${t}`, depth: 1 },
+    { text: '', depth: 0 },
+  ];
+}
+
 /** `unesi a, b` names two variables and needs one input() call per name. */
 function inputTargets(text: string): string[] {
   return (text || '')
@@ -39,15 +72,14 @@ function inputTargets(text: string): string[] {
 }
 
 
-function actionLines(stmt: Statement, depth: number, step?: number): PythonLine[] {
+function actionLines(stmt: Statement, depth: number, lang: Language, step?: number): PythonLine[] {
   const text = (stmt.text ?? '').trim();
 
   if (stmt.kind === 'unesi') {
+    const fn = READ_FN[lang];
     const targets = inputTargets(text);
-    if (!targets.length) return [{ text: 'value = int(input())', depth, step }];
-    // Numbers cover nearly every school exercise; a student reading a name or
-    // a decimal drops the int() themselves, which is a teachable moment.
-    return targets.map((v) => ({ text: `${v} = int(input())`, depth, step }));
+    if (!targets.length) return [{ text: `value = ${fn}()`, depth, step }];
+    return targets.map((v) => ({ text: `${v} = ${fn}()`, depth, step }));
   }
 
   if (stmt.kind === 'ispisi') {
@@ -68,6 +100,7 @@ function walk(
   depth: number,
   stepOf: Map<Statement, number>,
   used: Set<string>,
+  lang: Language,
   loopDepth = 0
 ): PythonLine[] {
   const out: PythonLine[] = [];
@@ -76,14 +109,14 @@ function walk(
     const step = stepOf.get(stmt);
 
     if (stmt.type === 'action') {
-      out.push(...actionLines(stmt, depth, step));
+      out.push(...actionLines(stmt, depth, lang, step));
       return;
     }
 
     if (stmt.type === 'if') {
       out.push({ text: `if ${conditionToPython(stmt.cond ?? '')}:`, depth, step });
       const thenBlock = stmt.thenBlock ?? [];
-      out.push(...(thenBlock.length ? walk(thenBlock, depth + 1, stepOf, used, loopDepth) : [{ text: 'pass', depth: depth + 1 }]));
+      out.push(...(thenBlock.length ? walk(thenBlock, depth + 1, stepOf, used, lang, loopDepth) : [{ text: 'pass', depth: depth + 1 }]));
 
       const elseBlock = stmt.elseBlock ?? [];
       if (!elseBlock.length) return;
@@ -92,14 +125,14 @@ function walk(
       // writes as elif rather than a nested block.
       const only = elseBlock.length === 1 ? elseBlock[0] : null;
       if (only && only.type === 'if') {
-        const chained = walk(elseBlock, depth, stepOf, used, loopDepth);
+        const chained = walk(elseBlock, depth, stepOf, used, lang, loopDepth);
         chained[0] = { ...chained[0], text: chained[0].text.replace(/^if /, 'elif ') };
         out.push(...chained);
         return;
       }
 
       out.push({ text: 'else:', depth });
-      out.push(...walk(elseBlock, depth + 1, stepOf, used, loopDepth));
+      out.push(...walk(elseBlock, depth + 1, stepOf, used, lang, loopDepth));
       return;
     }
 
@@ -111,7 +144,7 @@ function walk(
       out.push({ text: `for ${name} in range(${stmt.times ?? '3'}):`, depth, step });
       const body = stmt.body ?? [];
       out.push(...(body.length
-        ? walk(body, depth + 1, stepOf, used, loopDepth + 1)
+        ? walk(body, depth + 1, stepOf, used, lang, loopDepth + 1)
         : [{ text: 'pass', depth: depth + 1 }]));
       return;
     }
@@ -131,7 +164,7 @@ function walk(
       out.push({ text: header, depth, step });
       const body = stmt.body ?? [];
       out.push(...(body.length
-        ? walk(body, depth + 1, stepOf, used, loopDepth)
+        ? walk(body, depth + 1, stepOf, used, lang, loopDepth)
         : [{ text: 'pass', depth: depth + 1 }]));
       return;
     }
@@ -145,10 +178,12 @@ function walk(
  * badge of the flowchart node it belongs to, so the export can print the three
  * columns side by side without relying on them lining up geometrically.
  */
-export function statementsToPython(statements: Statement[], _lang: Language = 'en'): PythonLine[] {
+export function statementsToPython(statements: Statement[], lang: Language = 'en'): PythonLine[] {
   const stepOf = assignStepNumbers(statements);
-  const body = walk(statements, 0, stepOf, identifiersUsed(statements));
-  return body.length ? body : [{ text: 'pass', depth: 0 }];
+  const body = walk(statements, 0, stepOf, identifiersUsed(statements), lang);
+  if (!body.length) return [{ text: 'pass', depth: 0 }];
+  const reads = body.some((l) => l.text.endsWith(`= ${READ_FN[lang]}()`));
+  return reads ? [...readHelper(lang), ...body] : body;
 }
 
 /** Flattens the generated lines into a Python source file. */
