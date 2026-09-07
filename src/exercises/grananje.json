@@ -1,0 +1,509 @@
+{
+  "topic": "grananje",
+  "title": {
+    "bs": "Grananje (uslovi)",
+    "en": "Branching (conditions)",
+    "de": "Verzweigung (Bedingungen)"
+  },
+  "tasks": [
+    {
+      "id": "grananje-kisobran",
+      "kind": "svakodnevni",
+      "kockice": "sidra",
+      "showPython": false,
+      "title": {
+        "bs": "Da li ponijeti kišobran?",
+        "en": "Take an umbrella?",
+        "de": "Schirm mitnehmen?"
+      },
+      "prompt": {
+        "bs": "Aplikacija za vrijeme pokazuje vjerovatnoću kiše u postotcima. Ako je veća od 50, ponesi kišobran.",
+        "en": "A weather app shows the chance of rain as a percentage. If it is over 50, take an umbrella.",
+        "de": "Eine Wetter-App zeigt die Regenwahrscheinlichkeit in Prozent. Über 50 nimmst du einen Schirm mit."
+      },
+      "solution": "@START\n@OUTPUT \"Pogledaj prognozu\"\n@INPUT vjerovatnoca\n@IF vjerovatnoca > 50\n  @YES\n    @OUTPUT \"Uzmi kišobran\"\n@OUTPUT \"Kreni u školu\"\n@END",
+      "solutionByLang": {
+        "en": "@START\n@OUTPUT \"Check the forecast\"\n@INPUT chance\n@IF chance > 50\n  @YES\n    @OUTPUT \"Take an umbrella\"\n@OUTPUT \"Head off to school\"\n@END",
+        "de": "@START\n@OUTPUT \"Schau die Vorhersage an\"\n@INPUT wahrscheinlichkeit\n@IF wahrscheinlichkeit > 50\n  @YES\n    @OUTPUT \"Nimm einen Schirm\"\n@OUTPUT \"Geh zur Schule\"\n@END"
+      },
+      "tests": [
+        [
+          "80"
+        ],
+        [
+          "20"
+        ],
+        [
+          "50"
+        ]
+      ],
+      "types": [
+        "kockice",
+        "prepoznaj",
+        "dijagram-greska"
+      ],
+      "mistake": "oblik",
+      "discussion": {
+        "bs": "Grana DA postoji, a grane NE nema. Šta se dogodi kada je vjerovatnoća 20? Zašto se „Kreni u školu” ipak ispiše?",
+        "en": "There is a YES branch but no NO branch. What happens when the chance is 20? Why does ‚Head off to school’ still print?",
+        "de": "Es gibt einen JA-Zweig, aber keinen NEIN-Zweig. Was passiert bei 20? Warum wird ‚Geh zur Schule‘ trotzdem ausgegeben?"
+      },
+      "topic": "grananje",
+      "level": 1
+    },
+    {
+      "id": "grananje-nacas",
+      "kind": "svakodnevni",
+      "kockice": "sidra",
+      "showPython": false,
+      "title": {
+        "bs": "Stižeš li na čas?",
+        "en": "Will you make it to class?",
+        "de": "Schaffst du es zum Unterricht?"
+      },
+      "prompt": {
+        "bs": "Ako do zvona ima 5 ili više minuta, stigneš mirnim hodom. Ako ima manje, moraš potrčati.",
+        "en": "With 5 minutes or more until the bell you can walk. With less, you have to run.",
+        "de": "Bei 5 Minuten oder mehr bis zum Klingeln reicht Gehen. Bei weniger musst du rennen."
+      },
+      "solution": "@START\n@OUTPUT \"Pogledaj na sat\"\n@INPUT minuta\n@IF minuta >= 5\n  @YES\n    @OUTPUT \"Stigneš mirnim hodom\"\n  @ELSE\n    @OUTPUT \"Potrči\"\n@END",
+      "solutionByLang": {
+        "en": "@START\n@OUTPUT \"Look at the clock\"\n@INPUT minutes\n@IF minutes >= 5\n  @YES\n    @OUTPUT \"You can walk\"\n  @ELSE\n    @OUTPUT \"Run\"\n@END",
+        "de": "@START\n@OUTPUT \"Schau auf die Uhr\"\n@INPUT minuten\n@IF minuten >= 5\n  @YES\n    @OUTPUT \"Du kannst gehen\"\n  @ELSE\n    @OUTPUT \"Lauf\"\n@END"
+      },
+      "tests": [
+        [
+          "10"
+        ],
+        [
+          "5"
+        ],
+        [
+          "2"
+        ]
+      ],
+      "types": [
+        "kockice",
+        "prepoznaj",
+        "dijagram-greska"
+      ],
+      "mistake": "strelica",
+      "discussion": {
+        "bs": "Za tačno 5 minuta program kaže da stigneš mirno. Da li bi bilo drugačije da piše > 5 umjesto >= 5?",
+        "en": "At exactly 5 minutes it says you can walk. Would > 5 instead of >= 5 change that?",
+        "de": "Bei genau 5 Minuten sagt es, du kannst gehen. Wäre das mit > 5 statt >= 5 anders?"
+      },
+      "topic": "grananje",
+      "level": 2
+    },
+    {
+      "id": "grananje-veci",
+      "kind": "racunski",
+      "title": {
+        "bs": "Veći od dva broja",
+        "en": "The larger of two numbers",
+        "de": "Die größere von zwei Zahlen"
+      },
+      "prompt": {
+        "bs": "Za dva unesena broja ispiši koji je veći.",
+        "en": "Read two numbers and print the larger one.",
+        "de": "Lies zwei Zahlen ein und gib die größere aus."
+      },
+      "solution": "@START\n@INPUT a, b\n@IF a > b\n  @YES\n    @OUTPUT \"Veći je\", a\n  @ELSE\n    @OUTPUT \"Veći je\", b\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT a, b\n@IF a > b\n  @YES\n    @OUTPUT \"The larger is\", a\n  @ELSE\n    @OUTPUT \"The larger is\", b\n@END",
+        "de": "@START\n@INPUT a, b\n@IF a > b\n  @YES\n    @OUTPUT \"Größer ist\", a\n  @ELSE\n    @OUTPUT \"Größer ist\", b\n@END"
+      },
+      "tests": [
+        [
+          "8",
+          "3"
+        ],
+        [
+          "3",
+          "8"
+        ],
+        [
+          "5",
+          "5"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "greska",
+        "dijagram-greska"
+      ],
+      "mistake": "kraj",
+      "distractors": [
+        "@IF a < b"
+      ],
+      "discussion": {
+        "bs": "Za a = 5 i b = 5 program ispisuje 5, a brojevi su jednaki. Je li odgovor pogrešan ili je pitanje loše postavljeno?",
+        "en": "For a = 5 and b = 5 it prints 5, but the numbers are equal. Is the answer wrong, or is the question?",
+        "de": "Für a = 5 und b = 5 gibt es 5 aus, obwohl sie gleich sind. Ist die Antwort falsch oder die Frage?"
+      },
+      "topic": "grananje",
+      "level": 3
+    },
+    {
+      "id": "grananje-ugao",
+      "kind": "racunski",
+      "title": {
+        "bs": "Oštar ugao?",
+        "en": "Is the angle acute?",
+        "de": "Spitzer Winkel?"
+      },
+      "prompt": {
+        "bs": "Za uneseni ugao u stepenima ispiši je li oštar.",
+        "en": "For an angle in degrees, print whether it is acute.",
+        "de": "Gib für einen Winkel in Grad aus, ob er spitz ist."
+      },
+      "hint": {
+        "bs": "Oštar ugao je manji od 90°, prav je tačno 90°, a tup je veći od 90°.",
+        "en": "An acute angle is under 90°, a right angle is exactly 90°, an obtuse one is over 90°.",
+        "de": "Ein spitzer Winkel ist unter 90°, ein rechter genau 90°, ein stumpfer über 90°."
+      },
+      "solution": "@START\n@INPUT alfa\n@IF alfa {{< 90}}\n  @YES\n    @OUTPUT \"Ugao je oštar\"\n  @ELSE\n    @OUTPUT \"Ugao je tup ili prav\"\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT alpha\n@IF alpha {{< 90}}\n  @YES\n    @OUTPUT \"The angle is acute\"\n  @ELSE\n    @OUTPUT \"The angle is obtuse or right\"\n@END",
+        "de": "@START\n@INPUT alpha\n@IF alpha {{< 90}}\n  @YES\n    @OUTPUT \"Der Winkel ist spitz\"\n  @ELSE\n    @OUTPUT \"Der Winkel ist stumpf oder recht\"\n@END"
+      },
+      "tests": [
+        [
+          "30"
+        ],
+        [
+          "89.9"
+        ],
+        [
+          "90"
+        ],
+        [
+          "120.5"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "dopuni",
+        "kockice",
+        "greska",
+        "dijagram-greska"
+      ],
+      "mistake": "prazan",
+      "distractors": [
+        "@IF alfa <= 90"
+      ],
+      "discussion": {
+        "bs": "Poruka kaže „tup ili prav” jer jedna grana pokriva dva slučaja. Kako bi ih razdvojio?",
+        "en": "The message says ‚obtuse or right’ because one branch covers two cases. How would you separate them?",
+        "de": "Die Meldung sagt ‚stumpf oder recht‘, weil ein Zweig zwei Fälle abdeckt. Wie trennst du sie?"
+      },
+      "topic": "grananje",
+      "level": 4
+    },
+    {
+      "id": "grananje-prolaz",
+      "kind": "racunski",
+      "title": {
+        "bs": "Položio ili nije",
+        "en": "Passed or not",
+        "de": "Bestanden oder nicht"
+      },
+      "prompt": {
+        "bs": "Test je položen sa 50 i više bodova. Za uneseni broj bodova ispiši rezultat.",
+        "en": "The test is passed with 50 points or more. Print the result for a number of points.",
+        "de": "Der Test ist ab 50 Punkten bestanden. Gib das Ergebnis für eine Punktzahl aus."
+      },
+      "hint": {
+        "bs": "Tačno 50 bodova znači položio, pa granicu treba uključiti u uslov.",
+        "en": "Exactly 50 counts as passed, so the boundary belongs inside the condition.",
+        "de": "Genau 50 gilt als bestanden, die Grenze gehört also in die Bedingung."
+      },
+      "solution": "@START\n@INPUT bodovi\n@IF bodovi {{>=}} 50\n  @YES\n    @OUTPUT \"Položio\"\n  @ELSE\n    @OUTPUT \"Nije položio\"\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT points\n@IF points {{>=}} 50\n  @YES\n    @OUTPUT \"Passed\"\n  @ELSE\n    @OUTPUT \"Not passed\"\n@END",
+        "de": "@START\n@INPUT punkte\n@IF punkte {{>=}} 50\n  @YES\n    @OUTPUT \"Bestanden\"\n  @ELSE\n    @OUTPUT \"Nicht bestanden\"\n@END"
+      },
+      "tests": [
+        [
+          "0"
+        ],
+        [
+          "49"
+        ],
+        [
+          "50"
+        ],
+        [
+          "100"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "dopuni",
+        "greska",
+        "samostalno"
+      ],
+      "distractors": [
+        "@IF bodovi > 50"
+      ],
+      "topic": "grananje",
+      "level": 5
+    },
+    {
+      "id": "grananje-apsolutna",
+      "kind": "racunski",
+      "title": {
+        "bs": "Apsolutna vrijednost",
+        "en": "Absolute value",
+        "de": "Absolutwert"
+      },
+      "prompt": {
+        "bs": "Za uneseni broj ispiši njegovu apsolutnu vrijednost — broj bez predznaka.",
+        "en": "Print the absolute value of a number — the number without its sign.",
+        "de": "Gib den Absolutwert einer Zahl aus — die Zahl ohne Vorzeichen."
+      },
+      "solution": "@START\n@INPUT a\n@IF a < 0\n  @YES\n    @CALC a = -a\n@OUTPUT \"Apsolutna vrijednost je\", a\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT a\n@IF a < 0\n  @YES\n    @CALC a = -a\n@OUTPUT \"The absolute value is\", a\n@END",
+        "de": "@START\n@INPUT a\n@IF a < 0\n  @YES\n    @CALC a = -a\n@OUTPUT \"Der Absolutwert ist\", a\n@END"
+      },
+      "tests": [
+        [
+          "-7"
+        ],
+        [
+          "0"
+        ],
+        [
+          "12"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "tabela",
+        "greska",
+        "dijagram-greska"
+      ],
+      "mistake": "oblik",
+      "discussion": {
+        "bs": "ISPIŠI stoji izvan grane. Šta bi se ispisalo za broj 12 da je uvučen unutar DA?",
+        "en": "The OUTPUT sits outside the branch. What would 12 print if it were indented inside YES?",
+        "de": "Die AUSGABE steht außerhalb des Zweigs. Was käme bei 12 heraus, wenn sie in JA eingerückt wäre?"
+      },
+      "topic": "grananje",
+      "level": 6
+    },
+    {
+      "id": "grananje-voda",
+      "kind": "racunski",
+      "title": {
+        "bs": "Agregatno stanje vode",
+        "en": "The state of water",
+        "de": "Aggregatzustand von Wasser"
+      },
+      "prompt": {
+        "bs": "Za unesenu temperaturu ispiši u kojem je stanju voda. Na tačno 0 °C led i voda postoje zajedno.",
+        "en": "For a temperature, print the state of the water. At exactly 0 °C ice and water exist together.",
+        "de": "Gib für eine Temperatur den Zustand des Wassers aus. Bei genau 0 °C bestehen Eis und Wasser zugleich."
+      },
+      "solution": "@START\n@INPUT temperatura\n@IF temperatura < 0\n  @YES\n    @OUTPUT \"Voda je u čvrstom stanju (led)\"\n  @ELSE @IF temperatura {{== 0}}\n    @YES\n      @OUTPUT \"Led i voda postoje zajedno\"\n    @ELSE\n      @OUTPUT \"Voda je u tečnom stanju\"\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT temperature\n@IF temperature < 0\n  @YES\n    @OUTPUT \"The water is solid (ice)\"\n  @ELSE @IF temperature {{== 0}}\n    @YES\n      @OUTPUT \"Ice and water exist together\"\n    @ELSE\n      @OUTPUT \"The water is liquid\"\n@END",
+        "de": "@START\n@INPUT temperatur\n@IF temperatur < 0\n  @YES\n    @OUTPUT \"Das Wasser ist fest (Eis)\"\n  @ELSE @IF temperatur {{== 0}}\n    @YES\n      @OUTPUT \"Eis und Wasser bestehen zugleich\"\n    @ELSE\n      @OUTPUT \"Das Wasser ist fluessig\"\n@END"
+      },
+      "tests": [
+        [
+          "-5"
+        ],
+        [
+          "0"
+        ],
+        [
+          "20"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "dopuni",
+        "kockice",
+        "greska",
+        "dijagram-greska"
+      ],
+      "mistake": "strelica",
+      "distractors": [
+        "@IF temperatura <= 0"
+      ],
+      "discussion": {
+        "bs": "Ako u prvom uslovu umjesto < staviš <=, srednja grana se nikad neće izvršiti. Koji test to otkriva?",
+        "en": "Change < to <= in the first condition and the middle branch never runs. Which test finds that?",
+        "de": "Wird < zu <=, läuft der mittlere Zweig nie. Welcher Test deckt das auf?"
+      },
+      "topic": "grananje",
+      "level": 7
+    },
+    {
+      "id": "grananje-ocjena",
+      "kind": "racunski",
+      "title": {
+        "bs": "Ocjena iz bodova",
+        "en": "Mark from points",
+        "de": "Note aus Punkten"
+      },
+      "prompt": {
+        "bs": "Pretvori osvojene bodove u ocjenu: 90 i više je 5, od 75 je 4, od 60 je 3, od 50 je 2, ispod toga 1.",
+        "en": "Turn points into a mark: 90 and up is 5, from 75 a 4, from 60 a 3, from 50 a 2, below that a 1.",
+        "de": "Rechne Punkte in eine Note um: ab 90 eine 5, ab 75 eine 4, ab 60 eine 3, ab 50 eine 2, darunter eine 1."
+      },
+      "solution": "@START\n@INPUT bodovi\n@IF bodovi >= 90\n  @YES\n    @OUTPUT \"Odličan (5)\"\n  @ELSE @IF bodovi >= 75\n    @YES\n      @OUTPUT \"Vrlo dobar (4)\"\n    @ELSE @IF bodovi >= 60\n      @YES\n        @OUTPUT \"Dobar (3)\"\n      @ELSE @IF bodovi >= 50\n        @YES\n          @OUTPUT \"Dovoljan (2)\"\n        @ELSE\n          @OUTPUT \"Nedovoljan (1)\"\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT points\n@IF points >= 90\n  @YES\n    @OUTPUT \"Excellent (5)\"\n  @ELSE @IF points >= 75\n    @YES\n      @OUTPUT \"Very good (4)\"\n    @ELSE @IF points >= 60\n      @YES\n        @OUTPUT \"Good (3)\"\n      @ELSE @IF points >= 50\n        @YES\n          @OUTPUT \"Sufficient (2)\"\n        @ELSE\n          @OUTPUT \"Insufficient (1)\"\n@END",
+        "de": "@START\n@INPUT punkte\n@IF punkte >= 90\n  @YES\n    @OUTPUT \"Sehr gut (5)\"\n  @ELSE @IF punkte >= 75\n    @YES\n      @OUTPUT \"Gut (4)\"\n    @ELSE @IF punkte >= 60\n      @YES\n        @OUTPUT \"Befriedigend (3)\"\n      @ELSE @IF punkte >= 50\n        @YES\n          @OUTPUT \"Ausreichend (2)\"\n        @ELSE\n          @OUTPUT \"Ungenuegend (1)\"\n@END"
+      },
+      "tests": [
+        [
+          "95"
+        ],
+        [
+          "75"
+        ],
+        [
+          "60"
+        ],
+        [
+          "50"
+        ],
+        [
+          "20"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "samostalno"
+      ],
+      "discussion": {
+        "bs": "Uslovi idu od najvećeg praga prema najmanjem. Šta bi se ispisalo za 95 bodova da prvi uslov bude bodovi >= 50?",
+        "en": "The thresholds run from the highest down. What would 95 print if the first test were points >= 50?",
+        "de": "Die Schwellen laufen von oben nach unten. Was käme bei 95 heraus, wenn zuerst punkte >= 50 stünde?"
+      },
+      "topic": "grananje",
+      "level": 8
+    },
+    {
+      "id": "grananje-najveci",
+      "kind": "racunski",
+      "title": {
+        "bs": "Najveći od tri broja",
+        "en": "The largest of three numbers",
+        "de": "Die größte von drei Zahlen"
+      },
+      "prompt": {
+        "bs": "Za tri unesena broja odredi i ispiši najveći.",
+        "en": "Read three numbers and print the largest.",
+        "de": "Lies drei Zahlen ein und gib die größte aus."
+      },
+      "solution": "@START\n@INPUT a, b, c\n@IF a >= b\n  @YES\n    @IF a >= c\n      @YES\n        @CALC najveci = a\n      @ELSE\n        @CALC najveci = c\n  @ELSE\n    @IF b >= c\n      @YES\n        @CALC najveci = b\n      @ELSE\n        @CALC najveci = c\n@OUTPUT \"Najveći je\", najveci\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT a, b, c\n@IF a >= b\n  @YES\n    @IF a >= c\n      @YES\n        @CALC largest = a\n      @ELSE\n        @CALC largest = c\n  @ELSE\n    @IF b >= c\n      @YES\n        @CALC largest = b\n      @ELSE\n        @CALC largest = c\n@OUTPUT \"The largest is\", largest\n@END",
+        "de": "@START\n@INPUT a, b, c\n@IF a >= b\n  @YES\n    @IF a >= c\n      @YES\n        @CALC groesste = a\n      @ELSE\n        @CALC groesste = c\n  @ELSE\n    @IF b >= c\n      @YES\n        @CALC groesste = b\n      @ELSE\n        @CALC groesste = c\n@OUTPUT \"Die groesste ist\", groesste\n@END"
+      },
+      "tests": [
+        [
+          "8",
+          "3",
+          "5"
+        ],
+        [
+          "3",
+          "8",
+          "5"
+        ],
+        [
+          "3",
+          "5",
+          "8"
+        ],
+        [
+          "4",
+          "4",
+          "4"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "tabela",
+        "samostalno",
+        "dijagram-greska"
+      ],
+      "mistake": "kraj",
+      "discussion": {
+        "bs": "Unutar jedne grane stoji novo grananje. Koliko puta se najviše provjeri neki uslov za jedan unos?",
+        "en": "One branch holds another branch. At most how many conditions get tested for one input?",
+        "de": "In einem Zweig steckt ein weiterer Zweig. Wie viele Bedingungen werden höchstens geprüft?"
+      },
+      "topic": "grananje",
+      "level": 9
+    },
+    {
+      "id": "grananje-trougao",
+      "kind": "racunski",
+      "title": {
+        "bs": "Može li se sastaviti trougao?",
+        "en": "Can these make a triangle?",
+        "de": "Ergibt das ein Dreieck?"
+      },
+      "prompt": {
+        "bs": "Za tri unesene dužine provjeri mogu li biti stranice trougla.",
+        "en": "For three lengths, check whether they can be the sides of a triangle.",
+        "de": "Prüfe für drei Längen, ob sie die Seiten eines Dreiecks sein können."
+      },
+      "hint": {
+        "bs": "Trougao postoji samo ako je zbir svake dvije stranice veći od treće — sva tri uslova moraju vrijediti istovremeno.",
+        "en": "A triangle exists only if each pair of sides adds up to more than the third — all three must hold at once.",
+        "de": "Ein Dreieck gibt es nur, wenn je zwei Seiten zusammen größer als die dritte sind — alle drei zugleich."
+      },
+      "solution": "@START\n@INPUT a, b, c\n@IF a + b > c @AND b + c > a @AND a + c > b\n  @YES\n    @OUTPUT \"Trougao se može sastaviti\"\n  @ELSE\n    @OUTPUT \"Trougao se ne može sastaviti\"\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT a, b, c\n@IF a + b > c @AND b + c > a @AND a + c > b\n  @YES\n    @OUTPUT \"These can make a triangle\"\n  @ELSE\n    @OUTPUT \"These cannot make a triangle\"\n@END",
+        "de": "@START\n@INPUT a, b, c\n@IF a + b > c @AND b + c > a @AND a + c > b\n  @YES\n    @OUTPUT \"Daraus wird ein Dreieck\"\n  @ELSE\n    @OUTPUT \"Daraus wird kein Dreieck\"\n@END"
+      },
+      "tests": [
+        [
+          "3",
+          "4",
+          "5"
+        ],
+        [
+          "1",
+          "2",
+          "10"
+        ],
+        [
+          "2",
+          "2",
+          "4"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "greska",
+        "samostalno"
+      ],
+      "distractors": [
+        "@IF a + b > c"
+      ],
+      "discussion": {
+        "bs": "Za stranice 2, 2 i 4 zbir dvije jednak je trećoj. Zašto to nije trougao?",
+        "en": "For 2, 2 and 4 two sides add up to exactly the third. Why is that not a triangle?",
+        "de": "Bei 2, 2 und 4 ergeben zwei Seiten genau die dritte. Warum ist das kein Dreieck?"
+      },
+      "topic": "grananje",
+      "level": 10
+    }
+  ]
+}

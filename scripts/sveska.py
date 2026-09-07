@@ -311,21 +311,61 @@ def flowchart(dia, width=CONTENT_W, size=13):
     px = lambda n: n['y'] - left + pad
     py = lambda n: n['x'] - top + pad
 
+    def path(*points):
+        """One connector, corners and all, as a single shape.
+
+        Not two v:line segments: the upright leg of a branch has a bounding box
+        of no width and is silently dropped. Not v:polyline either, which reads
+        its points in its own space rather than the group's. A v:shape spanning
+        the whole group takes the same coordinates as everything else here.
+        """
+        head, *rest = points
+        d = f'm{head[0]},{head[1]} l' + ','.join(f'{x},{y}' for x, y in rest) + ' e'
+        return (f'<v:shape style="position:absolute;left:0;top:0;width:{gw};height:{gh}" '
+                f'coordsize="{gw},{gh}" path="{d}" filled="f" strokecolor="#{ACCENT}" '
+                'strokeweight="1.25pt"><v:stroke endarrow="block"/></v:shape>')
+
+    def branch_label(text, x, y):
+        # DA and NE stay upright even though the diagram is turned: two letters
+        # read fine either way, and an upright label is easier to place beside
+        # the line it belongs to.
+        w, h = 260, 130
+        return (f'<v:rect style="position:absolute;left:{x - w // 2};top:{y - h // 2};'
+                f'width:{w};height:{h}" filled="f" stroked="f">'
+                '<v:textbox inset="0,0,0,0"><w:txbxContent>'
+                '<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="0"/></w:pPr>'
+                f'<w:r><w:rPr><w:b/><w:sz w:val="12"/><w:color w:val="{ACCENT}"/></w:rPr>'
+                f'<w:t>{escape(text)}</w:t></w:r></w:p>'
+                '</w:txbxContent></v:textbox></v:rect>')
+
     parts = []
     for e in dia['edges']:
         a, b = nodes.get(e['from']), nodes.get(e['to'])
         if not a or not b:
             continue
-        if abs(a['y'] - b['y']) >= abs(a['x'] - b['x']):
-            step = a['h'] // 2 if b['y'] > a['y'] else -(a['h'] // 2)
-            back = b['h'] // 2 if b['y'] > a['y'] else -(b['h'] // 2)
-            x1, y1, x2, y2 = px(a) + step, py(a), px(b) - back, py(b)
+        sx, sy, tx, ty = px(a), py(a), px(b), py(b)
+        label = (e.get('label') or '').split(' ')[0].upper()
+        fwd = 1 if tx > sx else -1
+        if sy == ty:
+            # Straight along the page: the ordinary step-to-step arrow. It
+            # still carries a label when it is the branch that falls through.
+            start = sx + fwd * a['h'] // 2
+            parts.append(path((start, sy), (tx - fwd * b['h'] // 2, ty)))
+            if label:
+                parts.append(branch_label(label, start + fwd * 70, sy - 46))
+            continue
+        # Off the axis, so the connector turns a corner rather than cutting
+        # across. A branch leaves its diamond sideways first; everything else
+        # runs on before it steps across to meet what it joins.
+        across = 1 if ty > sy else -1
+        if a['type'] == 'decision':
+            leave = sy + across * a['w'] // 2
+            parts.append(path((sx, leave), (sx, ty), (tx - fwd * b['h'] // 2, ty)))
+            if label:
+                parts.append(branch_label(label, sx + 78, (leave + ty) // 2))
         else:
-            step = a['w'] // 2 if b['x'] > a['x'] else -(a['w'] // 2)
-            back = b['w'] // 2 if b['x'] > a['x'] else -(b['w'] // 2)
-            x1, y1, x2, y2 = px(a), py(a) + step, px(b), py(b) - back
-        parts.append(f'<v:line from="{x1},{y1}" to="{x2},{y2}" strokecolor="#{ACCENT}" '
-                     'strokeweight="1.25pt"><v:stroke endarrow="block"/></v:line>')
+            parts.append(path((sx + fwd * a['h'] // 2, sy), (tx, sy),
+                              (tx, ty - across * b['w'] // 2)))
     # Twips to points, then fit the drawing to the width it was given.
     k = min((width / 20) / gw, 0.62)
     for n in dia['nodes']:

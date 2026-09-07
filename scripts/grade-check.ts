@@ -15,6 +15,7 @@ import { Task, TaskPack } from '../src/exercises/types';
 import { solutionText, tileLine, tiles } from '../src/exercises/render';
 import { describeGrade, gradeAttempt } from '../src/exercises/grade';
 import linijska from '../src/exercises/linijska.json';
+import grananje from '../src/exercises/grananje.json';
 
 const pack = linijska as TaskPack;
 const task = (id: string) => pack.tasks.find((t) => t.id === id)!;
@@ -32,8 +33,10 @@ function expect(name: string, id: string, code: string, correct: boolean) {
   }
 }
 
+const branching = grananje as TaskPack;
+
 // Every authored solution must mark itself correct.
-for (const t of pack.tasks) {
+for (const t of [...pack.tasks, ...branching.tasks]) {
   const r = gradeAttempt(t, solutionText(t, 'bs'), 'bs');
   if (r.correct) pass++;
   else {
@@ -193,6 +196,19 @@ const sidra: Task = { ...ugao, id: 'probni-ugao-sidra', kockice: 'sidra' };
   else {
     fail++;
     console.log(`  ✗ sidra: očekivano 5 fiksnih i 3 slobodne, dobiveno ${fixed.length} i ${loose.length}`);
+  }
+}
+
+// Tiles laid out exactly as authored — depth included — must mark correct on
+// every branching task. This is the path that did not exist before tiles
+// carried their level, and the one every 'kockice' exercise in the pack uses.
+for (const t of branching.tasks) {
+  const built = tiles(t, 'bs').map(tileLine).join('\n');
+  const r = gradeAttempt(t, built, 'bs');
+  if (r.correct) pass++;
+  else {
+    fail++;
+    console.log(`  ✗ ${t.id}: složene kockice nisu tačne — ${describeGrade(r, 'bs')}`);
   }
 }
 

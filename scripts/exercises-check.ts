@@ -20,8 +20,9 @@ import { blankedText, blanks, renderKeywords, solutionText, tiles } from '../src
 import { MistakeKind, mistakeFor, plantMistake } from '../src/exercises/plant';
 import { buildFlowchart } from '../src/core/flowchart-gen';
 import linijska from '../src/exercises/linijska.json';
+import grananje from '../src/exercises/grananje.json';
 
-const packs = [linijska as TaskPack];
+const packs = [linijska as TaskPack, grananje as TaskPack];
 const LANGS: Language[] = ['bs', 'en', 'de'];
 
 let problems = 0;

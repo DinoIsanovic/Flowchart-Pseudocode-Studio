@@ -15,11 +15,19 @@ import { Interpreter } from '../src/core/interpreter';
 import { TaskPack, text } from '../src/exercises/types';
 import { blankedText, solutionText, tiles } from '../src/exercises/render';
 import linijska from '../src/exercises/linijska.json';
+import grananje from '../src/exercises/grananje.json';
 
 const out = process.argv[2];
-if (!out) throw new Error('usage: sveska-data.ts <izlazni.json>');
+if (!out) throw new Error('usage: sveska-data.ts <izlazni.json> [tema]');
 
-const pack = linijska as TaskPack;
+const PACKS: Record<string, TaskPack> = {
+  linijska: linijska as TaskPack,
+  grananje: grananje as TaskPack,
+};
+
+const topic = process.argv[3] ?? 'linijska';
+const pack = PACKS[topic];
+if (!pack) throw new Error(`nepoznata tema "${topic}" — postoje: ${Object.keys(PACKS).join(', ')}`);
 
 const data = {
   topic: text(pack.title, 'bs'),

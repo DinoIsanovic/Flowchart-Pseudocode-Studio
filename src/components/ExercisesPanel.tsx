@@ -17,6 +17,7 @@ import { gradeTrace, traceTask } from '../exercises/trace';
 import { MistakeKind, mistakeFor, plantMistake } from '../exercises/plant';
 import { MiniDiagram } from './MiniDiagram';
 import linijska from '../exercises/linijska.json';
+import grananje from '../exercises/grananje.json';
 
 interface ExercisesPanelProps {
   language: Language;
@@ -26,7 +27,11 @@ interface ExercisesPanelProps {
   onReward: (code: string) => void;
 }
 
-const PACK = linijska as TaskPack;
+/**
+ * The topics, in teaching order. A student meets them in this order and the
+ * first is what the panel opens on.
+ */
+const PACKS = [linijska as TaskPack, grananje as TaskPack];
 const PROGRESS_KEY = 'flowchart_studio_vjezbe_v1';
 
 /**
@@ -91,6 +96,7 @@ function availableTypes(task: Task): string[] {
 export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen, onClose, onReward }) => {
   const t = translations[language].vjezbe;
   const [openId, setOpenId] = useState<string | null>(null);
+  const [topic, setTopic] = useState<string>(PACKS[0].topic);
   const [progress, setProgress] = useState<Record<string, boolean>>(loadProgress);
   const [placed, setPlaced] = useState<Placed[]>([]);
   const [filled, setFilled] = useState<string[]>([]);
@@ -100,7 +106,8 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
   const [pickedShape, setPickedShape] = useState<string | null>(null);
   const [result, setResult] = useState<GradeResult | null>(null);
 
-  const task = useMemo(() => PACK.tasks.find((x) => x.id === openId) ?? null, [openId]);
+  const pack = useMemo(() => PACKS.find((p) => p.topic === topic) ?? PACKS[0], [topic]);
+  const task = useMemo(() => pack.tasks.find((x) => x.id === openId) ?? null, [openId, pack]);
   const solution = task ? solutionText(task, language) : '';
   /** Every tile of the solution, frame included, in the order it must run. */
   const all = useMemo(() => (task ? tiles(task, language) : []), [task, language]);
@@ -238,7 +245,7 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
     if (outcome.correct) markSolved(task.id);
   };
 
-  const solvedCount = PACK.tasks.filter((x) => progress[x.id]).length;
+  const solvedCount = pack.tasks.filter((x) => progress[x.id]).length;
 
   return (
     <div className="fixed inset-0 z-50 bg-[#050505]/97 backdrop-blur-xl flex flex-col">
@@ -260,7 +267,7 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
             </span>
           )}
           <span className="flex-1 min-w-0 truncate text-[11px] text-white/45 text-right">
-            {solvedCount} / {PACK.tasks.length} {t.progress}
+            {solvedCount} / {pack.tasks.length} {t.progress}
           </span>
           <button
             type="button"
@@ -275,8 +282,26 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
           {!task && (
             <>
               <p className="text-[11px] text-white/45 mb-3 px-1">{t.intro}</p>
+              {PACKS.length > 1 && (
+                <div className="flex gap-1.5 mb-3">
+                  {PACKS.map((p) => (
+                    <button
+                      key={p.topic}
+                      type="button"
+                      onClick={() => setTopic(p.topic)}
+                      className={`flex-1 px-3 h-9 rounded-lg text-[11px] font-black uppercase tracking-wider border transition-colors ${
+                        p.topic === topic
+                          ? 'bg-[#06B6D4]/15 border-[#06B6D4]/50 text-[#06B6D4]'
+                          : 'bg-white/[0.04] border-white/10 text-white/50 hover:text-white/80'
+                      }`}
+                    >
+                      {text(p.title, language)}
+                    </button>
+                  ))}
+                </div>
+              )}
               <div className="flex flex-col gap-1.5">
-                {PACK.tasks.map((item) => (
+                {pack.tasks.map((item) => (
                   <button
                     key={item.id}
                     type="button"

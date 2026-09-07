@@ -29,6 +29,11 @@ const KEYWORDS: Record<string, Record<Language, string>> = {
   '@REPEAT': { bs: 'PONOVI', en: 'REPEAT', de: 'WIEDERHOLE' },
   '@TIMES': { bs: 'PUTA', en: 'TIMES', de: 'MAL' },
   '@WHILE': { bs: 'DOK JE', en: 'WHILE', de: 'SOLANGE' },
+  // Word operators: a condition that joins two tests reads as words in every
+  // language the parser accepts, so it belongs here rather than in the text.
+  '@AND': { bs: 'I', en: 'AND', de: 'UND' },
+  '@OR': { bs: 'ILI', en: 'OR', de: 'ODER' },
+  '@NOT': { bs: 'NIJE', en: 'NOT', de: 'NICHT' },
 };
 
 const TOKEN = /@[A-Z]+/g;
