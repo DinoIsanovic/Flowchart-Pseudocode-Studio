@@ -10,7 +10,7 @@
  */
 
 import { writeFileSync } from 'node:fs';
-import { parsePseudocode } from '../src/core/flowchart-gen';
+import { buildFlowchart, parsePseudocode } from '../src/core/flowchart-gen';
 import { Interpreter } from '../src/core/interpreter';
 import { TaskPack, text } from '../src/exercises/types';
 import { blankedText, solutionText, tiles } from '../src/exercises/render';
@@ -46,6 +46,18 @@ const data = {
       interchangeable: task.interchangeable ?? [],
       distractors: (task.distractors ?? []).map((d) => solutionText({ ...task, solution: d }, 'bs')),
       results,
+      /**
+       * The laid-out diagram, so the workbook can print the solution as a
+       * drawing and not only as text. A student working alone has nothing to
+       * compare their own drawing against otherwise.
+       */
+      diagram: (() => {
+        const { nodes, edges } = buildFlowchart(statements, 'bs');
+        return {
+          nodes: nodes.map((n) => ({ id: n.id, type: n.type, x: n.x, y: n.y, w: n.w, h: n.h, text: n.text })),
+          edges: edges.map((e) => ({ from: e.from, to: e.to, label: e.label ?? '' })),
+        };
+      })(),
       /** Variables the state-table exercise gets columns for. */
       vars: (() => {
         const machine = new Interpreter(statements);

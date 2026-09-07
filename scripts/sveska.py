@@ -209,26 +209,214 @@ def algorithm_space(height):
                  row_height=height, shades=[None], valign='center')
 
 
+# --- drawing a whole flowchart ----------------------------------------------
+
+# VML paths in the 21600-square every path shape is drawn in.
+NODE_PATHS = {
+    'io': 'm5400,0l21600,0,16200,21600,0,21600xe',
+    'decision': 'm10800,0l21600,10800,10800,21600,0,10800xe',
+}
+
+# The parser lowercases a node's text; the workbook prints the keyword the way
+# the student writes it, and only when the first word really is one.
+KEYWORDS_IN_NODES = {
+    'početak', 'kraj', 'unesi', 'ispiši', 'postavi', 'računaj',
+    'ako', 'inače', 'dok', 'ponovi', 'da', 'ne',
+}
+
+
+def node_caption(text):
+    parts = (text or '').split(' ', 1)
+    if parts and parts[0].lower() in KEYWORDS_IN_NODES:
+        parts[0] = parts[0].upper()
+    return ' '.join(parts)
+
+
+# Below this the print is no longer readable; a label that will not fit even
+# here gets wrapped onto more lines instead of shrinking further.
+MIN_CAPTION = 12
+
+
+def wrap_caption(text, size, along_pt, across_pt):
+    """Break a label to the shape it sits in, the way the canvas does.
+
+    A long ISPIŠI line shrunk until it fits on one line comes out at four
+    points and cannot be read on paper. Wrapping keeps the type legible and
+    keeps the printed diagram looking like the one on screen.
+    """
+    words = (text or '').split()
+    if not words:
+        return [], size
+    while True:
+        per_line = max(6, int(along_pt / (size / 2 * 0.52)))
+        rows = max(1, int(across_pt / (size / 2 * 1.3)))
+        lines, line = [], ''
+        for word in words:
+            nxt = f'{line} {word}'.strip()
+            if len(nxt) <= per_line or not line:
+                line = nxt
+            else:
+                lines.append(line)
+                line = word
+        lines.append(line)
+        if len(lines) <= rows or size <= MIN_CAPTION:
+            return lines, size
+        size -= 1
+
+
+def vml_node(kind, cx, cy, w, h, text, size=13, k=0.5):
+    """One shape of a turned flowchart, caption and all.
+
+    A v:shape with a path turns its own text upside down where an oval or a
+    rect turns it correctly, so the polygons get their caption from a second,
+    invisible rect laid over them.
+    """
+    st = (f'position:absolute;left:{cx - w // 2};top:{cy - h // 2};'
+          f'width:{w};height:{h};rotation:{TURN}')
+    skin = f'fillcolor="#{SOFT}" strokecolor="#{ACCENT}" strokeweight="1.25pt"'
+    lines, pt = wrap_caption(node_caption(text), size, w * k, h * k)
+    caption = ('<v:textbox inset="2pt,1pt,2pt,1pt"><w:txbxContent>' + ''.join(
+        '<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="0" '
+        'w:line="240" w:lineRule="auto"/></w:pPr>'
+        f'<w:r><w:rPr><w:sz w:val="{pt}"/><w:color w:val="{ACCENT}"/></w:rPr>'
+        f'<w:t>{escape(line)}</w:t></w:r></w:p>' for line in lines) +
+        '</w:txbxContent></v:textbox>')
+    if kind == 'start_end':
+        return f'<v:oval style="{st}" {skin}>{caption}</v:oval>'
+    if kind in NODE_PATHS:
+        return (f'<v:shape style="{st}" coordsize="21600,21600" '
+                f'path="{NODE_PATHS[kind]}" {skin}/>'
+                f'<v:rect style="{st}" filled="f" stroked="f">{caption}</v:rect>')
+    return f'<v:rect style="{st}" {skin}>{caption}</v:rect>'
+
+
+def flowchart(dia, width=CONTENT_W, size=13):
+    """A laid-out diagram, turned the same quarter turn the student is asked to
+    draw in: what the app stacks downwards runs along the page instead.
+
+    Straight connectors only. Every task in the linear pack is a single chain,
+    and a branching one will need the waypoints the app already computes.
+    """
+    nodes = {n['id']: n for n in dia['nodes']}
+    if not nodes:
+        return para()
+    # Turning the picture swaps the axes: a node's app-y is its place along the
+    # page, its app-x is its place across it.
+    left = min(n['y'] - n['h'] // 2 for n in nodes.values())
+    right = max(n['y'] + n['h'] // 2 for n in nodes.values())
+    top = min(n['x'] - n['w'] // 2 for n in nodes.values())
+    bottom = max(n['x'] + n['w'] // 2 for n in nodes.values())
+    pad = 12
+    gw, gh = right - left + 2 * pad, bottom - top + 2 * pad
+    px = lambda n: n['y'] - left + pad
+    py = lambda n: n['x'] - top + pad
+
+    parts = []
+    for e in dia['edges']:
+        a, b = nodes.get(e['from']), nodes.get(e['to'])
+        if not a or not b:
+            continue
+        if abs(a['y'] - b['y']) >= abs(a['x'] - b['x']):
+            step = a['h'] // 2 if b['y'] > a['y'] else -(a['h'] // 2)
+            back = b['h'] // 2 if b['y'] > a['y'] else -(b['h'] // 2)
+            x1, y1, x2, y2 = px(a) + step, py(a), px(b) - back, py(b)
+        else:
+            step = a['w'] // 2 if b['x'] > a['x'] else -(a['w'] // 2)
+            back = b['w'] // 2 if b['x'] > a['x'] else -(b['w'] // 2)
+            x1, y1, x2, y2 = px(a), py(a) + step, px(b), py(b) - back
+        parts.append(f'<v:line from="{x1},{y1}" to="{x2},{y2}" strokecolor="#{ACCENT}" '
+                     'strokeweight="1.25pt"><v:stroke endarrow="block"/></v:line>')
+    # Twips to points, then fit the drawing to the width it was given.
+    k = min((width / 20) / gw, 0.62)
+    for n in dia['nodes']:
+        parts.append(vml_node(n['type'], px(n), py(n), n['w'], n['h'], n['text'], size, k))
+    return ('<w:p><w:pPr><w:spacing w:before="60" w:after="120"/></w:pPr><w:r><w:pict>'
+            f'<v:group style="width:{gw * k:.1f}pt;height:{gh * k:.1f}pt" '
+            f'coordsize="{gw},{gh}">' + ''.join(parts) + '</v:group></w:pict></w:r></w:p>')
+
+
 # --- pieces of the front matter ---------------------------------------------
 
 LEGEND = [
-    ('Elipsa', 'početak i kraj algoritma'),
-    ('Paralelogram', 'unos podataka i ispis rezultata'),
-    ('Pravougaonik', 'obrada — računanje i dodjela vrijednosti'),
-    ('Romb', 'uslov, iz njega izlaze grane DA i NE'),
-    ('Strelica', 'redoslijed izvršavanja koraka'),
+    ('start_end', 'Elipsa', 'početak i kraj algoritma — svaki dijagram ima tačno jedan od svakog'),
+    ('io', 'Paralelogram', 'unos podataka (UNESI) i ispis rezultata (ISPIŠI)'),
+    ('process', 'Pravougaonik', 'obrada — računanje i dodjela vrijednosti'),
+    ('decision', 'Romb', 'uslov; iz njega izlaze dvije grane, DA i NE'),
 ]
 
 HOW_TO = [
-    ('1', 'Pročitaj zadatak do kraja prije nego išta napišeš.'),
-    ('2', 'Riješi vježbu koja je uz zadatak — kockice, praznine, ispis ili tabelu.'),
-    ('3', 'U okvir nacrtaj dijagram toka. POČETAK i prva strelica su već tu.'),
-    ('4', 'Provjeri rješenje tako što ga „izvršiš" korak po korak na primjeru.'),
+    ('1', 'Pročitaj zadatak do kraja prije nego išta napišeš. Pitaj se: šta se '
+          'unosi, šta se računa, šta se ispisuje?'),
+    ('2', 'Riješi vježbu koja je uz zadatak. Uz svaku vježbu piše kako se radi.'),
+    ('3', 'U okvir nacrtaj dijagram toka. POČETAK i prva strelica su već tu — '
+          'nastavi udesno, do bloka KRAJ.'),
+    ('4', 'Provjeri se. Uzmi brojeve iz zadatka i prođi kroz svoj algoritam '
+          'korak po korak, kao da si ti računar.'),
+    ('5', 'Ako zapne, pogledaj rješenja na kraju — ali tek pošto si pokušao.'),
 ]
+
+# What each exercise asks for, said in a way a student can follow with nobody
+# beside them. This is the difference between a workbook and a page of tasks.
+HOW_TO_SOLVE = {
+    'prepoznaj': (
+        'Šta ispisuje?',
+        'Dobiješ gotov algoritam i nekoliko ulaza. Za svaki ulaz upiši šta '
+        'algoritam ispiše.',
+        ['Idi red po red, ne preskači.',
+         'Sa strane zapiši šta koja varijabla drži i mijenjaj to kad se '
+         'vrijednost promijeni.',
+         'Kad dođeš do reda ISPIŠI, ono što tu izađe upiši u tabelu.'],
+    ),
+    'dopuni': (
+        'Dopuni algoritam',
+        'Iz algoritma su izvađeni dijelovi i zamijenjeni crtama. Vrati ih.',
+        ['Prvo pročitaj cijeli algoritam, pa tek onda popunjavaj.',
+         'Red ispod često kaže šta je gore trebalo stajati — ako se varijabla '
+         'negdje ispisuje, gore je morala biti izračunata.',
+         'Kad popuniš, pročitaj sve ponovo od početka i vidi ima li smisla.'],
+    ),
+    'kockice': (
+        'Složi kockice',
+        'Koraci algoritma su pomiješani. Vrati ih u redoslijed koji ima smisla.',
+        ['POČETAK ide prvi, KRAJ zadnji — to su dvije kockice manje.',
+         'Pitaj se šta mora biti poznato prije nekog koraka: unos ide prije '
+         'računanja, računanje prije ispisa.',
+         'Neki koraci smiju zamijeniti mjesta. Ako ti se čini da su dva '
+         'nezavisna, vjerovatno jesu.'],
+    ),
+    'tabela': (
+        'Tabela stanja',
+        'Prati algoritam korak po korak i zapisuj vrijednosti varijabli.',
+        ['Jedan red tabele je stanje poslije jednog koraka.',
+         'Ako se varijabla u tom koraku nije promijenila, prepiši njenu staru '
+         'vrijednost — ne ostavljaj prazno polje.',
+         'Varijabla koja još nije unesena ni izračunata nema vrijednost; tu '
+         'stavi crticu.'],
+    ),
+    'samostalno': (
+        'Napiši sam',
+        'Nema gotovog algoritma — pišeš ga od nule.',
+        ['Odgovori sebi na tri pitanja: šta se unosi, šta se računa, šta se '
+         'ispisuje.',
+         'Napiši te korake redom, jedan po red.',
+         'Provjeri ga na brojevima iz zadatka prije nego ga nacrtaš.'],
+    ),
+}
+
+
+def legend_symbol(kind):
+    """The symbol itself, drawn the way it will be drawn on the page."""
+    w, h = 116, 42
+    return ('<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="0" w:after="0"/></w:pPr>'
+            '<w:r><w:pict>'
+            f'<v:group style="width:{h * 0.42:.1f}pt;height:{w * 0.42:.1f}pt" '
+            f'coordsize="{h},{w}">'
+            + vml_node(kind, h // 2, w // 2, w, h, '', 12) +
+            '</v:group></w:pict></w:r></w:p>')
 
 
 def cover(topic, count):
-    out = [para(after=900)]
+    out = [para(after=620)]
     out.append(para(run('RADNA SVESKA', bold=True, size=56, color=ACCENT, spacing=60),
                     align='center', after=100))
     out.append(para(run('Algoritmi i dijagrami toka', size=30, color=INK),
@@ -236,7 +424,7 @@ def cover(topic, count):
     out.append(para(run(topic, italic=True, size=25, color=MUTED),
                     align='center', after=140))
     out.append(para(run(f'{count} zadataka  ·  6. razred', size=19, color=FAINT),
-                    align='center', after=800))
+                    align='center', after=520))
 
     # Label and rule in their own columns: written as one run the rules start
     # wherever the label happens to end, and three ragged lines is the first
@@ -244,22 +432,86 @@ def cover(topic, count):
     rows = [[para(run(f'{name}', size=23, color=MUTED), after=0),
              para(run(' ' * 44, size=23), after=0, rule=RULE)]
             for name in ('Ime i prezime', 'Razred', 'Datum')]
-    out.append(table(rows, [2600, CONTENT_W - 2600], borders=None, row_height=560))
-    out.append(para(after=500))
+    out.append(table(rows, [2600, CONTENT_W - 2600], borders=None, row_height=500))
+    out.append(para(after=340))
 
     out.append(label('Kako radiš u ovoj svesci'))
     rows = [[para(run(n, bold=True, size=22, color='FFFFFF'), align='center', after=0),
              para(run(t, size=21), after=0)]
             for n, t in HOW_TO]
     out.append(table(rows, [520, CONTENT_W - 520], borders=None,
-                     shades=[ACCENT_FILL, PAPER], row_height=420))
-    out.append(para(after=360))
+                     shades=[ACCENT_FILL, PAPER], row_height=400))
+    out.append(para(after=240))
+
+    out.append(page_break())
+    return ''.join(out)
+
+
+def guide(example):
+    """One task solved from end to end, and what each exercise is asking for.
+
+    A workbook a child opens alone has to answer "what am I supposed to do
+    here?" before it asks anything. That is what this page is for.
+    """
+    out = [para(run('Kako se rješava zadatak', bold=True, size=36, color=ACCENT), after=60)]
+    out.append(para(run('Prvo simboli od kojih se dijagram sastoji, pa četiri vrste '
+                        'vježbi koje se u svesci smjenjuju.', size=21, color=MUTED),
+                    after=200))
 
     out.append(label('Simboli koje koristimo'))
-    rows = [[para(run(name, bold=True, size=20, color=ACCENT), after=0),
-             para(run(meaning, size=20), after=0)]
-            for name, meaning in LEGEND]
-    out.append(table(rows, [2500, CONTENT_W - 2500], borders=RULE))
+    out.append(para(run('Ovako izgledaju kad se dijagram crta slijeva nadesno, kako '
+                        'se crta u ovoj svesci.', size=18, color=MUTED), after=100))
+    rows = [[legend_symbol(kind),
+             para(run(name, bold=True, size=20, color=ACCENT), after=0),
+             para(run(meaning, size=19), after=0)]
+            for kind, name, meaning in LEGEND]
+    out.append(table(rows, [800, 2100, CONTENT_W - 2900], borders=RULE, row_height=520))
+    out.append(para(after=300))
+
+    out.append(label('Vrste vježbi'))
+
+    for kind in ('kockice', 'dopuni', 'prepoznaj', 'tabela'):
+        title, what, steps = HOW_TO_SOLVE[kind]
+        out.append(para(run(title, bold=True, size=23, color=INK), after=40))
+        out.append(para(run(what, size=20, color=MUTED), after=60, ind=60))
+        for step in steps:
+            out.append(para(run('•   ', color=ACCENT, size=20) + run(step, size=19),
+                            after=30, ind=60))
+        out.append(para(after=140))
+
+    # No forced break here: the section above already fills its page, and a
+    # break landing on a full page is what leaves a blank sheet behind it.
+    out.append(para(run('Jedan zadatak, riješen do kraja', bold=True, size=32,
+                        color=ACCENT), after=60, before=200))
+    out.append(para(run('Ovaj zadatak nije za tebe — riješen je da vidiš šta se '
+                        'od tebe traži u ostalima.', size=20, color=MUTED), after=200))
+
+    out.append(label('Zadatak'))
+    out.append(para(run(example['prompt'], size=21), after=160, ind=60))
+
+    out.append(label('1. Šta treba unijeti, izračunati i ispisati'))
+    out.append(para(run('Unosimo dva broja. Računamo njihov zbir i njihovu razliku. '
+                        'Ispisujemo oba rezultata. Tri pitanja, tri odgovora — i '
+                        'algoritam je već skoro napisan.', size=20), after=160, ind=60))
+
+    out.append(label('2. Algoritam'))
+    out.append(code_block(example['solution'].split('\n')))
+
+    out.append(label('3. Provjera na brojevima'))
+    first = example['results'][0]
+    pairs = ', '.join(f'{n} = {v}' for n, v in zip(example['inputVars'], first['inputs']))
+    out.append(para(run(f'Za {pairs} algoritam ispisuje:  ', size=20) +
+                    run(' / '.join(first['output']), mono=True, size=20, color=ACCENT),
+                    after=60, ind=60))
+    out.append(para(run('Provjeri i sam: prođi kroz korake s tim brojevima i vidi '
+                        'dobiješ li isto.', italic=True, size=19, color=MUTED),
+                    after=160, ind=60))
+
+    out.append(label('4. Dijagram toka'))
+    out.append(para(run('Isti algoritam kao slika. Počinje uz lijevu marginu i ide '
+                        'udesno, a svaki blok ima svoj oblik iz tabele simbola.',
+                        size=20, color=MUTED), after=60, ind=60))
+    out.append(flowchart(example['diagram']))
     out.append(page_break())
     return ''.join(out)
 
@@ -309,14 +561,55 @@ def back_page(tasks):
 
 # --- exercises --------------------------------------------------------------
 
+def trace_rows(task):
+    """How many rows the trace actually has.
+
+    Six blank rows for every task was a guess, and a wrong one: a student who
+    cannot tell whether a row is meant to stay empty learns nothing from the
+    table. One row per step that writes a variable is the answer.
+    """
+    n = 0
+    for line in task['solution'].split('\n'):
+        head = line.strip().split(' ', 1)
+        word = head[0].upper()
+        if word == 'UNESI':
+            n += len([v for v in head[1].split(',') if v.strip()]) if len(head) > 1 else 1
+        elif word in ('RAČUNAJ', 'POSTAVI'):
+            n += 1
+    return max(n, 2)
+
+
+def how_to(kind, tip=0):
+    """The two lines that tell a student working alone what to actually do."""
+    title, what, steps = HOW_TO_SOLVE[kind]
+    return (para(run(what, size=19, color=MUTED), after=30) +
+            para(run('Savjet:  ', bold=True, size=18, color=ACCENT) +
+                 run(steps[tip], size=18, color=MUTED), after=120))
+
+
+def self_check(task):
+    """"Did I get it right?" answered from the task's own first test case.
+
+    Left off a predict-the-output task, where the same numbers are the
+    question and printing the answer beside it would end the exercise.
+    """
+    if not task['results'] or not task['results'][0]['output']:
+        return ''
+    first = task['results'][0]
+    pairs = ', '.join(f'{n} = {v}' for n, v in zip(task['inputVars'], first['inputs']))
+    lead = f'Provjera:  za {pairs} mora ispisati  ' if pairs else 'Provjera:  mora ispisati  '
+    return para(run(lead, bold=True, size=18, color=ACCENT) +
+                run(' / '.join(first['output']), mono=True, size=18),
+                after=120, box=RULE, shade=SOFT)
+
+
 def exercise_kockice(task, rng):
     tiles = [t['text'] if isinstance(t, dict) else t for t in task['tiles']]
     levels = [t.get('level', 0) if isinstance(t, dict) else 0 for t in task['tiles']]
     letters = [chr(65 + i) for i in range(len(tiles))]
     order = list(range(len(tiles)))
     rng.shuffle(order)
-    out = [para(run('Kockice su pomiješane. Upiši njihova slova ispravnim redoslijedom '
-                    'u polja ispod.', italic=True, size=19, color=MUTED), after=120)]
+    out = [how_to('kockice')]
     # Two columns: the bank reads the same either way, and half the rows is
     # half the height on a page that has to hold more than one task.
     half = CONTENT_W // 2
@@ -347,16 +640,13 @@ def exercise_kockice(task, rng):
 
 
 def exercise_dopuni(task):
-    out = [para(run('Nedostaju dijelovi algoritma. Upiši ih na crte.',
-                    italic=True, size=19, color=MUTED), after=120)]
+    out = [how_to('dopuni', 1)]
     out.append(code_block(task['blanked'].split('\n')))
     return ''.join(out)
 
 
 def exercise_prepoznaj(task):
-    out = [para(run('Pročitaj algoritam i upiši šta ispisuje za svaki ulaz. '
-                    'Ne moraš ga pokretati — dovoljno je da ga pratiš korak po korak.',
-                    italic=True, size=19, color=MUTED), after=120)]
+    out = [how_to('prepoznaj', 1)]
     out.append(code_block(task['solution'].split('\n')))
     rows = [[para(run('Ulaz', bold=True, size=18, color=ACCENT, caps=True, spacing=20), after=0),
              para(run('Ispis', bold=True, size=18, color=ACCENT, caps=True, spacing=20), after=0)]]
@@ -376,13 +666,11 @@ def exercise_tabela(task):
     first = task['results'][0]['inputs'] if task['results'] else []
     pairs = ', '.join(f'{name} = {value}'
                       for name, value in zip(task['inputVars'], first))
-    uputa = ('Prati izvršavanje korak po korak i popuni tabelu stanja.'
-             if not pairs else
-             f'Prati izvršavanje za {pairs} i popuni tabelu stanja. '
-             'U svaki red upiši vrijednosti nakon tog koraka.')
-    out = [para(run(uputa, italic=True, size=19, color=MUTED), after=120)]
+    out = [how_to('tabela')]
+    if pairs:
+        out.append(para(run(f'Prati izvršavanje za {pairs}.', size=19), after=100))
     rows = [[para(run(c, bold=True, size=18, color=ACCENT), align='center', after=0) for c in cols]]
-    rows += [[para(after=0) for _ in cols] for _ in range(6)]
+    rows += [[para(after=0) for _ in cols] for _ in range(trace_rows(task))]
     out.append(table(rows, [width] * len(cols), borders=RULE, row_height=350,
                      shades=[PAPER] * len(cols)))
     return ''.join(out)
@@ -448,9 +736,13 @@ def estimate(task):
         h += 360 + len(task['solution'].split('\n')) * 250 + 200
         h += (len(task['results']) + 1) * 440
     elif kind == 'tabela':
-        h += 320 + 7 * 360
+        h += 320 + (trace_rows(task) + 1) * 360
     else:
         h += 300
+    if kind != 'tabela' and 'tabela' in task['types'] and not draw_height(kind):
+        h += 250 + 320 + (trace_rows(task) + 1) * 360  # the second exercise
+    if kind not in ('prepoznaj', 'kockice'):
+        h += 400                                       # the self-check box
     height = draw_height(kind)
     if height:
         # The frame, its label, and the line of instruction above it — that
@@ -478,9 +770,20 @@ def card(task, rng):
                         run(task['hint'], size=19),
                         after=160, box=RULE, shade=SOFT))
 
-    out.append(EXERCISES.get(kind, lambda t, r: para(
-        run('Napiši algoritam sam, pa ga nacrtaj u okviru ispod.',
-            italic=True, size=19, color=MUTED), after=120))(task, rng))
+    out.append(EXERCISES.get(kind, lambda t, r: how_to('samostalno'))(task, rng))
+
+    # A task declares several exercise types; the sheet used to show one and
+    # throw the rest away. The state table is the one that adds a different
+    # kind of thinking rather than a second helping of the same.
+    if kind != 'tabela' and 'tabela' in task['types'] and not draw_height(kind):
+        out.append(label('Još jedna vježba'))
+        out.append(exercise_tabela(task))
+
+    # Not on the two exercises whose answer this would be: a predict-the-output
+    # task asks for exactly this, and on a tile task the printed lines come out
+    # in solution order, which is the ordering the student is meant to find.
+    if kind not in ('prepoznaj', 'kockice'):
+        out.append(self_check(task))
 
     height = draw_height(kind)
     if height:
@@ -517,18 +820,21 @@ def pack(tasks):
 def answers(tasks):
     out = [page_break()]
     out.append(para(run('Rješenja', bold=True, size=36, color=ACCENT), after=60))
-    out.append(para(run('Za nastavnika — ove stranice se ne moraju štampati.',
-                        italic=True, size=19, color=MUTED), after=240))
+    out.append(para(run('Pogledaj tek kad si pokušao sam. Uz svaki zadatak je i '
+                        'nacrtan dijagram toka, pa možeš uporediti svoj crtež s '
+                        'njim — ako se razlikuje, ne mora značiti da je pogrešan: '
+                        'provjeri ispisuje li isto.', size=20, color=MUTED), after=240))
     for task in tasks:
-        out.append(para(run(f'{task["level"]}. {task["title"]}', bold=True, size=21,
-                            color=INK), after=60))
+        out.append(para(run(f'{task["level"]}. {task["title"]}', bold=True, size=22,
+                            color=INK), after=60, rule=RULE))
         out.append(code_block(task['solution'].split('\n')))
         for case in task['results']:
             ulaz = ', '.join(case['inputs']) if case['inputs'] else '—'
             ispis = ' / '.join(case['output']) if case['output'] else '—'
             out.append(para(run(f'{ulaz}  →  {ispis}', mono=True, size=18, color=MUTED),
                             ind=200, after=40))
-        out.append(para(after=140))
+        out.append(flowchart(task['diagram'], size=12))
+        out.append(para(after=200))
     return ''.join(out)
 
 
@@ -550,7 +856,10 @@ FOOTER = ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
 
 def build(data, path):
     rng = random.Random(20260906)
-    body = [cover(data['topic'], len(data['tasks']))]
+    # The worked example is the first computational task: everyday tasks have
+    # no numbers to check against, which is half of what the example shows.
+    example = next((t for t in data['tasks'] if t['kind'] == 'racunski'), data['tasks'][0])
+    body = [cover(data['topic'], len(data['tasks'])), guide(example)]
 
     pages = pack(data['tasks'])
     for i, page in enumerate(pages):
