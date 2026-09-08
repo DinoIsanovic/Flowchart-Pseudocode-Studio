@@ -11,6 +11,7 @@
 
 import { writeFileSync } from 'node:fs';
 import { buildFlowchart, parsePseudocode } from '../src/core/flowchart-gen';
+import { pythonSource, statementsToPython } from '../src/core/python-gen';
 import { Interpreter } from '../src/core/interpreter';
 import { TaskPack, text } from '../src/exercises/types';
 import { blankedText, solutionText, tiles } from '../src/exercises/render';
@@ -57,6 +58,12 @@ const data = {
       interchangeable: task.interchangeable ?? [],
       distractors: (task.distractors ?? []).map((d) => solutionText({ ...task, solution: d }, 'bs')),
       results,
+      /**
+       * The same algorithm as Python, for the solutions at the back: a student
+       * who has drawn the diagram should see what the program they drew looks
+       * like in a language a computer runs.
+       */
+      python: pythonSource(statementsToPython(statements, 'bs')),
       /**
        * The laid-out diagram, so the workbook can print the solution as a
        * drawing and not only as text. A student working alone has nothing to

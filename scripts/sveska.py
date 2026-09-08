@@ -147,6 +147,14 @@ def code_block(lines, *, shade=SOFT):
     return table([[body]], [CONTENT_W], borders=None, shades=[shade])
 
 
+def code_cell(lines, *, size=18):
+    """The same listing as `code_block`, but as bare paragraphs, so two of them
+    can stand side by side in one table row — the algorithm and the program."""
+    return ''.join(
+        para(run(line if line.strip() else ' ', mono=True, size=size), after=0, ind=20)
+        for line in lines)
+
+
 def blank_lines(n=1, width=64):
     return ''.join(para(run(' ' * width, color='FFFFFF'), after=40) for _ in range(n))
 
@@ -232,53 +240,80 @@ def node_caption(text):
     return ' '.join(parts)
 
 
-# Below this the print is no longer readable; a label that will not fit even
-# here gets wrapped onto more lines instead of shrinking further.
-MIN_CAPTION = 12
+# --- how a printed block is sized -------------------------------------------
+
+CM = 567                     # twips in a centimetre
+BLOCK_W = int(3.5 * CM)      # an ordinary block, across
+DECISION_W = int(4.2 * CM)   # a diamond holds the same words in less room
+LINK = CM                    # a straight connector is exactly one centimetre
+CAPTION = 28                 # half-points, so 14 pt
+LINE_H = 1.28                # of the font size
+MIN_H = int(0.85 * CM)
+PAD = int(0.16 * CM)
+
+# How much of each shape its caption may use: a diamond gives away most of its
+# box to the corners, a rectangle almost none of it.
+TEXT_BOX = {
+    'start_end': (0.70, 0.62),
+    'io': (0.66, 0.76),
+    # A diamond is cut away at every corner: it needs half again the height of
+    # the words it holds, or the caption stands outside the shape.
+    'decision': (0.56, 0.36),
+    'process': (0.88, 0.78),
+}
 
 
-def wrap_caption(text, size, along_pt, across_pt):
-    """Break a label to the shape it sits in, the way the canvas does.
+def wrap_to(text, width_pt, size=CAPTION):
+    """Break a caption to a width, without shrinking the type.
 
-    A long ISPIŠI line shrunk until it fits on one line comes out at four
-    points and cannot be read on paper. Wrapping keeps the type legible and
-    keeps the printed diagram looking like the one on screen.
+    The old drawing shrank the letters until a line fitted and came out at four
+    points. On paper the block grows instead: its width is fixed and its height
+    follows the text.
     """
     words = (text or '').split()
     if not words:
-        return [], size
-    while True:
-        per_line = max(6, int(along_pt / (size / 2 * 0.52)))
-        rows = max(1, int(across_pt / (size / 2 * 1.3)))
-        lines, line = [], ''
-        for word in words:
-            nxt = f'{line} {word}'.strip()
-            if len(nxt) <= per_line or not line:
-                line = nxt
-            else:
-                lines.append(line)
-                line = word
-        lines.append(line)
-        if len(lines) <= rows or size <= MIN_CAPTION:
-            return lines, size
-        size -= 1
+        return ['']
+    per_line = max(5, int(width_pt / (size / 2 * 0.55)))
+    lines, line = [], ''
+    for word in words:
+        nxt = f'{line} {word}'.strip()
+        if len(nxt) <= per_line or not line:
+            line = nxt
+        else:
+            lines.append(line)
+            line = word
+    lines.append(line)
+    return lines
 
 
-def vml_node(kind, cx, cy, w, h, text, size=13, k=0.5):
-    """One shape of a turned flowchart, caption and all.
+def block_size(kind, text, size=CAPTION):
+    """Width from the kind of block, height from how much text it holds."""
+    w = DECISION_W if kind == 'decision' else BLOCK_W
+    fw, fh = TEXT_BOX.get(kind, TEXT_BOX['process'])
+    lines = wrap_to(node_caption(text), w * fw / 20, size)
+    text_h = len(lines) * size / 2 * LINE_H * 20
+    return w, max(MIN_H, int(text_h / fh) + PAD), lines
+
+
+def vml_node(kind, cx, cy, w, h, lines, size=CAPTION, turned=False):
+    """One shape of a flowchart, caption and all.
 
     A v:shape with a path turns its own text upside down where an oval or a
     rect turns it correctly, so the polygons get their caption from a second,
     invisible rect laid over them.
     """
+    # v-text-anchor: a VML textbox starts its text at the top of the box, which
+    # in a tall diamond puts the caption outside the shape.
     st = (f'position:absolute;left:{cx - w // 2};top:{cy - h // 2};'
-          f'width:{w};height:{h};rotation:{TURN}')
+          f'width:{w};height:{h};v-text-anchor:middle'
+          + (f';rotation:{TURN}' if turned else ''))
     skin = f'fillcolor="#{SOFT}" strokecolor="#{ACCENT}" strokeweight="1.25pt"'
-    lines, pt = wrap_caption(node_caption(text), size, w * k, h * k)
+    if isinstance(lines, str):
+        lines = wrap_to(node_caption(lines), w * TEXT_BOX.get(kind, TEXT_BOX['process'])[0] / 20, size)
     caption = ('<v:textbox inset="2pt,1pt,2pt,1pt"><w:txbxContent>' + ''.join(
         '<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="0" '
         'w:line="240" w:lineRule="auto"/></w:pPr>'
-        f'<w:r><w:rPr><w:sz w:val="{pt}"/><w:color w:val="{ACCENT}"/></w:rPr>'
+        f'<w:r><w:rPr><w:sz w:val="{size}"/><w:color w:val="{ACCENT}"/></w:rPr>'
         f'<w:t>{escape(line)}</w:t></w:r></w:p>' for line in lines) +
         '</w:txbxContent></v:textbox>')
     if kind == 'start_end':
@@ -290,51 +325,137 @@ def vml_node(kind, cx, cy, w, h, text, size=13, k=0.5):
     return f'<v:rect style="{st}" {skin}>{caption}</v:rect>'
 
 
-def flowchart(dia, width=CONTENT_W, size=13):
-    """A laid-out diagram, turned the same quarter turn the student is asked to
-    draw in: what the app stacks downwards runs along the page instead.
+# --- drawing a whole flowchart ----------------------------------------------
 
-    Straight connectors only. Every task in the linear pack is a single chain,
-    and a branching one will need the waypoints the app already computes.
+def arrange(dia, size=CAPTION):
+    """Re-spaces the app's layout for paper.
+
+    The app's own coordinates are made for a canvas that can be scrolled: the
+    blocks sit far apart and the arrows between them are long, which on a sheet
+    of paper reads as a diagram of mostly empty space. The rows and columns it
+    worked out are kept — they are the shape of the algorithm — and everything
+    else is measured again here: a block is 3.5 cm across, as tall as its own
+    text needs, and one centimetre from the next.
     """
-    nodes = {n['id']: n for n in dia['nodes']}
+    nodes = {n['id']: dict(n) for n in dia['nodes']}
+    if not nodes:
+        return {}, 0, 0
+    for n in nodes.values():
+        n['w'], n['h'], n['lines'] = block_size(n['type'], n['text'], size)
+
+    # Two blocks the app placed on the same spot — it happens where a branch
+    # inside a branch closes — would be drawn one on top of the other, and one
+    # of them would simply be missing from the picture. Nudging the second one
+    # gives it a column of its own.
+    taken = set()
+    for n in sorted(nodes.values(), key=lambda n: (n['y'], n['x'])):
+        while (n['y'], n['x']) in taken:
+            n['x'] += 1
+        taken.add((n['y'], n['x']))
+
+    cols = sorted({n['x'] for n in nodes.values()})
+    rows = sorted({n['y'] for n in nodes.values()})
+    col_of = {x: i for i, x in enumerate(cols)}
+    row_of = {y: i for i, y in enumerate(rows)}
+
+    x, col_cx = 0, []
+    for c in range(len(cols)):
+        w = max(n['w'] for n in nodes.values() if col_of[n['x']] == c)
+        col_cx.append(x + w // 2)
+        x += w + LINK
+    x -= LINK
+
+    y, row_cy = 0, []
+    for r in range(len(rows)):
+        h = max(n['h'] for n in nodes.values() if row_of[n['y']] == r)
+        row_cy.append(y + h // 2)
+        y += h + LINK
+    y -= LINK
+
+    for n in nodes.values():
+        n['cx'] = col_cx[col_of[n['x']]]
+        n['cy'] = row_cy[row_of[n['y']]]
+    return nodes, x, y
+
+
+def route(a, b, side_x):
+    """The corners one connector turns, from the block it leaves to the one it
+    enters. A step to the block straight below it is a single centimetre; only
+    a branch or a merge turns corners, and those are the ones allowed to run.
+    """
+    top = lambda n: n['cy'] - n['h'] // 2
+    bottom = lambda n: n['cy'] + n['h'] // 2
+    if a['cx'] == b['cx'] and b['cy'] > a['cy']:
+        return [(a['cx'], bottom(a)), (b['cx'], top(b))]
+    if b['cy'] <= a['cy']:
+        # Back up to a loop's test: out to the side, up, and in from the left.
+        return [(a['cx'], bottom(a)), (side_x, bottom(a)), (side_x, b['cy']),
+                (b['cx'] + b['w'] // 2, b['cy'])]
+    if a['type'] == 'decision':
+        # A branch leaves its diamond sideways, then drops into its own column.
+        edge = a['cx'] + (a['w'] // 2 if b['cx'] > a['cx'] else -a['w'] // 2)
+        return [(edge, a['cy']), (b['cx'], a['cy']), (b['cx'], top(b))]
+    mid = (bottom(a) + top(b)) // 2
+    return [(a['cx'], bottom(a)), (a['cx'], mid), (b['cx'], mid), (b['cx'], top(b))]
+
+
+def drawing_height(dia, size=CAPTION):
+    """How tall the finished drawing prints, in twips — what the solutions
+    section needs to know before it decides where the page turns."""
+    _, _, gh = arrange(dia, size)
+    return gh
+
+
+def flowchart(dia, width=CONTENT_W, size=CAPTION, turned=False):
+    """A laid-out diagram, drawn the way the app exports it.
+
+    Upright by default — top to bottom, the picture the student gets out of the
+    program. `turned` gives the quarter turn the workbook asks for when the
+    algorithm is to be drawn by hand along the page instead.
+    """
+    nodes, gw, gh = arrange(dia, size)
     if not nodes:
         return para()
-    # Turning the picture swaps the axes: a node's app-y is its place along the
-    # page, its app-x is its place across it.
-    left = min(n['y'] - n['h'] // 2 for n in nodes.values())
-    right = max(n['y'] + n['h'] // 2 for n in nodes.values())
-    top = min(n['x'] - n['w'] // 2 for n in nodes.values())
-    bottom = max(n['x'] + n['w'] // 2 for n in nodes.values())
-    pad = 12
-    gw, gh = right - left + 2 * pad, bottom - top + 2 * pad
-    px = lambda n: n['y'] - left + pad
-    py = lambda n: n['x'] - top + pad
+    pad = int(0.15 * CM)
+    side_x = gw + pad + LINK // 2
+    if any(nodes[e['to']]['cy'] <= nodes[e['from']]['cy']
+           for e in dia['edges'] if e['from'] in nodes and e['to'] in nodes):
+        gw = side_x + pad
+    gw += 2 * pad
+    gh += 2 * pad
 
-    def path(*points):
-        """One connector, corners and all, as a single shape.
+    # Turning the picture swaps the axes; everything below is worked out
+    # upright and mapped on the way out.
+    def at(x, y):
+        x, y = x + pad, y + pad
+        return (y, x) if turned else (x, y)
 
-        Not two v:line segments: the upright leg of a branch has a bounding box
-        of no width and is silently dropped. Not v:polyline either, which reads
-        its points in its own space rather than the group's. A v:shape spanning
-        the whole group takes the same coordinates as everything else here.
-        """
-        head, *rest = points
+    box = (gh, gw) if turned else (gw, gh)
+    # A VML group scales its shapes but not the type inside them: the letters
+    # come out at their absolute size and spill out of a drawing that had to be
+    # shrunk. The caption is scaled by hand to match, and the wrapping stays as
+    # it was worked out — the same words on the same lines, smaller.
+    ratio = min(1.0, width / box[0])
+    caption_size = max(12, int(round(size * ratio)))
+    label_size = max(10, int(round(20 * ratio)))
+
+    def path(points):
+        head, *rest = [at(*p) for p in points]
         d = f'm{head[0]},{head[1]} l' + ','.join(f'{x},{y}' for x, y in rest) + ' e'
-        return (f'<v:shape style="position:absolute;left:0;top:0;width:{gw};height:{gh}" '
-                f'coordsize="{gw},{gh}" path="{d}" filled="f" strokecolor="#{ACCENT}" '
+        return (f'<v:shape style="position:absolute;left:0;top:0;width:{box[0]};height:{box[1]}" '
+                f'coordsize="{box[0]},{box[1]}" path="{d}" filled="f" strokecolor="#{ACCENT}" '
                 'strokeweight="1.25pt"><v:stroke endarrow="block"/></v:shape>')
 
     def branch_label(text, x, y):
-        # DA and NE stay upright even though the diagram is turned: two letters
-        # read fine either way, and an upright label is easier to place beside
-        # the line it belongs to.
-        w, h = 260, 130
-        return (f'<v:rect style="position:absolute;left:{x - w // 2};top:{y - h // 2};'
+        # DA and NE stay upright even where the diagram is turned: two letters
+        # read fine either way, and an upright label is easier to place.
+        w, h = int(0.9 * CM), int(0.42 * CM)
+        px, py = at(x, y)
+        return (f'<v:rect style="position:absolute;left:{px - w // 2};top:{py - h // 2};'
                 f'width:{w};height:{h}" filled="f" stroked="f">'
                 '<v:textbox inset="0,0,0,0"><w:txbxContent>'
                 '<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="0"/></w:pPr>'
-                f'<w:r><w:rPr><w:b/><w:sz w:val="12"/><w:color w:val="{ACCENT}"/></w:rPr>'
+                f'<w:r><w:rPr><w:b/><w:sz w:val="{label_size}"/><w:color w:val="{ACCENT}"/></w:rPr>'
                 f'<w:t>{escape(text)}</w:t></w:r></w:p>'
                 '</w:txbxContent></v:textbox></v:rect>')
 
@@ -343,36 +464,29 @@ def flowchart(dia, width=CONTENT_W, size=13):
         a, b = nodes.get(e['from']), nodes.get(e['to'])
         if not a or not b:
             continue
-        sx, sy, tx, ty = px(a), py(a), px(b), py(b)
+        points = route(a, b, side_x)
+        parts.append(path(points))
         label = (e.get('label') or '').split(' ')[0].upper()
-        fwd = 1 if tx > sx else -1
-        if sy == ty:
-            # Straight along the page: the ordinary step-to-step arrow. It
-            # still carries a label when it is the branch that falls through.
-            start = sx + fwd * a['h'] // 2
-            parts.append(path((start, sy), (tx - fwd * b['h'] // 2, ty)))
-            if label:
-                parts.append(branch_label(label, start + fwd * 70, sy - 46))
-            continue
-        # Off the axis, so the connector turns a corner rather than cutting
-        # across. A branch leaves its diamond sideways first; everything else
-        # runs on before it steps across to meet what it joins.
-        across = 1 if ty > sy else -1
-        if a['type'] == 'decision':
-            leave = sy + across * a['w'] // 2
-            parts.append(path((sx, leave), (sx, ty), (tx - fwd * b['h'] // 2, ty)))
-            if label:
-                parts.append(branch_label(label, sx + 78, (leave + ty) // 2))
-        else:
-            parts.append(path((sx + fwd * a['h'] // 2, sy), (tx, sy),
-                              (tx, ty - across * b['w'] // 2)))
-    # Twips to points, then fit the drawing to the width it was given.
-    k = min((width / 20) / gw, 0.62)
-    for n in dia['nodes']:
-        parts.append(vml_node(n['type'], px(n), py(n), n['w'], n['h'], n['text'], size, k))
-    return ('<w:p><w:pPr><w:spacing w:before="60" w:after="120"/></w:pPr><w:r><w:pict>'
-            f'<v:group style="width:{gw * k:.1f}pt;height:{gh * k:.1f}pt" '
-            f'coordsize="{gw},{gh}">' + ''.join(parts) + '</v:group></w:pict></w:r></w:p>')
+        if label:
+            # Beside the first corner the line turns, which is where the
+            # branch actually parts from the block it left.
+            (x1, y1), (x2, y2) = points[0], points[1]
+            if y1 == y2:
+                parts.append(branch_label(label, (x1 + x2) // 2, y1 - int(0.28 * CM)))
+            else:
+                parts.append(branch_label(label, x1 + int(0.55 * CM), (y1 + y2) // 2))
+
+    for n in nodes.values():
+        px, py = at(n['cx'], n['cy'])
+        parts.append(vml_node(n['type'], px, py, n['w'], n['h'], n['lines'],
+                              caption_size, turned))
+
+    # Twips to points, shrunk only if the drawing is wider than the column.
+    k = ratio * 0.05
+    return ('<w:p><w:pPr><w:jc w:val="center"/>'
+            '<w:spacing w:before="60" w:after="120"/></w:pPr><w:r><w:pict>'
+            f'<v:group style="width:{box[0] * k:.1f}pt;height:{box[1] * k:.1f}pt" '
+            f'coordsize="{box[0]},{box[1]}">' + ''.join(parts) + '</v:group></w:pict></w:r></w:p>')
 
 
 # --- pieces of the front matter ---------------------------------------------
@@ -451,7 +565,7 @@ def legend_symbol(kind):
             '<w:r><w:pict>'
             f'<v:group style="width:{h * 0.42:.1f}pt;height:{w * 0.42:.1f}pt" '
             f'coordsize="{h},{w}">'
-            + vml_node(kind, h // 2, w // 2, w, h, '', 12) +
+            + vml_node(kind, h // 2, w // 2, w, h, [''], 12, True) +
             '</v:group></w:pict></w:r></w:p>')
 
 
@@ -551,7 +665,9 @@ def guide(example):
     out.append(para(run('Isti algoritam kao slika. Počinje uz lijevu marginu i ide '
                         'udesno, a svaki blok ima svoj oblik iz tabele simbola.',
                         size=20, color=MUTED), after=60, ind=60))
-    out.append(flowchart(example['diagram']))
+    # Turned, like the space the student draws in: this page is about
+    # drawing the algorithm by hand, across the sheet.
+    out.append(flowchart(example['diagram'], turned=True))
     out.append(page_break())
     return ''.join(out)
 
@@ -849,6 +965,103 @@ def card(task, rng):
     return ''.join(out)
 
 
+def python_body(code):
+    """The program without the input helper.
+
+    Every program that reads anything carries the same six lines of helper at
+    the top. Printed ten times over they are noise, so the solutions print them
+    once, at the front of the section.
+    """
+    lines = code.split('\n')
+    for i, line in enumerate(lines):
+        if line.strip() == 'return tekst':
+            return '\n'.join(lines[i + 1:]).strip('\n')
+    return code
+
+
+def python_helper(tasks):
+    """The helper itself, taken from the first solution that has one."""
+    for task in tasks:
+        lines = task.get('python', '').split('\n')
+        for i, line in enumerate(lines):
+            if line.strip() == 'return tekst':
+                return lines[:i + 1]
+    return []
+
+
+def explain_line(text):
+    """One sentence for one line of the algorithm.
+
+    A student who has drawn the diagram and cannot see why it works needs the
+    line said back to them in words. Structural lines — DA, INAČE — carry no
+    sentence of their own; the branch they open is explained where the
+    condition is.
+    """
+    text = (text or '').strip()
+    if not text:
+        return None
+    head = text.split(' ', 1)
+    word = head[0].upper().rstrip(':')
+    rest = head[1].strip() if len(head) > 1 else ''
+
+    if word == 'POČETAK':
+        return 'Odavde program kreće.'
+    if word == 'KRAJ':
+        return 'Ovdje se program zaustavlja. Sve što je trebalo ispisati, ispisano je prije ovog bloka.'
+    if word in ('DA', 'NE', 'INAČE') and not rest:
+        return None
+    if word == 'UNESI':
+        names = [v.strip() for v in rest.split(',') if v.strip()]
+        if len(names) == 1:
+            return (f'Program staje i čeka da se ukuca jedna vrijednost. Ono što se ukuca '
+                    f'pamti se pod imenom {names[0]} i odatle se dalje čita.')
+        imena = ', '.join(names)
+        koliko = {2: 'dvije', 3: 'tri', 4: 'četiri', 5: 'pet'}.get(len(names), str(len(names)))
+        return (f'Traže se {koliko} vrijednosti, jedna po jedna, i pamte se redom pod imenima '
+                f'{imena} — prva ukucana ide u {names[0]}.')
+    if word == 'ISPIŠI':
+        return ('Na ekran izlazi: ' + rest + '. Ono pod navodnicima ispisuje se doslovno, '
+                'a ono bez njih je vrijednost varijable u tom trenutku.')
+    if word in ('POSTAVI', 'RAČUNAJ') and '=' in rest:
+        target, expr = rest.split('=', 1)
+        target, expr = target.strip(), expr.strip()
+        kako = 'Izračuna se' if word == 'RAČUNAJ' else 'Uzme se'
+        return (f'{kako} {expr}, i rezultat se upisuje u {target}. Stara vrijednost '
+                f'varijable {target} se time gubi.')
+    if word == 'AKO' or (word == 'INAČE' and rest.upper().startswith('AKO')):
+        cond = rest
+        for prefix in ('AKO JE ', 'AKO ', 'JE '):
+            if cond.upper().startswith(prefix):
+                cond = cond[len(prefix):]
+        prvi = 'Provjerava se' if word == 'AKO' else 'Ako prethodni uslov nije vrijedio, provjerava se'
+        return (f'{prvi} uslov {cond}. Kad vrijedi, izvršavaju se koraci uvučeni ispod DA; '
+                f'kad ne vrijedi, oni ispod INAČE. Prolazi se samo jednom granom.')
+    if word == 'PONOVI' and rest.upper().endswith(('PUTA', 'PUTA:')):
+        koliko = rest.rsplit(' ', 1)[0].strip()
+        return (f'Koraci uvučeni ispod ovog bloka ponavljaju se {koliko} puta. Brojač se zove i '
+                f'i ide od 0 naviše, pa je u prvom prolazu i = 0.')
+    if word == 'PONOVI' or word == 'PONAVLJAJ' or word == 'DOK':
+        cond = rest
+        for prefix in ('DOK JE ', 'DOK ', 'JE '):
+            if cond.upper().startswith(prefix):
+                cond = cond[len(prefix):]
+        if not cond:
+            return 'Odavde počinju koraci koji se ponavljaju; uslov stoji u redu ispod njih.'
+        return (f'Dok god vrijedi {cond}, ponavljaju se koraci uvučeni ispod. Uslov se provjerava '
+                f'prije svakog prolaza, pa se može desiti da se ne izvrši nijednom.')
+    return None
+
+
+def explanation(task):
+    """The whole algorithm said in words, line by line."""
+    rows = []
+    for line in task['solution'].split('\n'):
+        sentence = explain_line(line)
+        if sentence:
+            rows.append((line.strip(), sentence))
+    return rows
+
+
 def pack(tasks):
     """Two or three cards to a sheet, whichever the page can actually hold."""
     pages, current, used = [], [], 0
@@ -865,23 +1078,80 @@ def pack(tasks):
 
 
 def answers(tasks):
+    """The back of the book: every task solved the way the app would show it.
+
+    A drawing to compare against, the program that drawing stands for, and the
+    algorithm said back line by line — a student working alone has no teacher
+    to ask why a step is there.
+    """
     out = [page_break()]
     out.append(para(run('Rješenja', bold=True, size=36, color=ACCENT), after=60))
-    out.append(para(run('Pogledaj tek kad si pokušao sam. Uz svaki zadatak je i '
-                        'nacrtan dijagram toka, pa možeš uporediti svoj crtež s '
-                        'njim — ako se razlikuje, ne mora značiti da je pogrešan: '
-                        'provjeri ispisuje li isto.', size=20, color=MUTED), after=240))
-    for task in tasks:
-        out.append(para(run(f'{task["level"]}. {task["title"]}', bold=True, size=22,
-                            color=INK), after=60, rule=RULE))
-        out.append(code_block(task['solution'].split('\n')))
+    out.append(para(run('Pogledaj tek kad si pokušao sam. Uz svaki zadatak stoji dijagram '
+                        'toka onakav kakav ga aplikacija nacrta, isti algoritam napisan kao '
+                        'Python program, i objašnjenje svakog koraka. Ako se tvoj crtež '
+                        'razlikuje, ne mora značiti da je pogrešan — provjeri ispisuje li '
+                        'isto za iste ulaze.', size=20, color=MUTED), after=140))
+
+    helper = python_helper(tasks)
+    if helper:
+        out.append(para(run('Programi koji nešto unose počinju ovim pomoćnikom. On pročita '
+                            'ukucani red i pretvori ga u broj kad je broj, a inače ga ostavi '
+                            'kao tekst. Ispod je napisan jednom, a podrazumijeva se u svakom '
+                            'rješenju.', size=19, color=MUTED), after=80))
+        out.append(code_block(helper))
+        out.append(para(after=200))
+
+    half = CONTENT_W // 2
+    for i, task in enumerate(tasks):
+        # A sheet each: the drawing is one picture and cannot be split, so
+        # letting these flow leaves a third of a page empty before every one.
+        if i:
+            out.append(page_break())
+        out.append(para(run(f'{task["level"]}. {task["title"]}', bold=True, size=26,
+                            color=ACCENT), after=50, rule=RULE))
+        out.append(para(run(task['prompt'], size=19, color=MUTED), after=120, ind=60))
+
+        body = python_body(task.get('python', ''))
+        out.append(table([[para(run('ALGORITAM', bold=True, size=15, color=ACCENT,
+                                    spacing=30), after=40) + code_cell(task['solution'].split('\n')),
+                           para(run('PYTHON', bold=True, size=15, color=ACCENT,
+                                    spacing=30), after=40) + code_cell(body.split('\n'))]],
+                         [half, CONTENT_W - half], borders=None,
+                         shades=[SOFT, PAPER], valign='top'))
+        out.append(para(after=120))
+
+        # A drawing this tall cannot share a sheet with the words about it:
+        # it goes on its own page, after them, rather than pushing half the
+        # explanation onto a third sheet.
+        tall = drawing_height(task['diagram']) > 7000
+        if not tall:
+            out.append(flowchart(task['diagram']))
+
+        rows = [[para(run(line, mono=True, size=17), after=0),
+                 para(run(sentence, size=17, color=MUTED), after=0)]
+                for line, sentence in explanation(task)]
+        if rows:
+            out.append(label('Šta radi koji korak'))
+            out.append(table(rows, [3400, CONTENT_W - 3400], borders=RULE, valign='top'))
+            out.append(para(after=100))
+
+        out.append(label('Provjera na brojevima'))
         for case in task['results']:
             ulaz = ', '.join(case['inputs']) if case['inputs'] else '—'
             ispis = ' / '.join(case['output']) if case['output'] else '—'
             out.append(para(run(f'{ulaz}  →  {ispis}', mono=True, size=18, color=MUTED),
                             ind=200, after=40))
-        out.append(flowchart(task['diagram'], size=12))
-        out.append(para(after=200))
+        if tall:
+            out.append(page_break())
+            out.append(label('Dijagram toka'))
+            out.append(para(run('Ovako ga aplikacija nacrta. Tvoj crtež ide slijeva nadesno, '
+                                'ali su blokovi i strelice isti.', size=18, color=MUTED),
+                            after=60))
+            out.append(flowchart(task['diagram']))
+        else:
+            # Only when something follows on the same sheet: after a drawing
+            # that filled its own page this empty line starts a blank one.
+            out.append(para(after=160))
     return ''.join(out)
 
 
