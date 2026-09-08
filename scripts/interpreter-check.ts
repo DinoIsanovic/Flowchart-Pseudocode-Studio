@@ -162,17 +162,6 @@ PONOVI 2 PUTA
     ISPIŠI "x"
 KRAJ`, { i: 1, j: 1 });
 
-counts('brojač ne gazi studentovu varijablu', `POČETAK
-POSTAVI i = 100
-PONOVI 2 PUTA
-  ISPIŠI "x"
-KRAJ`, { i: 100, j: 1 });
-
-errors('brojač se ne može čitati iz pseudokoda', `POČETAK
-PONOVI 3 PUTA
-  ISPIŠI i
-KRAJ`, 'undefined-var');
-
 // A bottom-tested loop is drawn with its test at the top, and the Python is
 // generated the same way, so the body can run zero times here where a true
 // do-while would run once. The simulator agrees with the other two views on
@@ -190,6 +179,35 @@ PONAVLJAJ
   ISPIŠI i
   RAČUNAJ i = i + 1
 DOK JE i > 3`, []);
+
+// --- the counter of a count loop -------------------------------------------
+
+// The counter is a variable the pseudocode may read: its name follows the
+// depth of the loop, so `i` is `i` no matter what else the program holds.
+
+prints('brojač se može ispisati', `POČETAK
+PONOVI 3 PUTA
+  ISPIŠI i
+KRAJ`, ['0', '1', '2']);
+
+prints('ugniježđene petlje broje u i pa u j', `POČETAK
+PONOVI 2 PUTA
+  PONOVI 2 PUTA
+    ISPIŠI i, j
+KRAJ`, ['0 0', '0 1', '1 0', '1 1']);
+
+// Python does the same with `for i in range(n)`, and the two must not differ.
+prints('petlja preuzima varijablu istog imena', `POČETAK
+POSTAVI i = 100
+PONOVI 2 PUTA
+  ISPIŠI i
+ISPIŠI i
+KRAJ`, ['0', '1', '1']);
+
+counts('brojač ostaje na zadnjoj vrijednosti', `POČETAK
+PONOVI 5 PUTA
+  ISPIŠI i
+KRAJ`, { i: 4 });
 
 // --- which branch was taken ------------------------------------------------
 
@@ -334,6 +352,22 @@ PONOVI 3 PUTA
 KRAJ`, 'bs');
   const py = pythonSource(statementsToPython(statements));
   const usesRange = py.includes('for i in range(3):');
+  {
+    // Nesting, and a variable of the counter's own name in the way: the
+    // generated file has to name the same variables the simulator sets.
+    const nested = parsePseudocode(`POČETAK
+POSTAVI i = 100
+PONOVI 2 PUTA
+  PONOVI 2 PUTA
+    ISPIŠI i, j
+KRAJ`, 'bs').statements;
+    const code = pythonSource(statementsToPython(nested));
+    if (code.includes('for i in range(2):') && code.includes('for j in range(2):')) pass++;
+    else {
+      fail++;
+      console.log(`FAIL  imena brojača u Pythonu\n${code}`);
+    }
+  }
   const m = new Interpreter(statements);
   m.runToEnd();
   // range(3) leaves the counter at 2, and so must the simulator.

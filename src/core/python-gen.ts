@@ -6,7 +6,7 @@
 import { Language, SourceLang, Statement } from '../types';
 import { sourceLang } from '../i18n/croatian';
 import { assignStepNumbers } from './flowchart-gen';
-import { counterName, identifiersUsed } from './counters';
+import { counterName } from './counters';
 
 export interface PythonLine {
   /** Source text without indentation. */
@@ -100,7 +100,6 @@ function walk(
   stmts: Statement[],
   depth: number,
   stepOf: Map<Statement, number>,
-  used: Set<string>,
   lang: Language,
   loopDepth = 0
 ): PythonLine[] {
@@ -117,7 +116,7 @@ function walk(
     if (stmt.type === 'if') {
       out.push({ text: `if ${conditionToPython(stmt.cond ?? '')}:`, depth, step });
       const thenBlock = stmt.thenBlock ?? [];
-      out.push(...(thenBlock.length ? walk(thenBlock, depth + 1, stepOf, used, lang, loopDepth) : [{ text: 'pass', depth: depth + 1 }]));
+      out.push(...(thenBlock.length ? walk(thenBlock, depth + 1, stepOf, lang, loopDepth) : [{ text: 'pass', depth: depth + 1 }]));
 
       const elseBlock = stmt.elseBlock ?? [];
       if (!elseBlock.length) return;
@@ -126,26 +125,26 @@ function walk(
       // writes as elif rather than a nested block.
       const only = elseBlock.length === 1 ? elseBlock[0] : null;
       if (only && only.type === 'if') {
-        const chained = walk(elseBlock, depth, stepOf, used, lang, loopDepth);
+        const chained = walk(elseBlock, depth, stepOf, lang, loopDepth);
         chained[0] = { ...chained[0], text: chained[0].text.replace(/^if /, 'elif ') };
         out.push(...chained);
         return;
       }
 
       out.push({ text: 'else:', depth });
-      out.push(...walk(elseBlock, depth + 1, stepOf, used, lang, loopDepth));
+      out.push(...walk(elseBlock, depth + 1, stepOf, lang, loopDepth));
       return;
     }
 
     if (stmt.type === 'count_loop') {
-      // The pseudocode keeps the counter implicit, but naming it in Python is
-      // the point of showing Python at all: the student sees the variable that
-      // was doing the counting, and that it advances by one each pass.
-      const name = counterName(used, loopDepth);
+      // The counter is named by the depth of the loop — `i`, then `j` — and
+      // the pseudocode may read it: `PONOVI 3 PUTA` with `ISPIŠI i` inside is
+      // the same variable here and in the simulator.
+      const name = counterName(loopDepth);
       out.push({ text: `for ${name} in range(${stmt.times ?? '3'}):`, depth, step });
       const body = stmt.body ?? [];
       out.push(...(body.length
-        ? walk(body, depth + 1, stepOf, used, lang, loopDepth + 1)
+        ? walk(body, depth + 1, stepOf, lang, loopDepth + 1)
         : [{ text: 'pass', depth: depth + 1 }]));
       return;
     }
@@ -165,7 +164,7 @@ function walk(
       out.push({ text: header, depth, step });
       const body = stmt.body ?? [];
       out.push(...(body.length
-        ? walk(body, depth + 1, stepOf, used, lang, loopDepth)
+        ? walk(body, depth + 1, stepOf, lang, loopDepth)
         : [{ text: 'pass', depth: depth + 1 }]));
       return;
     }
@@ -181,7 +180,7 @@ function walk(
  */
 export function statementsToPython(statements: Statement[], lang: Language = 'en'): PythonLine[] {
   const stepOf = assignStepNumbers(statements);
-  const body = walk(statements, 0, stepOf, identifiersUsed(statements), lang);
+  const body = walk(statements, 0, stepOf, lang);
   if (!body.length) return [{ text: 'pass', depth: 0 }];
   const reads = body.some((l) => l.text.endsWith(`= ${READ_FN[lang]}()`));
   return reads ? [...readHelper(lang), ...body] : body;

@@ -6,7 +6,7 @@
 import { Language, SourceLang, Statement } from '../types';
 import { localize, sourceLang } from '../i18n/croatian';
 import { assignStepNumbers } from './flowchart-gen';
-import { counterName, identifiersUsed } from './counters';
+import { counterName } from './counters';
 import { Env, ExprError, ExprErrorCode, Value, describeExprError, evaluateExpression, formatValue, toBoolean } from './expr';
 
 /**
@@ -78,7 +78,6 @@ interface Ctx {
   /** Printed values with the words around them left out; see `printedValues`. */
   values: string[];
   stepOf: Map<Statement, number>;
-  used: Set<string>;
   count: number;
   /** Statement currently executing, so a thrown error can name its line. */
   at: Statement | null;
@@ -294,7 +293,7 @@ function* runStatement(stmt: Statement, ctx: Ctx, loopDepth: number): Generator<
   }
 
   if (stmt.type === 'count_loop') {
-    const name = counterName(ctx.used, loopDepth);
+    const name = counterName(loopDepth);
     const times = evalIn(stmt.times ?? '0', ctx);
     if (typeof times !== 'number') throw new ExprError('type-mismatch', 0, formatValue(times));
     // 0-based, like the `range(N)` the Python generator emits.
@@ -343,7 +342,6 @@ export class Interpreter {
       output: [],
       values: [],
       stepOf: assignStepNumbers(this.statements),
-      used: identifiersUsed(this.statements),
       count: 0,
       at: null,
     };
