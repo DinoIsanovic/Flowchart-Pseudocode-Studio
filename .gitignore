@@ -9,7 +9,7 @@ coverage/
 dev-dist/
 
 # generisana radna sveska
-radna-sveska-*.docx
+radna-sveska*.docx
 
 # python venv (python-docx za generisanje radne sveske)
 .venv/

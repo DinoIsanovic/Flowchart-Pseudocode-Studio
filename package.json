@@ -14,9 +14,8 @@
     "check:interpreter": "tsx scripts/interpreter-check.ts",
     "check:exercises": "tsx scripts/exercises-check.ts",
     "check:diagram": "tsx scripts/diagram-check.ts",
-    "sveska": "tsx scripts/sveska-data.ts /tmp/sveska-podaci.json linijska && python3 scripts/sveska.py /tmp/sveska-podaci.json radna-sveska-linijska.docx",
+    "sveska": "tsx scripts/sveska-data.ts /tmp/sveska-podaci.json && python3 scripts/sveska.py /tmp/sveska-podaci.json radna-sveska.docx",
     "check:grade": "tsx scripts/grade-check.ts",
-    "sveska:grananje": "tsx scripts/sveska-data.ts /tmp/sveska-grananje.json grananje && python3 scripts/sveska.py /tmp/sveska-grananje.json radna-sveska-grananje.docx",
     "check:croatian": "tsx scripts/croatian-check.ts"
   },
   "dependencies": {

@@ -18,23 +18,18 @@ import { blankedText, solutionText, tiles } from '../src/exercises/render';
 import { traceTask } from '../src/exercises/trace';
 import linijska from '../src/exercises/linijska.json';
 import grananje from '../src/exercises/grananje.json';
+import petlje from '../src/exercises/petlje.json';
 
 const out = process.argv[2];
-if (!out) throw new Error('usage: sveska-data.ts <izlazni.json> [tema]');
+if (!out) throw new Error('usage: sveska-data.ts <izlazni.json>');
 
-const PACKS: Record<string, TaskPack> = {
-  linijska: linijska as TaskPack,
-  grananje: grananje as TaskPack,
-};
+// Every pack, in teaching order: the workbook is one book with a part for each
+// topic, not three books.
+const PACKS: TaskPack[] = [linijska as TaskPack, grananje as TaskPack, petlje as TaskPack];
 
-// The workbook is printed in Bosnian only; the app is where the other
-// languages live.
-const topic = process.argv[3] ?? 'linijska';
-const pack = PACKS[topic];
-if (!pack) throw new Error(`nepoznata tema "${topic}" — postoje: ${Object.keys(PACKS).join(', ')}`);
-
-const data = {
-  topic: text(pack.title, 'bs'),
+const dump = (pack: TaskPack) => ({
+  topic: pack.topic,
+  title: text(pack.title, 'bs'),
   tasks: pack.tasks.map((task) => {
     const solution = solutionText(task, 'bs');
     const { statements } = parsePseudocode(solution, 'bs');
@@ -114,7 +109,10 @@ const data = {
       })(),
     };
   }),
-};
+});
+
+const data = { parts: PACKS.map(dump) };
+const total = data.parts.reduce((n, part) => n + part.tasks.length, 0);
 
 writeFileSync(out, JSON.stringify(data, null, 2));
-console.log(`zapisano ${data.tasks.length} zadataka u ${out}`);
+console.log(`zapisano ${total} zadataka u ${data.parts.length} dijela u ${out}`);

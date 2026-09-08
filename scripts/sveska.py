@@ -29,7 +29,7 @@ CONTENT_W = PAGE_W - 2 * MARGIN_X        # 10204 twips of usable width
 # How much of a page the cards may fill before the next one waits its turn.
 # Measured, not guessed: the estimates below are compared against the rendered
 # pages, and this is the value at which nothing spills.
-PAGE_BUDGET = 14200
+PAGE_BUDGET = 13600
 MAX_PER_PAGE = 3
 
 INK = '18303A'
@@ -406,7 +406,13 @@ def drawing_height(dia, size=CAPTION):
     return gh
 
 
-def flowchart(dia, width=CONTENT_W, size=CAPTION, turned=False):
+# What is left of a sheet once the margins and a caption above the drawing are
+# taken off. A picture is one object and cannot be split across pages: taller
+# than this and Word pushes it to the next sheet, leaving a blank one behind.
+CONTENT_H = PAGE_H - 2 * MARGIN_Y - 900
+
+
+def flowchart(dia, width=CONTENT_W, size=CAPTION, turned=False, height=CONTENT_H):
     """A laid-out diagram, drawn the way the app exports it.
 
     Upright by default — top to bottom, the picture the student gets out of the
@@ -435,7 +441,7 @@ def flowchart(dia, width=CONTENT_W, size=CAPTION, turned=False):
     # come out at their absolute size and spill out of a drawing that had to be
     # shrunk. The caption is scaled by hand to match, and the wrapping stays as
     # it was worked out — the same words on the same lines, smaller.
-    ratio = min(1.0, width / box[0])
+    ratio = min(1.0, width / box[0], height / box[1])
     caption_size = max(12, int(round(size * ratio)))
     label_size = max(10, int(round(20 * ratio)))
 
@@ -569,16 +575,58 @@ def legend_symbol(kind):
             '</v:group></w:pict></w:r></w:p>')
 
 
-def cover(topic, count):
+# The book is one whole with a part for each topic; this is what each part is
+# called on its divider page and what it says it teaches.
+PARTS = {
+    'linijska': ('Prvi dio',
+                 'Koraci se izvršavaju jedan za drugim, od početka do kraja. '
+                 'Program ništa ne odlučuje i ništa ne ponavlja.'),
+    'grananje': ('Drugi dio',
+                 'Algoritam odlučuje: provjeri uslov, pa idi jednom ili drugom '
+                 'granom. Kroz jedan prolaz izvrši se samo jedna od njih.'),
+    'petlje': ('Treći dio',
+               'Koraci se ponavljaju — određen broj puta, ili dok god uslov '
+               'vrijedi. Uslov se provjerava prije svakog prolaza.'),
+}
+
+
+def part_name(part):
+    return PARTS.get(part['topic'], ('', ''))[0]
+
+
+def part_page(part, number):
+    """The divider that opens a part, with everything in it listed."""
+    name, what = PARTS.get(part['topic'], (f'{number}. dio', ''))
+    out = [para(after=900)]
+    out.append(para(run(name.upper(), bold=True, size=22, color=ACCENT_FILL, spacing=80),
+                    align='center', after=80))
+    out.append(para(run(part['title'], bold=True, size=44, color=ACCENT),
+                    align='center', after=120))
+    out.append(para(run(what, size=22, color=MUTED), align='center', after=200))
+    out.append(para(run(f'{len(part["tasks"])} zadataka', size=19, color=FAINT),
+                    align='center', after=460))
+    rows = [[para(run(str(t['level']), bold=True, size=20, color=ACCENT),
+                  align='center', after=0),
+             para(run(t['title'], size=20), after=0),
+             para(run(HOW_TO_SOLVE.get(primary_type(t), ('', '', ''))[0], size=18,
+                      color=MUTED), after=0)]
+            for t in part['tasks']]
+    out.append(table(rows, [560, 5200, CONTENT_W - 5760], borders=None, row_height=360))
+    out.append(page_break())
+    return ''.join(out)
+
+
+def cover(parts):
     out = [para(after=620)]
     out.append(para(run('RADNA SVESKA', bold=True, size=56, color=ACCENT, spacing=60),
                     align='center', after=100))
     out.append(para(run('Algoritmi i dijagrami toka', size=30, color=INK),
                     align='center', after=60))
-    out.append(para(run(topic, italic=True, size=25, color=MUTED),
-                    align='center', after=140))
+    out.append(para(run('  ·  '.join(p['title'] for p in parts), italic=True,
+                        size=22, color=MUTED), align='center', after=140))
+    count = sum(len(p['tasks']) for p in parts)
     out.append(para(run(f'{count} zadataka  ·  6. razred', size=19, color=FAINT),
-                    align='center', after=520))
+                    align='center', after=440))
 
     # Label and rule in their own columns: written as one run the rules start
     # wherever the label happens to end, and three ragged lines is the first
@@ -588,6 +636,16 @@ def cover(topic, count):
             for name in ('Ime i prezime', 'Razred', 'Datum')]
     out.append(table(rows, [2600, CONTENT_W - 2600], borders=None, row_height=500))
     out.append(para(after=340))
+
+    out.append(label('Šta je u svesci'))
+    rows = [[para(run(part_name(p) or '', bold=True, size=19, color=ACCENT), after=0),
+             para(run(p['title'], size=21), after=0),
+             para(run(f'{len(p["tasks"])} zadataka', size=19, color=MUTED),
+                  align='right', after=0)]
+            for p in parts]
+    out.append(table(rows, [1700, CONTENT_W - 4000, 2300], borders=None, row_height=420,
+                     shades=[PAPER, PAPER, PAPER]))
+    out.append(para(after=300))
 
     out.append(label('Kako radiš u ovoj svesci'))
     rows = [[para(run(n, bold=True, size=22, color='FFFFFF'), align='center', after=0),
@@ -672,7 +730,7 @@ def guide(example):
     return ''.join(out)
 
 
-def back_page(tasks):
+def back_page(parts):
     out = [page_break()]
     out.append(para(run('Šta sam naučio', bold=True, size=36, color=ACCENT), after=60))
     out.append(para(run('Označi ono što ti sada ide samo od sebe. Ono što nije označeno '
@@ -692,17 +750,18 @@ def back_page(tasks):
     out.append(para(after=400))
 
     out.append(label('Zadaci koje sam uradio'))
-    ticks = [f'{t["level"]}. {t["title"]}' for t in tasks]
-    # Three columns, filled down, so a long list stays on one page.
-    per = (len(ticks) + 2) // 3
-    cols = [ticks[i * per:(i + 1) * per] for i in range(3)]
+    # One column per part: thirty-five ticks in one running list is a wall, and
+    # the parts are what a student thinks in anyway.
+    cols = [[f'{t["level"]}. {t["title"]}' for t in part['tasks']] for part in parts]
+    head = [para(run(part['title'], bold=True, size=18, color=ACCENT), after=0)
+            for part in parts]
     depth = max(len(c) for c in cols)
-    rows = []
+    rows = [head]
     for r in range(depth):
-        rows.append([para(run('☐  ' + c[r] if r < len(c) else '', size=18), after=0)
+        rows.append([para(run('☐  ' + c[r] if r < len(c) else '', size=17), after=0)
                      for c in cols])
-    out.append(table(rows, [CONTENT_W // 3] * 3, borders=None, row_height=330))
-    out.append(para(after=500))
+    out.append(table(rows, [CONTENT_W // 3] * 3, borders=None, row_height=300))
+    out.append(para(after=400))
 
     out.append(label('Moje bilješke'))
     notes = blank_lines(6)
@@ -919,7 +978,7 @@ def estimate(task):
     return round(h * 1.35)
 
 
-def card(task, rng):
+def card(task, rng, separator=True):
     kind = primary_type(task)
     head = [[para(run(str(task['level']), bold=True, size=26, color='FFFFFF'),
                   align='center', after=0),
@@ -961,7 +1020,11 @@ def card(task, rng):
                         run(task['discussion'], size=19, color=MUTED),
                         after=120, before=60))
 
-    out.append(para(after=200, rule=RULE))
+    # The rule that parts one card from the next. On the last card of a sheet
+    # there is nothing to part it from, and a paragraph that no longer fits
+    # starts a blank page.
+    if separator:
+        out.append(para(after=200, rule=RULE))
     return ''.join(out)
 
 
@@ -1077,7 +1140,7 @@ def pack(tasks):
     return pages
 
 
-def answers(tasks):
+def answers(parts):
     """The back of the book: every task solved the way the app would show it.
 
     A drawing to compare against, the program that drawing stands for, and the
@@ -1092,6 +1155,7 @@ def answers(tasks):
                         'razlikuje, ne mora značiti da je pogrešan — provjeri ispisuje li '
                         'isto za iste ulaze.', size=20, color=MUTED), after=140))
 
+    tasks = [t for part in parts for t in part['tasks']]
     helper = python_helper(tasks)
     if helper:
         out.append(para(run('Programi koji nešto unose počinju ovim pomoćnikom. On pročita '
@@ -1102,57 +1166,69 @@ def answers(tasks):
         out.append(para(after=200))
 
     half = CONTENT_W // 2
-    for i, task in enumerate(tasks):
-        # A sheet each: the drawing is one picture and cannot be split, so
-        # letting these flow leaves a third of a page empty before every one.
-        if i:
-            out.append(page_break())
-        out.append(para(run(f'{task["level"]}. {task["title"]}', bold=True, size=26,
-                            color=ACCENT), after=50, rule=RULE))
-        out.append(para(run(task['prompt'], size=19, color=MUTED), after=120, ind=60))
-
-        body = python_body(task.get('python', ''))
-        out.append(table([[para(run('ALGORITAM', bold=True, size=15, color=ACCENT,
-                                    spacing=30), after=40) + code_cell(task['solution'].split('\n')),
-                           para(run('PYTHON', bold=True, size=15, color=ACCENT,
-                                    spacing=30), after=40) + code_cell(body.split('\n'))]],
-                         [half, CONTENT_W - half], borders=None,
-                         shades=[SOFT, PAPER], valign='top'))
-        out.append(para(after=120))
-
-        # A drawing this tall cannot share a sheet with the words about it:
-        # it goes on its own page, after them, rather than pushing half the
-        # explanation onto a third sheet.
-        tall = drawing_height(task['diagram']) > 7000
-        if not tall:
-            out.append(flowchart(task['diagram']))
-
-        rows = [[para(run(line, mono=True, size=17), after=0),
-                 para(run(sentence, size=17, color=MUTED), after=0)]
-                for line, sentence in explanation(task)]
-        if rows:
-            out.append(label('Šta radi koji korak'))
-            out.append(table(rows, [3400, CONTENT_W - 3400], borders=RULE, valign='top'))
-            out.append(para(after=100))
-
-        out.append(label('Provjera na brojevima'))
-        for case in task['results']:
-            ulaz = ', '.join(case['inputs']) if case['inputs'] else '—'
-            ispis = ' / '.join(case['output']) if case['output'] else '—'
-            out.append(para(run(f'{ulaz}  →  {ispis}', mono=True, size=18, color=MUTED),
-                            ind=200, after=40))
-        if tall:
-            out.append(page_break())
-            out.append(label('Dijagram toka'))
-            out.append(para(run('Ovako ga aplikacija nacrta. Tvoj crtež ide slijeva nadesno, '
-                                'ali su blokovi i strelice isti.', size=18, color=MUTED),
-                            after=60))
-            out.append(flowchart(task['diagram']))
-        else:
-            # Only when something follows on the same sheet: after a drawing
-            # that filled its own page this empty line starts a blank one.
-            out.append(para(after=160))
+    for part in parts:
+        out.append(page_break())
+        out.append(para(run(f'{part_name(part)} · {part["title"]}', bold=True,
+                            size=30, color=ACCENT_FILL), after=200))
+        for i, task in enumerate(part['tasks']):
+            # The first solution of a part shares the sheet with its heading.
+            out.append(solution(task, half, first=i == 0))
     return ''.join(out)
+
+
+def solution(task, half, first):
+    """One solved task: the algorithm, the same thing as Python, the drawing
+    the app makes of it, and every line said back in words."""
+    out = []
+    # A sheet each: the drawing is one picture and cannot be split, so letting
+    # these flow leaves a third of a page empty before every one.
+    if not first:
+        out.append(page_break())
+    out.append(para(run(f'{task["level"]}. {task["title"]}', bold=True, size=26,
+                        color=ACCENT), after=50, rule=RULE))
+    out.append(para(run(task['prompt'], size=19, color=MUTED), after=120, ind=60))
+
+    body = python_body(task.get('python', ''))
+    out.append(table([[para(run('ALGORITAM', bold=True, size=15, color=ACCENT,
+                                spacing=30), after=40) + code_cell(task['solution'].split('\n')),
+                       para(run('PYTHON', bold=True, size=15, color=ACCENT,
+                                spacing=30), after=40) + code_cell(body.split('\n'))]],
+                     [half, CONTENT_W - half], borders=None,
+                     shades=[SOFT, PAPER], valign='top'))
+    out.append(para(after=120))
+
+    # A drawing this tall cannot share a sheet with the words about it:
+    # it goes on its own page, after them, rather than pushing half the
+    # explanation onto a third sheet.
+    tall = drawing_height(task['diagram']) > 7000
+    if not tall:
+        out.append(flowchart(task['diagram']))
+
+    rows = [[para(run(line, mono=True, size=17), after=0),
+             para(run(sentence, size=17, color=MUTED), after=0)]
+            for line, sentence in explanation(task)]
+    if rows:
+        out.append(label('Šta radi koji korak'))
+        out.append(table(rows, [3400, CONTENT_W - 3400], borders=RULE, valign='top'))
+        out.append(para(after=100))
+
+    out.append(label('Provjera na brojevima'))
+    for case in task['results']:
+        ulaz = ', '.join(case['inputs']) if case['inputs'] else '—'
+        ispis = ' / '.join(case['output']) if case['output'] else '—'
+        out.append(para(run(f'{ulaz}  →  {ispis}', mono=True, size=18, color=MUTED),
+                        ind=200, after=40))
+    if tall:
+        out.append(page_break())
+        out.append(label('Dijagram toka'))
+        out.append(para(run('Ovako ga aplikacija nacrta. Tvoj crtež ide slijeva nadesno, '
+                            'ali su blokovi i strelice isti.', size=18, color=MUTED),
+                        after=60))
+        out.append(flowchart(task['diagram']))
+    # Nothing follows on this sheet — the next solution begins with a page
+    # break — and a closing empty line here is enough to start a blank page.
+    return ''.join(out)
+
 
 
 # --- the package ------------------------------------------------------------
@@ -1173,20 +1249,29 @@ FOOTER = ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
 
 def build(data, path):
     rng = random.Random(20260906)
+    parts = data['parts']
+    tasks = [t for part in parts for t in part['tasks']]
     # The worked example is the first computational task: everyday tasks have
     # no numbers to check against, which is half of what the example shows.
-    example = next((t for t in data['tasks'] if t['kind'] == 'racunski'), data['tasks'][0])
-    body = [cover(data['topic'], len(data['tasks'])), guide(example)]
+    example = next((t for t in tasks if t['kind'] == 'racunski'), tasks[0])
+    body = [cover(parts), guide(example)]
 
-    pages = pack(data['tasks'])
-    for i, page in enumerate(pages):
-        for task in page:
-            body.append(card(task, rng))
-        if i < len(pages) - 1:
+    sheets = 0
+    for number, part in enumerate(parts, 1):
+        # The guide already broke the page for the first one.
+        if number > 1:
             body.append(page_break())
+        body.append(part_page(part, number))
+        pages = pack(part['tasks'])
+        sheets += len(pages)
+        for i, page in enumerate(pages):
+            for j, task in enumerate(page):
+                body.append(card(task, rng, separator=j < len(page) - 1))
+            if i < len(pages) - 1:
+                body.append(page_break())
 
-    body.append(back_page(data['tasks']))
-    body.append(answers(data['tasks']))
+    body.append(back_page(parts))
+    body.append(answers(parts))
 
     sect = (f'<w:sectPr><w:footerReference w:type="default" r:id="rId2"/>'
             f'<w:pgSz w:w="{PAGE_W}" w:h="{PAGE_H}"/>'
@@ -1234,7 +1319,7 @@ def build(data, path):
         z.writestr('word/footer1.xml', FOOTER)
         z.writestr('word/_rels/document.xml.rels', doc_rels)
 
-    return len(pages)
+    return sheets
 
 
 if __name__ == '__main__':
@@ -1243,4 +1328,6 @@ if __name__ == '__main__':
     with open(sys.argv[1]) as f:
         data = json.load(f)
     sheets = build(data, sys.argv[2])
-    print(f'sveska: {sys.argv[2]} — {len(data["tasks"])} zadataka na {sheets} listova')
+    count = sum(len(part['tasks']) for part in data['parts'])
+    print(f'sveska: {sys.argv[2]} — {count} zadataka u {len(data["parts"])} dijela '
+          f'na {sheets} listova vježbi')
