@@ -14,6 +14,7 @@ import { buildFlowchart, parsePseudocode } from '../src/core/flowchart-gen';
 import { Interpreter } from '../src/core/interpreter';
 import { TaskPack, text } from '../src/exercises/types';
 import { blankedText, solutionText, tiles } from '../src/exercises/render';
+import { traceTask } from '../src/exercises/trace';
 import linijska from '../src/exercises/linijska.json';
 import grananje from '../src/exercises/grananje.json';
 
@@ -68,11 +69,20 @@ const data = {
           edges: edges.map((e) => ({ from: e.from, to: e.to, label: e.label ?? '' })),
         };
       })(),
-      /** Variables the state-table exercise gets columns for. */
-      vars: (() => {
-        const machine = new Interpreter(statements);
-        machine.runToEnd(task.tests[0] ?? []);
-        return [...machine.vars.keys()];
+      /**
+       * The grid the state-table exercise is printed as: a column per variable,
+       * a column for the condition when the program branches, and a row per
+       * step the student fills in. It comes from the same trace the app grades,
+       * so the printed table and the screen cannot disagree about the shape of
+       * the answer.
+       */
+      trace: (() => {
+        const traced = traceTask(task, 'bs', task.tests[0] ?? []);
+        return {
+          columns: traced.columns,
+          hasCondition: traced.hasCondition,
+          rows: traced.rows.length,
+        };
       })(),
       /**
        * Which variable each input answers, in order, so the worksheet can say

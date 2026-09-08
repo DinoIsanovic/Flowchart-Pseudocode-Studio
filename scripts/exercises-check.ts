@@ -18,6 +18,7 @@ import { Language } from '../src/types';
 import { Task, TaskPack, text } from '../src/exercises/types';
 import { blankedText, blanks, renderKeywords, solutionText, tiles } from '../src/exercises/render';
 import { MistakeKind, mistakeFor, plantMistake } from '../src/exercises/plant';
+import { traceTask } from '../src/exercises/trace';
 import { buildFlowchart } from '../src/core/flowchart-gen';
 import linijska from '../src/exercises/linijska.json';
 import grananje from '../src/exercises/grananje.json';
@@ -133,6 +134,16 @@ for (const pack of packs) {
       if (!planted.answerIds.length) fail(task, `zasađena greška "${kind}" nije vezana ni za jedan oblik`);
     }
 
+    // The state table is printed with one row per step and one column per
+    // variable plus the condition; a task whose run fills none of them would
+    // reach the student as an empty grid.
+    let traced: ReturnType<typeof traceTask> | null = null;
+    if (task.types.includes('tabela')) {
+      traced = traceTask(task, 'bs', task.tests[0] ?? []);
+      if (!traced.rows.length) fail(task, "tip 'tabela' bez ijednog reda — prvi test ništa ne upisuje");
+      if (traced.rows.some((row) => !row.answer)) fail(task, 'red tabele bez odgovora');
+    }
+
     const real = new Set(tiles(task, 'bs'));
     for (const d of task.distractors ?? []) {
       if (real.has(renderKeywords(d, 'bs'))) fail(task, `distraktor je zapravo tačna kockica: ${d}`);
@@ -142,6 +153,11 @@ for (const pack of packs) {
     outputs.forEach((o) => console.log(`     ${o}`));
     if (holes.length) console.log(`     praznine: ${holes.map((h) => `${h.kind}:${h.answer}`).join(', ')}`);
     if (task.interchangeable) console.log(`     zamjenjivi koraci: ${task.interchangeable.map((g) => g.join('↔')).join(', ')}`);
+    if (traced) {
+      const cols = [...(traced.hasCondition ? ['uslov'] : []), ...traced.columns];
+      console.log(`     tabela: ${traced.rows.length} redova, kolone ${cols.join(', ')}`);
+      console.log(`     tabela odgovori: ${traced.rows.map((r) => `${r.step ?? '·'}:${r.answer}`).join(' ')}`);
+    }
   }
 
   const sorted = [...levels].sort((a, b) => a - b);

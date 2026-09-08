@@ -4,6 +4,7 @@
  */
 
 import { Language } from '../types';
+import { translations } from '../i18n/translations';
 import { parsePseudocode } from '../core/flowchart-gen';
 import { Interpreter } from '../core/interpreter';
 import { formatValue } from '../core/expr';
@@ -11,10 +12,14 @@ import { Task } from './types';
 import { solutionText } from './render';
 
 /**
- * The trace table a student fills in: one row per step that writes a variable,
- * one column per variable. The interpreter already reports which variable each
- * step wrote, so the table is a view over a run rather than a second model of
- * what the program does.
+ * The trace table a student fills in: one row per step that writes a variable
+ * or decides a condition, one column per variable plus a column for the
+ * condition. The interpreter already reports which variable each step wrote
+ * and which way each decision went, so the table is a view over a run rather
+ * than a second model of what the program does.
+ *
+ * A branching program without the condition column reads as a list of values
+ * with the branch — the thing being taught — nowhere on the page.
  */
 
 export interface TraceRow {
@@ -22,8 +27,12 @@ export interface TraceRow {
   step?: number;
   /** The pseudocode line, so the student sees which step they are on. */
   label: string;
-  /** The variable this step writes — the only cell the student fills. */
+  /** The variable this step writes, or '' when the row is a decision. */
   changed: string;
+  /** Which way the decision went; absent on a row that writes a variable. */
+  branch?: boolean;
+  /** What belongs in the one open cell of this row — the value, or DA / NE. */
+  answer: string;
   /** Every variable's value after this step, for the cells already known. */
   values: Record<string, string>;
 }
@@ -31,6 +40,8 @@ export interface TraceRow {
 export interface Trace {
   /** Variables in the order they first appear — the column order. */
   columns: string[];
+  /** Whether the run met a decision, so the table needs the condition column. */
+  hasCondition: boolean;
   rows: TraceRow[];
   /** The inputs this run was traced with. */
   inputs: string[];
@@ -45,6 +56,9 @@ export function traceTask(task: Task, lang: Language, inputs: string[]): Trace {
   const { statements } = parsePseudocode(source, lang);
   const machine = new Interpreter(statements);
 
+  const yes = translations[lang].yesLabel.toUpperCase();
+  const no = translations[lang].noLabel.toUpperCase();
+
   const rows: TraceRow[] = [];
   const inputVars: string[] = [];
   let next = 0;
@@ -58,7 +72,7 @@ export function traceTask(task: Task, lang: Language, inputs: string[]): Trace {
       continue;
     }
     if (result.status === 'done' || result.status === 'error') break;
-    if (!result.changed) continue;
+    if (!result.changed && result.branch === undefined) continue;
 
     const values: Record<string, string> = {};
     machine.vars.forEach((value, name) => {
@@ -67,19 +81,33 @@ export function traceTask(task: Task, lang: Language, inputs: string[]): Trace {
     rows.push({
       step: result.step,
       label: (lines[(result.line ?? 1) - 1] ?? '').trim(),
-      changed: result.changed,
+      changed: result.changed ?? '',
+      branch: result.branch,
+      answer: result.changed ? values[result.changed] : result.branch ? yes : no,
       values,
     });
   }
 
-  return { columns: [...machine.vars.keys()], rows, inputs, inputVars };
+  return {
+    columns: [...machine.vars.keys()],
+    hasCondition: rows.some((row) => row.branch !== undefined),
+    rows,
+    inputs,
+    inputVars,
+  };
 }
 
-/** Marks the filled cells; a row is right when its changed value matches. */
+/**
+ * Marks the filled cells; a row is right when its open cell matches. A value
+ * has to be written exactly, but DA / NE is a word the student says out loud
+ * rather than copies, so its case is ignored.
+ */
 export function gradeTrace(trace: Trace, answers: string[]): { correct: boolean; firstWrong?: number } {
   for (let i = 0; i < trace.rows.length; i++) {
-    const want = trace.rows[i].values[trace.rows[i].changed];
-    if ((answers[i] ?? '').trim() !== want) return { correct: false, firstWrong: i };
+    const row = trace.rows[i];
+    const got = (answers[i] ?? '').trim();
+    const ok = row.changed ? got === row.answer : got.toLowerCase() === row.answer.toLowerCase();
+    if (!ok) return { correct: false, firstWrong: i };
   }
   return { correct: true };
 }

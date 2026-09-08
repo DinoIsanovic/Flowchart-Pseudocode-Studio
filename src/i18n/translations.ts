@@ -188,9 +188,15 @@ export interface Translations {
     hint: string;
     trace: string;
     traceStep: string;
+    traceCond: string;
+    traceCondHint: string;
     findMistake: string;
     wrongPick: string;
     predict: string;
+    write: string;
+    writeNote: string;
+    writeAll: string;
+    writeTests: string;
     inputLabel: string;
     outputLabel: string;
     noInput: string;
@@ -371,9 +377,15 @@ const SOURCE: Record<SourceLang, Translations> = {
       hint: 'Help',
       trace: 'Follow the run and fill in the state table.',
       traceStep: 'step',
+      traceCond: 'condition',
+      traceCondHint: 'For every condition write yes or no — the branch the program took.',
       findMistake: 'One symbol in this diagram is wrong. Tap it.',
       wrongPick: 'that symbol is fine — look again',
       predict: 'Read the algorithm and write what it prints.',
+      write: 'Write the algorithm yourself, then check it.',
+      writeNote: 'The wording is yours to choose — what is checked is what the program works out for each input.',
+      writeAll: 'Write the algorithm first.',
+      writeTests: 'Checked with:',
       inputLabel: 'Input',
       outputLabel: 'Output',
       noInput: 'no input',
@@ -561,9 +573,15 @@ const SOURCE: Record<SourceLang, Translations> = {
       hint: 'Hilfe',
       trace: 'Verfolge den Ablauf und fülle die Wertetabelle aus.',
       traceStep: 'Schritt',
+      traceCond: 'Bedingung',
+      traceCondHint: 'Schreibe bei jeder Bedingung ja oder nein — den Zweig, den das Programm genommen hat.',
       findMistake: 'Ein Symbol in diesem Diagramm ist falsch. Tippe es an.',
       wrongPick: 'dieses Symbol ist in Ordnung — schau noch einmal',
       predict: 'Lies den Algorithmus und schreibe auf, was er ausgibt.',
+      write: 'Schreibe den Algorithmus selbst und prüfe ihn dann.',
+      writeNote: 'Die Formulierung wählst du selbst — geprüft wird, was das Programm für jede Eingabe herausbekommt.',
+      writeAll: 'Schreibe zuerst den Algorithmus.',
+      writeTests: 'Geprüft mit:',
       inputLabel: 'Eingabe',
       outputLabel: 'Ausgabe',
       noInput: 'keine Eingabe',
@@ -751,9 +769,15 @@ const SOURCE: Record<SourceLang, Translations> = {
       hint: 'Pomoć',
       trace: 'Prati izvršavanje i popuni tabelu stanja.',
       traceStep: 'korak',
+      traceCond: 'uslov',
+      traceCondHint: 'Za svaki uslov upiši DA ili NE — granu kojom je program prošao.',
       findMistake: 'Jedan simbol na ovom dijagramu nije u redu. Dodirni ga.',
       wrongPick: 'taj simbol je u redu — pogledaj ponovo',
       predict: 'Pročitaj algoritam i upiši šta ispisuje.',
+      write: 'Napiši algoritam sam, pa ga provjeri.',
+      writeNote: 'Riječi u ispisu biraš sam — provjerava se šta program izračuna za svaki ulaz.',
+      writeAll: 'Prvo napiši algoritam.',
+      writeTests: 'Provjerava se za:',
       inputLabel: 'Ulaz',
       outputLabel: 'Ispis',
       noInput: 'bez unosa',

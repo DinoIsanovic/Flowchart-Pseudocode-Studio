@@ -56,6 +56,12 @@ export interface StepResult {
   printed?: string;
   /** Variable being read while `status` is 'input'. */
   awaiting?: string;
+  /**
+   * On a decision — an `if` or the test of a loop — whether the condition
+   * held. It is the `DA` edge of the diagram either way: the UNTIL form swaps
+   * the labels rather than the test, so `true` always leaves by `DA`.
+   */
+  branch?: boolean;
   error?: RunError;
 }
 
@@ -69,6 +75,8 @@ const MAX_STEPS = 200_000;
 interface Ctx {
   vars: Env;
   output: string[];
+  /** Printed values with the words around them left out; see `printedValues`. */
+  values: string[];
   stepOf: Map<Statement, number>;
   used: Set<string>;
   count: number;
@@ -83,6 +91,7 @@ interface Tick {
   changed?: string;
   printed?: string;
   awaiting?: string;
+  branch?: boolean;
 }
 
 class RunSignal extends Error {
@@ -133,6 +142,24 @@ function splitArguments(text: string): string[] {
   }
   out.push(current.trim());
   return out.filter((s) => s.length > 0);
+}
+
+/**
+ * Whether an argument of a print is nothing but a quoted text — the wording a
+ * program puts around its result, as opposed to a value it worked out.
+ */
+function isTextLiteral(src: string): boolean {
+  const s = src.trim();
+  const quote = s[0];
+  if (s.length < 2 || (quote !== '"' && quote !== "'")) return false;
+  for (let i = 1; i < s.length; i++) {
+    if (s[i] === '\\') {
+      i++;
+      continue;
+    }
+    if (s[i] === quote) return i === s.length - 1;
+  }
+  return false;
 }
 
 /**
@@ -217,9 +244,13 @@ function* runStatement(stmt: Statement, ctx: Ctx, loopDepth: number): Generator<
     if (stmt.kind === 'ispisi') {
       // Several comma-separated values print on one line separated by a
       // space, the way Python's print does it.
-      const parts = splitArguments(text).map((src) => formatValue(evalIn(src, ctx)));
+      const args = splitArguments(text);
+      const parts = args.map((src) => formatValue(evalIn(src, ctx)));
       const printed = parts.join(' ');
       ctx.output.push(printed);
+      args.forEach((src, i) => {
+        if (!isTextLiteral(src)) ctx.values.push(parts[i]);
+      });
       yield { ...here, printed };
       return;
     }
@@ -242,7 +273,7 @@ function* runStatement(stmt: Statement, ctx: Ctx, loopDepth: number): Generator<
 
   if (stmt.type === 'if') {
     const taken = toBoolean(evalIn(stmt.cond ?? '', ctx));
-    yield here;
+    yield { ...here, branch: taken };
     yield* runBlock((taken ? stmt.thenBlock : stmt.elseBlock) ?? [], ctx, loopDepth);
     return;
   }
@@ -256,7 +287,7 @@ function* runStatement(stmt: Statement, ctx: Ctx, loopDepth: number): Generator<
       // moved — exactly what the generated `while not (...)` does.
       const cond = toBoolean(evalIn(stmt.cond ?? '', ctx));
       const carryOn = stmt.until ? !cond : cond;
-      yield here;
+      yield { ...here, branch: cond };
       if (!carryOn) return;
       yield* runBlock(stmt.body ?? [], ctx, loopDepth);
     }
@@ -310,6 +341,7 @@ export class Interpreter {
     return {
       vars: new Map<string, Value>(),
       output: [],
+      values: [],
       stepOf: assignStepNumbers(this.statements),
       used: identifiersUsed(this.statements),
       count: 0,
@@ -325,6 +357,16 @@ export class Interpreter {
   /** Console lines printed so far. */
   get output(): string[] {
     return this.ctx.output;
+  }
+
+  /**
+   * The values the program printed, in order, without the text it printed
+   * around them. A student writing an algorithm of their own picks their own
+   * wording, so this is the part of the output that can be compared with the
+   * author's solution.
+   */
+  get printedValues(): string[] {
+    return this.ctx.values;
   }
 
   /** Statements executed so far, for a "still running?" readout. */

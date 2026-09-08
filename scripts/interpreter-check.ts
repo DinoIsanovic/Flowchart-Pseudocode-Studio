@@ -50,6 +50,33 @@ function counts(name: string, code: string, expected: Record<string, number>, in
   }
 }
 
+/**
+ * The way each decision went, in order, as the state table's condition column
+ * writes it: `DA` when the condition held. A loop reports one per test, an
+ * `AKO` one per decision reached.
+ */
+function branches(name: string, code: string, expected: string, inputs: string[] = []) {
+  const { statements } = parsePseudocode(code, 'bs');
+  const machine = new Interpreter(statements);
+  const seen: string[] = [];
+  let next = 0;
+  for (;;) {
+    if (machine.status === 'input') {
+      if (next >= inputs.length) break;
+      machine.provideInput(inputs[next++]);
+    }
+    const step = machine.step();
+    if (step.branch !== undefined) seen.push(step.branch ? 'DA' : 'NE');
+    if (step.status === 'done' || step.status === 'error') break;
+  }
+  if (seen.join(',') === expected) {
+    pass++;
+  } else {
+    fail++;
+    console.log(`FAIL  ${name}\n      grane    ${seen.join(',')}\n      očekivano ${expected}`);
+  }
+}
+
 function errors(name: string, code: string, expectedCode: string, inputs: string[] = []) {
   const { result } = run(code, inputs);
   if (result.status === 'error' && result.error?.code === expectedCode) {
@@ -163,6 +190,60 @@ PONAVLJAJ
   ISPIŠI i
   RAČUNAJ i = i + 1
 DOK JE i > 3`, []);
+
+// --- which branch was taken ------------------------------------------------
+
+// The state table has a column for the condition, and it is filled from the
+// same report the canvas highlights the diagram with: `true` is always the DA
+// edge, including in the UNTIL form, where the labels are swapped rather than
+// the test.
+
+branches('AKO — grana DA', `POČETAK
+UNESI a
+AKO JE a > 10
+  DA
+    ISPIŠI "veliko"
+  INAČE
+    ISPIŠI "malo"
+KRAJ`, 'DA', ['12']);
+
+branches('AKO — grana NE', `POČETAK
+UNESI a
+AKO JE a > 10
+  DA
+    ISPIŠI "veliko"
+  INAČE
+    ISPIŠI "malo"
+KRAJ`, 'NE', ['7']);
+
+// Only the decisions actually reached leave a row: the inner AKO of the branch
+// that was not taken never runs.
+branches('ugniježđeni AKO — samo dosegnute odluke', `POČETAK
+UNESI a, b
+AKO JE a >= b
+  DA
+    AKO JE a >= 10
+      DA
+        ISPIŠI "a, veliko"
+      INAČE
+        ISPIŠI "a, malo"
+  INAČE
+    AKO JE b >= 10
+      DA
+        ISPIŠI "b, veliko"
+KRAJ`, 'DA,NE', ['8', '3']);
+
+branches('petlja — jedna odluka po prolazu', `POČETAK
+POSTAVI i = 1
+PONOVI DOK JE i <= 3
+  RAČUNAJ i = i + 1
+KRAJ`, 'DA,DA,DA,NE');
+
+branches('petlja pisana odozdo — DA i dalje znači da uslov vrijedi', `POČETAK
+POSTAVI i = 1
+PONAVLJAJ
+  RAČUNAJ i = i + 1
+DOK JE i <= 3`, 'DA,DA,DA,NE');
 
 // --- errors ----------------------------------------------------------------
 

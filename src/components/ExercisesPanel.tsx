@@ -11,8 +11,9 @@ import { buildFlowchart, parsePseudocode } from '../core/flowchart-gen';
 import { describeDiagramIssue } from '../core/diagram-check';
 import { Interpreter } from '../core/interpreter';
 import { Task, TaskPack, text } from '../exercises/types';
-import { blankedText, blanks, fillBlanks, solutionText, tileLine, tiles } from '../exercises/render';
-import { GradeResult, describeGrade, gradeAttempt } from '../exercises/grade';
+import { STEP, blankedText, blanks, fillBlanks, renderKeywords, solutionText, tileLine, tiles } from '../exercises/render';
+import { GradeResult, describeGrade, gradeAttempt, gradeWritten } from '../exercises/grade';
+import { AUTOCOMPLETE_KEYWORDS } from '../i18n/keywords';
 import { gradeTrace, traceTask } from '../exercises/trace';
 import { MistakeKind, mistakeFor, plantMistake } from '../exercises/plant';
 import { MiniDiagram } from './MiniDiagram';
@@ -78,7 +79,14 @@ interface Placed {
 }
 
 /** The exercise types this panel can actually run, in the order they appear. */
-const IN_APP_TYPES = ['kockice', 'dopuni', 'prepoznaj', 'tabela', 'dijagram-greska'];
+const IN_APP_TYPES = ['kockice', 'dopuni', 'prepoznaj', 'tabela', 'dijagram-greska', 'samostalno'];
+
+/**
+ * The words offered above the writing box. The first ten are the sequence and
+ * branching keywords; the loop words after them belong to a topic that is not
+ * authored yet, and a word a student cannot use anywhere is only in the way.
+ */
+const WRITING_KEYWORDS = 10;
 
 /** The exercise a task is built for — the first type its author listed. */
 function primaryType(task: Task): string {
@@ -86,8 +94,8 @@ function primaryType(task: Task): string {
 }
 
 /**
- * Everything this task offers on screen. 'greska' and 'samostalno' are
- * authored but have no exercise here yet, so they stay on paper.
+ * Everything this task offers on screen. 'greska' — find the mistake in the
+ * pseudocode — is authored but has no exercise here yet, so it stays on paper.
  */
 function availableTypes(task: Task): string[] {
   return task.types.filter((x) => IN_APP_TYPES.includes(x));
@@ -102,9 +110,14 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
   const [filled, setFilled] = useState<string[]>([]);
   const [predicted, setPredicted] = useState<string[]>([]);
   const [traced, setTraced] = useState<string[]>([]);
+  const [written, setWritten] = useState<string>('');
   const [activeType, setActiveType] = useState<string>('kockice');
   const [pickedShape, setPickedShape] = useState<string | null>(null);
   const [result, setResult] = useState<GradeResult | null>(null);
+  const writingBox = React.useRef<HTMLTextAreaElement>(null);
+
+  /** What the writing box starts with: the two lines every algorithm has. */
+  const frame = renderKeywords('@START\n\n@END', language);
 
   const pack = useMemo(() => PACKS.find((p) => p.topic === topic) ?? PACKS[0], [topic]);
   const task = useMemo(() => pack.tasks.find((x) => x.id === openId) ?? null, [openId, pack]);
@@ -173,9 +186,26 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
     setFilled([]);
     setPredicted([]);
     setTraced([]);
+    setWritten('');
     setPickedShape(null);
     setActiveType(primaryType(next));
     setResult(null);
+  };
+
+  /**
+   * Drops a keyword — or an indent — where the caret is. On a phone the
+   * keyboard has no Č and no Tab, so the buttons are the way in.
+   */
+  const insertWriting = (text: string) => {
+    const box = writingBox.current;
+    const start = box?.selectionStart ?? written.length;
+    const end = box?.selectionEnd ?? start;
+    setWritten(written.slice(0, start) + text + written.slice(end));
+    // The value only lands after the redraw, so the caret is placed after it.
+    requestAnimationFrame(() => {
+      box?.focus();
+      box?.setSelectionRange(start + text.length, start + text.length);
+    });
   };
 
   const markSolved = (id: string) => {
@@ -212,7 +242,7 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
             reason: 'tabela',
             mismatch: {
               inputs: [String(trace.rows[row].step ?? row + 1)],
-              expected: [trace.rows[row].values[trace.rows[row].changed]],
+              expected: [trace.rows[row].answer],
               got: [(traced[row] ?? '').trim() || '—'],
             },
           };
@@ -236,6 +266,14 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
       outcome = { correct: false, reason: 'nepotpuno', message: t.fillAll };
     } else if (kind === 'kockice' && placed.length < movable.length) {
       outcome = { correct: false, reason: 'nepotpuno', message: t.placeAll };
+    } else if (kind === 'samostalno') {
+      // The bare frame is what the box was handed to the student with; it is
+      // an empty answer, not a wrong one.
+      const code = written.trim();
+      outcome =
+        !code || code === frame.trim()
+          ? { correct: false, reason: 'nepotpuno', message: t.writeAll }
+          : gradeWritten(task, written, language);
     } else {
       const code = kind === 'kockice' ? assembled : fillBlanks(task, language, filled);
       outcome = gradeAttempt(task, code, language);
@@ -351,6 +389,7 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                       type="button"
                       onClick={() => {
                         setActiveType(kind);
+                        if (kind === 'samostalno' && !written.trim()) setWritten(frame);
                         setResult(null);
                       }}
                       className={`flex-1 min-w-0 truncate px-2 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
@@ -526,6 +565,9 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                       </span>
                     )}
                   </p>
+                  {trace.hasCondition && (
+                    <p className="text-[11px] text-[#FBBF24]/80">{t.traceCondHint}</p>
+                  )}
                   <div className="overflow-x-auto rounded-xl border border-white/10 bg-black/40">
                     <table className="w-full text-[11.5px]">
                       <thead>
@@ -533,6 +575,11 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                           <th className="text-left font-black uppercase tracking-wider text-[9.5px] px-2 py-1.5">
                             {t.traceStep}
                           </th>
+                          {trace.hasCondition && (
+                            <th className="font-black uppercase tracking-wider text-[9.5px] px-2 py-1.5 text-[#FBBF24]">
+                              {t.traceCond}
+                            </th>
+                          )}
                           {trace.columns.map((name) => (
                             <th key={name} className="px-2 py-1.5 font-mono font-bold text-[#67E8F9]">
                               {name}
@@ -549,6 +596,24 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                               )}
                               {row.label}
                             </td>
+                            {trace.hasCondition && (
+                              <td className="px-1.5 py-1 text-center">
+                                {row.branch !== undefined ? (
+                                  <input
+                                    value={traced[i] ?? ''}
+                                    onChange={(e) => {
+                                      const next = [...traced];
+                                      next[i] = e.target.value;
+                                      setTraced(next);
+                                    }}
+                                    aria-label={`${t.traceCond} @ ${row.label}`}
+                                    className="w-16 px-1 py-0.5 rounded-md bg-white/10 border border-[#FBBF24]/40 text-[#FBBF24] text-[11.5px] font-mono text-center outline-none focus:border-[#FBBF24]"
+                                  />
+                                ) : (
+                                  <span className="text-white/25 font-mono">·</span>
+                                )}
+                              </td>
+                            )}
                             {trace.columns.map((name) => (
                               <td key={name} className="px-1.5 py-1 text-center">
                                 {name === row.changed ? (
@@ -572,6 +637,49 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                       </tbody>
                     </table>
                   </div>
+                </>
+              )}
+
+              {activeType === 'samostalno' && (
+                <>
+                  <p className="text-[11px] text-white/45">{t.write}</p>
+                  <p className="text-[11px] text-[#FBBF24]/80">{t.writeNote}</p>
+                  <div className="flex flex-wrap gap-1">
+                    {AUTOCOMPLETE_KEYWORDS[language].slice(0, WRITING_KEYWORDS).map((word) => (
+                      <button
+                        key={word.word}
+                        type="button"
+                        title={word.hint}
+                        onClick={() => insertWriting(word.arg ? `${word.word} ` : word.word)}
+                        className="px-2 h-7 rounded-lg bg-white/[0.06] border border-white/10 font-mono text-[10.5px] text-white/65 hover:text-white hover:bg-white/[0.12] transition-colors"
+                      >
+                        {word.word}
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    ref={writingBox}
+                    value={written}
+                    onChange={(e) => setWritten(e.target.value)}
+                    onKeyDown={(e) => {
+                      // Indentation is part of the answer here, and Tab would
+                      // otherwise walk out of the box.
+                      if (e.key !== 'Tab' || e.shiftKey) return;
+                      e.preventDefault();
+                      insertWriting(STEP);
+                    }}
+                    spellCheck={false}
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                    aria-label={t.write}
+                    className="min-h-[240px] rounded-xl border border-white/10 bg-black/50 p-3 font-mono text-[12px] leading-6 text-white/85 outline-none focus:border-[#06B6D4]/60 resize-y"
+                  />
+                  <p className="text-[11px] text-white/40">
+                    {t.writeTests}{' '}
+                    <span className="font-mono text-white/60">
+                      {task.tests.map((inputs) => inputs.join(', ') || t.noInput).join('  ·  ')}
+                    </span>
+                  </p>
                 </>
               )}
 
@@ -615,7 +723,8 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                   <button
                     type="button"
                     onClick={() => {
-                      onReward(solution);
+                      // Their own program is the one worth seeing drawn.
+                      onReward(activeType === 'samostalno' ? written : solution);
                       onClose();
                     }}
                     className="flex items-center gap-1.5 h-10 px-3 rounded-xl bg-[#4ADE80]/15 border border-[#4ADE80]/40 text-[#86EFAC] text-[11px] font-black uppercase tracking-wider hover:bg-[#4ADE80]/25 active:scale-95 transition-all ml-auto"

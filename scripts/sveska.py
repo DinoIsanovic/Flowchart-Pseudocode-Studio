@@ -606,17 +606,18 @@ def trace_rows(task):
 
     Six blank rows for every task was a guess, and a wrong one: a student who
     cannot tell whether a row is meant to stay empty learns nothing from the
-    table. One row per step that writes a variable is the answer.
+    table. The count comes from a real run, so a branch that is not taken
+    brings no row with it.
     """
-    n = 0
-    for line in task['solution'].split('\n'):
-        head = line.strip().split(' ', 1)
-        word = head[0].upper()
-        if word == 'UNESI':
-            n += len([v for v in head[1].split(',') if v.strip()]) if len(head) > 1 else 1
-        elif word in ('RAČUNAJ', 'POSTAVI'):
-            n += 1
-    return max(n, 2)
+    return max(task['trace']['rows'], 2)
+
+
+def tabela_height(task):
+    """How tall the state-table exercise prints: the line naming the inputs, the
+    header and one row per step, plus the DA / NE note where the program
+    branches. A table that is estimated short breaks across two sheets.
+    """
+    return 320 + (trace_rows(task) + 1) * 360 + (260 if task['trace']['hasCondition'] else 0)
 
 
 def how_to(kind, tip=0):
@@ -699,7 +700,10 @@ def exercise_prepoznaj(task):
 
 
 def exercise_tabela(task):
-    cols = ['korak'] + task['vars']
+    # The condition gets a column of its own where the program branches: the
+    # branch taken is the whole point of tracing an AKO, and without it the
+    # table shows values that appear from nowhere.
+    cols = ['korak'] + (['uslov'] if task['trace']['hasCondition'] else []) + task['trace']['columns']
     width = CONTENT_W // len(cols)
     # Naming the values the trace starts from; a state table without them is
     # a table of anything.
@@ -709,6 +713,9 @@ def exercise_tabela(task):
     out = [how_to('tabela')]
     if pairs:
         out.append(para(run(f'Prati izvršavanje za {pairs}.', size=19), after=100))
+    if task['trace']['hasCondition']:
+        out.append(para(run('U kolonu uslov upiši DA ili NE — granu kojom je program prošao.',
+                            italic=True, size=17, color=WARM), after=60))
     rows = [[para(run(c, bold=True, size=18, color=ACCENT), align='center', after=0) for c in cols]]
     rows += [[para(after=0) for _ in cols] for _ in range(trace_rows(task))]
     out.append(table(rows, [width] * len(cols), borders=RULE, row_height=350,
@@ -776,11 +783,11 @@ def estimate(task):
         h += 360 + len(task['solution'].split('\n')) * 250 + 200
         h += (len(task['results']) + 1) * 440
     elif kind == 'tabela':
-        h += 320 + (trace_rows(task) + 1) * 360
+        h += tabela_height(task)
     else:
         h += 300
     if kind != 'tabela' and 'tabela' in task['types'] and not draw_height(kind):
-        h += 250 + 320 + (trace_rows(task) + 1) * 360  # the second exercise
+        h += 250 + tabela_height(task)  # the second exercise
     if kind not in ('prepoznaj', 'kockice'):
         h += 400                                       # the self-check box
     height = draw_height(kind)

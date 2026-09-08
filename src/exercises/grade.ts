@@ -27,6 +27,10 @@ export type GradeReason =
   | 'greska-u-radu'
   /** It ran to the end and printed something else. */
   | 'ispis'
+  /** It asked for more data than the task hands it. */
+  | 'previse-unosa'
+  /** Two test cases came out the same where they must differ, or the reverse. */
+  | 'grane'
   /** A cell of the state table holds the wrong value. */
   | 'tabela'
   /** The wrong shape was picked in a diagram. */
@@ -48,7 +52,7 @@ export interface GradeResult {
 }
 
 function outputsFor(code: string, inputs: string[], lang: Language):
-  { output?: string[]; message?: string; reason?: GradeReason } {
+  { output?: string[]; values?: string[]; message?: string; reason?: GradeReason } {
   const { statements, errors } = parsePseudocode(code, lang);
   if (errors.length) return { reason: 'ne-parsira', message: `${errors[0].line}: ${errors[0].message}` };
   const machine = new Interpreter(statements);
@@ -56,7 +60,11 @@ function outputsFor(code: string, inputs: string[], lang: Language):
   if (result.status === 'error' && result.error) {
     return { reason: 'greska-u-radu', message: describeRunError(result.error, lang) };
   }
-  return { output: machine.output };
+  // A program written from scratch can read more variables than the task has
+  // values for; it then waits forever, which is not "wrong output" but a
+  // different mistake and has to be said differently.
+  if (result.status === 'input') return { reason: 'previse-unosa' };
+  return { output: machine.output, values: machine.printedValues };
 }
 
 /**
@@ -130,6 +138,79 @@ export function gradeAttempt(task: Task, code: string, lang: Language): GradeRes
   return { correct: true };
 }
 
+function sameList(a: string[], b: string[]): boolean {
+  return a.length === b.length && a.every((x, i) => x === b[i]);
+}
+
+/**
+ * Marks an algorithm the student wrote from nothing.
+ *
+ * Here the wording is theirs: nobody told them to print "Prosjek je", so the
+ * text of the output cannot be the answer key. Two things can be:
+ *
+ * - the values the program works out and prints. The author's values have to
+ *   come out at the end of the student's — anything printed before them is
+ *   the student echoing the input back, which is not an error.
+ * - where a task prints only words, which test cases print the same thing.
+ *   A pass/fail task has no numbers to compare, but 49 and 50 must still come
+ *   out different, and 50 and 100 the same.
+ */
+export function gradeWritten(task: Task, code: string, lang: Language): GradeResult {
+  const solution = solutionText(task, lang);
+  const wanted = task.tests.map((inputs) => ({ inputs, run: outputsFor(solution, inputs, lang) }));
+  const byValue = wanted.some((w) => (w.run.values ?? []).length > 0);
+  const mine: string[][] = [];
+
+  for (const { inputs, run } of wanted) {
+    const got = outputsFor(code, inputs, lang);
+    if (got.reason) return { correct: false, reason: got.reason, message: got.message };
+    mine.push(got.output!);
+
+    const want = run.values ?? [];
+    // A test whose own branch prints only words carries nothing to compare,
+    // even in a task that prints values elsewhere; it still has to print.
+    if (byValue && want.length) {
+      if (!sameList(got.values!.slice(-want.length), want)) {
+        return {
+          correct: false,
+          reason: 'ispis',
+          mismatch: { inputs, expected: want, got: got.values! },
+        };
+      }
+    } else {
+      // No value to compare on this case. Silence is an answer of its own —
+      // "the larger of two numbers" prints nothing when they are equal — so
+      // what has to match is whether the program says anything at all.
+      const said = (lines: string[]) => lines.join('').trim() !== '';
+      if (said(run.output ?? []) !== said(got.output!)) {
+        return { correct: false, reason: 'ispis', mismatch: { inputs, expected: run.output ?? [], got: got.output! } };
+      }
+    }
+  }
+
+  if (!byValue) {
+    for (let i = 0; i < wanted.length; i++) {
+      for (let j = i + 1; j < wanted.length; j++) {
+        const shouldMatch = sameList(wanted[i].run.output ?? [], wanted[j].run.output ?? []);
+        if (shouldMatch === sameList(mine[i], mine[j])) continue;
+        return {
+          correct: false,
+          reason: 'grane',
+          mismatch: {
+            inputs: [wanted[i].inputs.join(', '), wanted[j].inputs.join(', ')],
+            // The sentence needs to know which way round it went; the caller
+            // has nowhere else to put it, the way 'tabela' carries its step.
+            expected: [shouldMatch ? 'isto' : 'razlicito'],
+            got: [],
+          },
+        };
+      }
+    }
+  }
+
+  return { correct: true };
+}
+
 /** The sentence shown under a wrong attempt. */
 export function describeGrade(result: GradeResult, lang: Language): string {
   return localize(lang, describeGradeIn(result, sourceLang(lang)));
@@ -148,6 +229,30 @@ function describeGradeIn(result: GradeResult, lang: SourceLang): string {
   if (result.reason === 'greska-u-radu') {
     const head = lang === 'en' ? 'it stops with an error' : lang === 'de' ? 'es bricht mit einem Fehler ab' : 'prekida se greškom';
     return `${head}: ${result.message ?? ''}`;
+  }
+  if (result.reason === 'previse-unosa') {
+    return lang === 'en'
+      ? 'it asks for more data than the task gives it'
+      : lang === 'de'
+      ? 'es verlangt mehr Daten, als die Aufgabe hergibt'
+      : 'traži više podataka nego što mu zadatak daje';
+  }
+  if (result.reason === 'grane' && result.mismatch) {
+    const [a, b] = result.mismatch.inputs;
+    const shouldMatch = result.mismatch.expected[0] === 'isto';
+    if (lang === 'en') {
+      return shouldMatch
+        ? `for ${a} and for ${b} it should print the same, but yours prints something different`
+        : `for ${a} and for ${b} it should print something different, but yours prints the same`;
+    }
+    if (lang === 'de') {
+      return shouldMatch
+        ? `für ${a} und für ${b} muss dasselbe herauskommen, bei dir kommt Verschiedenes`
+        : `für ${a} und für ${b} muss Verschiedenes herauskommen, bei dir kommt dasselbe`;
+    }
+    return shouldMatch
+      ? `za ${a} i za ${b} treba ispisati isto, a tvoj ispisuje različito`
+      : `za ${a} i za ${b} treba ispisati različito, a tvoj ispisuje isto`;
   }
   const cell = result.mismatch;
   if (result.reason === 'tabela' && cell) {

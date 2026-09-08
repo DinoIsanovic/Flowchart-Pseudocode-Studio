@@ -13,7 +13,7 @@
 
 import { Task, TaskPack } from '../src/exercises/types';
 import { solutionText, tileLine, tiles } from '../src/exercises/render';
-import { describeGrade, gradeAttempt } from '../src/exercises/grade';
+import { describeGrade, gradeAttempt, gradeWritten } from '../src/exercises/grade';
 import linijska from '../src/exercises/linijska.json';
 import grananje from '../src/exercises/grananje.json';
 
@@ -211,6 +211,135 @@ for (const t of branching.tasks) {
     console.log(`  ✗ ${t.id}: složene kockice nisu tačne — ${describeGrade(r, 'bs')}`);
   }
 }
+
+// --- napiši sam -------------------------------------------------------------
+
+// Here the student's wording is their own, so the marker compares the values
+// the program prints, and — where a task prints only words — which test cases
+// come out alike.
+
+console.log('\nnapiši sam:');
+
+const anyTask = (id: string) =>
+  [...pack.tasks, ...branching.tasks].find((t) => t.id === id)!;
+
+function written(name: string, id: string, code: string, correct: boolean) {
+  const result = gradeWritten(anyTask(id), code, 'bs');
+  if (result.correct === correct) {
+    pass++;
+    if (!correct) console.log(`  ✓ ${name.padEnd(44)} → ${describeGrade(result, 'bs')}`);
+  } else {
+    fail++;
+    console.log(`  ✗ ${name} → očekivano ${correct ? 'tačno' : 'netačno'}, dobiveno ${result.correct ? 'tačno' : 'netačno'} (${describeGrade(result, 'bs')})`);
+  }
+}
+
+// Every authored solution has to mark itself correct here too.
+for (const t of [...pack.tasks, ...branching.tasks]) {
+  const r = gradeWritten(t, solutionText(t, 'bs'), 'bs');
+  if (r.correct) pass++;
+  else {
+    fail++;
+    console.log(`  ✗ ${t.id}: vlastito rješenje ocijenjeno netačnim — ${describeGrade(r, 'bs')}`);
+  }
+}
+
+written('prosjek: svoje riječi i ponovljen unos', 'linijska-prosjek', `POČETAK
+ISPIŠI "Unesi tri ocjene"
+UNESI a, b, c
+ISPIŠI "Unio si", a, b, c
+RAČUNAJ p = (a + b + c) / 3
+ISPIŠI "prosjek:", p
+KRAJ`, true);
+
+written('prosjek: dijeli sa 2', 'linijska-prosjek', `POČETAK
+UNESI a, b, c
+RAČUNAJ p = (a + b + c) / 2
+ISPIŠI p
+KRAJ`, false);
+
+written('najveći: ispisan samo broj', 'grananje-najveci', `POČETAK
+UNESI a, b, c
+POSTAVI m = a
+AKO JE b > m
+  DA
+    POSTAVI m = b
+AKO JE c > m
+  DA
+    POSTAVI m = c
+ISPIŠI m
+KRAJ`, true);
+
+written('prolaz: druge riječi, ista granica', 'grananje-prolaz', `POČETAK
+UNESI bodovi
+AKO JE bodovi >= 50
+  DA
+    ISPIŠI "PROŠAO"
+  INAČE
+    ISPIŠI "PAO"
+KRAJ`, true);
+
+written('prolaz: granica pomjerena na > 50', 'grananje-prolaz', `POČETAK
+UNESI bodovi
+AKO JE bodovi > 50
+  DA
+    ISPIŠI "PROŠAO"
+  INAČE
+    ISPIŠI "PAO"
+KRAJ`, false);
+
+written('prolaz: ista poruka za obje grane', 'grananje-prolaz', `POČETAK
+UNESI bodovi
+AKO JE bodovi >= 50
+  DA
+    ISPIŠI "gotovo"
+  INAČE
+    ISPIŠI "gotovo"
+KRAJ`, false);
+
+// A wrong threshold is only caught where a test stands on it: 90 has no test
+// of its own in this task, so the mistake below is planted on 60, which does.
+written('ocjena: prag 65 umjesto 60', 'grananje-ocjena', `POČETAK
+UNESI bodovi
+AKO JE bodovi >= 90
+  DA
+    ISPIŠI 5
+  INAČE AKO JE bodovi >= 75
+    DA
+      ISPIŠI 4
+    INAČE AKO JE bodovi >= 65
+      DA
+        ISPIŠI 3
+      INAČE AKO JE bodovi >= 50
+        DA
+          ISPIŠI 2
+        INAČE
+          ISPIŠI 1
+KRAJ`, false);
+
+written('zamjena: obrnut redoslijed ispisa', 'linijska-zamjena', `POČETAK
+UNESI a, b
+POSTAVI p = a
+POSTAVI a = b
+POSTAVI b = p
+ISPIŠI a, b
+ISPIŠI "prije je bilo", b, a
+KRAJ`, false);
+
+written('traži više podataka nego što zadatak daje', 'linijska-prosjek', `POČETAK
+UNESI a, b, c, d
+RAČUNAJ p = (a + b + c) / 3
+ISPIŠI p
+KRAJ`, false);
+
+written('ne može se pročitati', 'linijska-prosjek', `POČETAK
+UNESI a, b, c
+AKO JE a
+KRAJ`, false);
+
+written('ništa ne ispisuje', 'grananje-prolaz', `POČETAK
+UNESI bodovi
+KRAJ`, false);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
