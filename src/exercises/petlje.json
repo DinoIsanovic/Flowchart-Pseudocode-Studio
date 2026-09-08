@@ -1,0 +1,436 @@
+{
+  "topic": "petlje",
+  "title": {
+    "bs": "Petlje (ponavljanje)",
+    "en": "Loops (repetition)",
+    "de": "Schleifen (Wiederholung)"
+  },
+  "tasks": [
+    {
+      "id": "petlje-cucnjevi",
+      "kind": "svakodnevni",
+      "showPython": false,
+      "kockice": "sidra",
+      "title": {
+        "bs": "Deset čučnjeva",
+        "en": "Ten squats",
+        "de": "Zehn Kniebeugen"
+      },
+      "prompt": {
+        "bs": "Vježba se ponavlja tačno deset puta. Poredaj korake tako da se čučanj nađe unutar ponavljanja.",
+        "en": "The exercise repeats exactly ten times. Put the steps in order so the squat sits inside the repetition.",
+        "de": "Die Übung wiederholt sich genau zehnmal. Ordne die Schritte so, dass die Kniebeuge in der Wiederholung steht."
+      },
+      "solution": "@START\n@OUTPUT \"Stani uspravno, stopala u širini ramena\"\n@REPEAT 10 @TIMES\n  @OUTPUT \"Spusti se u čučanj i vrati se gore\"\n@OUTPUT \"Protegni noge i odmori\"\n@END",
+      "solutionByLang": {
+        "en": "@START\n@OUTPUT \"Stand up straight, feet shoulder-width apart\"\n@REPEAT 10 @TIMES\n  @OUTPUT \"Lower into a squat and come back up\"\n@OUTPUT \"Stretch your legs and rest\"\n@END",
+        "de": "@START\n@OUTPUT \"Stell dich gerade hin, Füße schulterbreit\"\n@REPEAT 10 @TIMES\n  @OUTPUT \"Geh in die Kniebeuge und komm wieder hoch\"\n@OUTPUT \"Dehne die Beine und ruh dich aus\"\n@END"
+      },
+      "tests": [
+        []
+      ],
+      "types": [
+        "kockice",
+        "prepoznaj",
+        "dijagram-greska"
+      ],
+      "discussion": {
+        "bs": "Šta bi promijenio da uradiš dvadeset čučnjeva? A šta ako unaprijed ne znaš koliko ćeš ih uraditi, nego staješ kad se umoriš?",
+        "en": "What would you change to do twenty squats? And what if you did not know the number in advance, but stopped when you got tired?",
+        "de": "Was würdest du für zwanzig Kniebeugen ändern? Und was, wenn du die Zahl nicht vorher weißt, sondern aufhörst, wenn du müde bist?"
+      },
+      "topic": "petlje",
+      "level": 1
+    },
+    {
+      "id": "petlje-kanta",
+      "kind": "svakodnevni",
+      "showPython": false,
+      "kockice": "sidra",
+      "title": {
+        "bs": "Sipaj vodu dok se kanta ne napuni",
+        "en": "Fill the bucket",
+        "de": "Fülle den Eimer"
+      },
+      "prompt": {
+        "bs": "Kanta je puna na deset litara. Sipaš čašu po čašu i svaki put pogledaš koliko je ima. Ovdje se ne zna unaprijed koliko puta ćeš sipati.",
+        "en": "The bucket is full at ten litres. You pour a glass at a time and look at the level each time. Here you do not know in advance how many times you will pour.",
+        "de": "Der Eimer ist bei zehn Litern voll. Du gießt Glas für Glas und schaust jedes Mal auf den Stand. Wie oft du gießt, weißt du hier nicht vorher."
+      },
+      "solution": "@START\n@OUTPUT \"Stavi kantu pod slavinu\"\n@INPUT litara\n@REPEAT @WHILE litara < 10\n  @OUTPUT \"Sipaj još jednu čašu i pogledaj koliko ima\"\n  @INPUT litara\n@OUTPUT \"Kanta je puna, zatvori slavinu\"\n@END",
+      "solutionByLang": {
+        "en": "@START\n@OUTPUT \"Put the bucket under the tap\"\n@INPUT litres\n@REPEAT @WHILE litres < 10\n  @OUTPUT \"Pour one more glass and look at the level\"\n  @INPUT litres\n@OUTPUT \"The bucket is full, turn off the tap\"\n@END",
+        "de": "@START\n@OUTPUT \"Stell den Eimer unter den Hahn\"\n@INPUT liter\n@REPEAT @WHILE liter < 10\n  @OUTPUT \"Gieße noch ein Glas und schau auf den Stand\"\n  @INPUT liter\n@OUTPUT \"Der Eimer ist voll, dreh den Hahn zu\"\n@END"
+      },
+      "tests": [
+        [
+          "2",
+          "5",
+          "8",
+          "10"
+        ],
+        [
+          "10"
+        ]
+      ],
+      "types": [
+        "kockice",
+        "prepoznaj",
+        "dijagram-greska"
+      ],
+      "discussion": {
+        "bs": "Koliko puta se sipalo kada je počelo od dva litra? Zašto se za deset litara na početku ne sipa nijednom — kada se uslov provjerava?",
+        "en": "How many times did you pour when it started at two litres? Why does it not pour at all when it starts at ten — when is the condition checked?",
+        "de": "Wie oft wurde gegossen, wenn bei zwei Litern begonnen wurde? Warum wird bei zehn Litern gar nicht gegossen — wann wird die Bedingung geprüft?"
+      },
+      "topic": "petlje",
+      "level": 2
+    },
+    {
+      "id": "petlje-ime",
+      "kind": "racunski",
+      "title": {
+        "bs": "Ispiši svoje ime pet puta",
+        "en": "Print your name five times",
+        "de": "Schreibe deinen Namen fünfmal"
+      },
+      "prompt": {
+        "bs": "Program pročita ime i ispiše ga pet puta.",
+        "en": "The program reads a name and prints it five times.",
+        "de": "Das Programm liest einen Namen und gibt ihn fünfmal aus."
+      },
+      "solution": "@START\n@INPUT ime\n@REPEAT 5 @TIMES\n  @OUTPUT ime\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT name\n@REPEAT 5 @TIMES\n  @OUTPUT name\n@END",
+        "de": "@START\n@INPUT name\n@REPEAT 5 @TIMES\n  @OUTPUT name\n@END"
+      },
+      "tests": [
+        [
+          "Amina"
+        ],
+        [
+          "Tarik"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "tabela",
+        "samostalno"
+      ],
+      "discussion": {
+        "bs": "Šta bi promijenio da se ime ispiše osam puta? Šta radi brojač i dok se ovo izvršava, iako se nigdje ne ispisuje?",
+        "en": "What would you change to print the name eight times? What is the counter i doing while this runs, even though it is never printed?",
+        "de": "Was würdest du ändern, um den Namen achtmal auszugeben? Was macht der Zähler i dabei, obwohl er nie ausgegeben wird?"
+      },
+      "topic": "petlje",
+      "level": 3
+    },
+    {
+      "id": "petlje-brojevi",
+      "kind": "racunski",
+      "title": {
+        "bs": "Brojevi od 1 do 5",
+        "en": "The numbers from 1 to 5",
+        "de": "Die Zahlen von 1 bis 5"
+      },
+      "prompt": {
+        "bs": "Ispiši brojeve od 1 do 5, svaki u svom redu. Brojač i počinje od nule, pa se do broja dolazi računanjem.",
+        "en": "Print the numbers from 1 to 5, one per line. The counter i starts at zero, so the number has to be worked out from it.",
+        "de": "Gib die Zahlen von 1 bis 5 aus, jede in einer Zeile. Der Zähler i beginnt bei null, die Zahl muss also berechnet werden."
+      },
+      "solution": "@START\n@REPEAT 5 @TIMES\n  @CALC broj = {{i + 1}}\n  @OUTPUT broj\n@END",
+      "solutionByLang": {
+        "en": "@START\n@REPEAT 5 @TIMES\n  @CALC number = {{i + 1}}\n  @OUTPUT number\n@END",
+        "de": "@START\n@REPEAT 5 @TIMES\n  @CALC zahl = {{i + 1}}\n  @OUTPUT zahl\n@END"
+      },
+      "tests": [
+        []
+      ],
+      "types": [
+        "prepoznaj",
+        "dopuni",
+        "kockice",
+        "tabela"
+      ],
+      "hint": {
+        "bs": "PONOVI 5 PUTA broji u varijabli i, i to od 0 do 4.",
+        "en": "REPEAT 5 TIMES counts in the variable i, from 0 to 4.",
+        "de": "WIEDERHOLE 5 MAL zählt in der Variablen i, von 0 bis 4."
+      },
+      "discussion": {
+        "bs": "Zašto se piše i + 1, a ne samo i? Šta bi program ispisao da piše samo i?",
+        "en": "Why i + 1 and not just i? What would the program print with just i?",
+        "de": "Warum i + 1 und nicht nur i? Was gäbe das Programm mit nur i aus?"
+      },
+      "topic": "petlje",
+      "level": 4
+    },
+    {
+      "id": "petlje-raketa",
+      "kind": "racunski",
+      "title": {
+        "bs": "Odbrojavanje za lansiranje rakete",
+        "en": "Countdown to lift-off",
+        "de": "Countdown zum Start"
+      },
+      "prompt": {
+        "bs": "Za uneseni broj sekundi odbroj unazad do 1, a na kraju ispiši „Lansiranje!”.",
+        "en": "For the number of seconds entered, count back down to 1 and then print \"Lift-off!\".",
+        "de": "Zähle von der eingegebenen Sekundenzahl rückwärts bis 1 und gib am Ende „Start!“ aus."
+      },
+      "solution": "@START\n@INPUT s\n@REPEAT @WHILE s >= 1\n  @OUTPUT s\n  @CALC s = s - 1\n@OUTPUT \"Lansiranje!\"\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT s\n@REPEAT @WHILE s >= 1\n  @OUTPUT s\n  @CALC s = s - 1\n@OUTPUT \"Lift-off!\"\n@END",
+        "de": "@START\n@INPUT s\n@REPEAT @WHILE s >= 1\n  @OUTPUT s\n  @CALC s = s - 1\n@OUTPUT \"Start!\"\n@END"
+      },
+      "tests": [
+        [
+          "3"
+        ],
+        [
+          "5"
+        ],
+        [
+          "1"
+        ],
+        [
+          "0"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "tabela",
+        "samostalno"
+      ],
+      "distractors": [
+        "@CALC s = s + 1"
+      ],
+      "discussion": {
+        "bs": "Šta bi se dogodilo kada bi umjesto s >= 1 uslov glasio s > 1? Koji broj bi nedostajao u odbrojavanju?",
+        "en": "What would happen if the condition were s > 1 instead of s >= 1? Which number would be missing from the countdown?",
+        "de": "Was passierte, wenn die Bedingung s > 1 statt s >= 1 wäre? Welche Zahl fehlte im Countdown?"
+      },
+      "topic": "petlje",
+      "level": 5
+    },
+    {
+      "id": "petlje-zbir-prvih",
+      "kind": "racunski",
+      "title": {
+        "bs": "Zbir prvih n brojeva",
+        "en": "The sum of the first n numbers",
+        "de": "Summe der ersten n Zahlen"
+      },
+      "prompt": {
+        "bs": "Za uneseni broj n saberi sve brojeve od 1 do n i ispiši zbir.",
+        "en": "For the number n entered, add up all the numbers from 1 to n and print the sum.",
+        "de": "Addiere für die eingegebene Zahl n alle Zahlen von 1 bis n und gib die Summe aus."
+      },
+      "solution": "@START\n@INPUT n\n@SET zbir = {{0}}\n@REPEAT n @TIMES\n  @CALC broj = i + 1\n  @CALC zbir = {{zbir + broj}}\n@OUTPUT \"Zbir je\", zbir\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT n\n@SET total = {{0}}\n@REPEAT n @TIMES\n  @CALC number = i + 1\n  @CALC total = {{total + number}}\n@OUTPUT \"The sum is\", total\n@END",
+        "de": "@START\n@INPUT n\n@SET summe = {{0}}\n@REPEAT n @TIMES\n  @CALC zahl = i + 1\n  @CALC summe = {{summe + zahl}}\n@OUTPUT \"Die Summe ist\", summe\n@END"
+      },
+      "tests": [
+        [
+          "5"
+        ],
+        [
+          "1"
+        ],
+        [
+          "10"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "dopuni",
+        "kockice",
+        "samostalno"
+      ],
+      "distractors": [
+        "@SET zbir = 1"
+      ],
+      "discussion": {
+        "bs": "Zašto zbir mora biti postavljen na nulu prije petlje? Šta bi se desilo da taj korak stoji unutar petlje?",
+        "en": "Why must the sum be set to zero before the loop? What would happen if that step were inside the loop?",
+        "de": "Warum muss die Summe vor der Schleife auf null gesetzt werden? Was passierte, wenn dieser Schritt in der Schleife stünde?"
+      },
+      "topic": "petlje",
+      "level": 6
+    },
+    {
+      "id": "petlje-zbir-unesenih",
+      "kind": "racunski",
+      "title": {
+        "bs": "Zbir unesenih brojeva",
+        "en": "The sum of the numbers entered",
+        "de": "Summe der eingegebenen Zahlen"
+      },
+      "prompt": {
+        "bs": "Prvo se unese koliko će brojeva biti, a zatim ti brojevi. Ispiši njihov zbir.",
+        "en": "First you enter how many numbers there will be, then the numbers themselves. Print their sum.",
+        "de": "Zuerst wird eingegeben, wie viele Zahlen kommen, dann die Zahlen selbst. Gib ihre Summe aus."
+      },
+      "solution": "@START\n@INPUT koliko\n@SET zbir = 0\n@REPEAT koliko @TIMES\n  @INPUT broj\n  @CALC zbir = zbir + broj\n@OUTPUT \"Zbir je\", zbir\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT howMany\n@SET total = 0\n@REPEAT howMany @TIMES\n  @INPUT number\n  @CALC total = total + number\n@OUTPUT \"The sum is\", total\n@END",
+        "de": "@START\n@INPUT anzahl\n@SET summe = 0\n@REPEAT anzahl @TIMES\n  @INPUT zahl\n  @CALC summe = summe + zahl\n@OUTPUT \"Die Summe ist\", summe\n@END"
+      },
+      "tests": [
+        [
+          "3",
+          "5",
+          "2",
+          "4"
+        ],
+        [
+          "1",
+          "7"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "samostalno",
+        "dijagram-greska"
+      ],
+      "discussion": {
+        "bs": "Koliko puta program traži broj kada se prvo unese 3? Šta se ispiše ako se prvo unese 0?",
+        "en": "How many numbers does the program ask for when 3 is entered first? What does it print if 0 is entered first?",
+        "de": "Wie viele Zahlen verlangt das Programm, wenn zuerst 3 eingegeben wird? Was gibt es aus, wenn zuerst 0 eingegeben wird?"
+      },
+      "topic": "petlje",
+      "level": 7
+    },
+    {
+      "id": "petlje-najveci",
+      "kind": "racunski",
+      "title": {
+        "bs": "Najveći od unesenih brojeva",
+        "en": "The largest of the numbers entered",
+        "de": "Die größte der eingegebenen Zahlen"
+      },
+      "prompt": {
+        "bs": "Prvo se unese koliko će brojeva biti, pa onda brojevi. Ispiši najveći među njima.",
+        "en": "First you enter how many numbers there will be, then the numbers. Print the largest of them.",
+        "de": "Zuerst wird eingegeben, wie viele Zahlen kommen, dann die Zahlen. Gib die größte davon aus."
+      },
+      "solution": "@START\n@INPUT koliko\n@INPUT najveci\n@REPEAT koliko - 1 @TIMES\n  @INPUT broj\n  @IF broj > najveci\n    @YES\n      @SET najveci = broj\n@OUTPUT \"Najveći je\", najveci\n@END",
+      "solutionByLang": {
+        "en": "@START\n@INPUT howMany\n@INPUT largest\n@REPEAT howMany - 1 @TIMES\n  @INPUT number\n  @IF number > largest\n    @YES\n      @SET largest = number\n@OUTPUT \"The largest is\", largest\n@END",
+        "de": "@START\n@INPUT anzahl\n@INPUT groesste\n@REPEAT anzahl - 1 @TIMES\n  @INPUT zahl\n  @IF zahl > groesste\n    @YES\n      @SET groesste = zahl\n@OUTPUT \"Die größte ist\", groesste\n@END"
+      },
+      "tests": [
+        [
+          "4",
+          "3",
+          "8",
+          "5",
+          "2"
+        ],
+        [
+          "3",
+          "5",
+          "5",
+          "5"
+        ],
+        [
+          "1",
+          "9"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "samostalno"
+      ],
+      "discussion": {
+        "bs": "Zašto se prvi broj unosi prije petlje, a petlja se ponavlja jedanput manje? Šta bi se desilo da najveci na početku bude 0, a svi uneseni brojevi negativni?",
+        "en": "Why is the first number read before the loop, and why does the loop run one time less? What would happen if the largest started at 0 and every number entered were negative?",
+        "de": "Warum wird die erste Zahl vor der Schleife gelesen und die Schleife einmal weniger durchlaufen? Was passierte, wenn die größte mit 0 begänne und alle Zahlen negativ wären?"
+      },
+      "topic": "petlje",
+      "level": 8
+    },
+    {
+      "id": "petlje-provjera-unosa",
+      "kind": "racunski",
+      "title": {
+        "bs": "Traži unos dok ne bude ispravan",
+        "en": "Ask until the input is valid",
+        "de": "Frage, bis die Eingabe stimmt"
+      },
+      "prompt": {
+        "bs": "Program traži broj veći od nule. Dok god unos nije takav, ponavlja pitanje.",
+        "en": "The program asks for a number greater than zero. As long as the input is not one, it asks again.",
+        "de": "Das Programm verlangt eine Zahl größer als null. Solange die Eingabe das nicht ist, fragt es erneut."
+      },
+      "solution": "@START\n@OUTPUT \"Unesi broj veći od nule\"\n@INPUT broj\n@REPEAT @WHILE broj <= 0\n  @OUTPUT \"To nije dobro, pokušaj ponovo\"\n  @INPUT broj\n@OUTPUT \"Hvala, primljen je broj\", broj\n@END",
+      "solutionByLang": {
+        "en": "@START\n@OUTPUT \"Enter a number greater than zero\"\n@INPUT number\n@REPEAT @WHILE number <= 0\n  @OUTPUT \"That is not right, try again\"\n  @INPUT number\n@OUTPUT \"Thank you, the number is\", number\n@END",
+        "de": "@START\n@OUTPUT \"Gib eine Zahl größer als null ein\"\n@INPUT zahl\n@REPEAT @WHILE zahl <= 0\n  @OUTPUT \"Das passt nicht, versuch es noch einmal\"\n  @INPUT zahl\n@OUTPUT \"Danke, die Zahl ist\", zahl\n@END"
+      },
+      "tests": [
+        [
+          "-5",
+          "0",
+          "7"
+        ],
+        [
+          "3"
+        ]
+      ],
+      "types": [
+        "prepoznaj",
+        "kockice",
+        "samostalno",
+        "dijagram-greska"
+      ],
+      "discussion": {
+        "bs": "Koliko puta se petlja izvrši kada se odmah unese 3? Zašto se poruka o grešci tada nijednom ne ispiše?",
+        "en": "How many times does the loop run when 3 is entered straight away? Why is the error message not printed at all then?",
+        "de": "Wie oft läuft die Schleife, wenn sofort 3 eingegeben wird? Warum erscheint die Fehlermeldung dann gar nicht?"
+      },
+      "topic": "petlje",
+      "level": 9
+    },
+    {
+      "id": "petlje-nejednacina",
+      "kind": "racunski",
+      "title": {
+        "bs": "Nejednačina u petlji",
+        "en": "An inequality in a loop",
+        "de": "Eine Ungleichung in der Schleife"
+      },
+      "prompt": {
+        "bs": "Provjeri brojeve od 1 do 10 i ispiši samo one koji zadovoljavaju nejednačinu x + 3 > 7.",
+        "en": "Check the numbers from 1 to 10 and print only those that satisfy the inequality x + 3 > 7.",
+        "de": "Prüfe die Zahlen von 1 bis 10 und gib nur die aus, die die Ungleichung x + 3 > 7 erfüllen."
+      },
+      "solution": "@START\n@REPEAT 10 @TIMES\n  @CALC x = i + 1\n  @IF {{x + 3 > 7}}\n    @YES\n      @OUTPUT x\n@END",
+      "solutionByLang": {
+        "en": "@START\n@REPEAT 10 @TIMES\n  @CALC x = i + 1\n  @IF {{x + 3 > 7}}\n    @YES\n      @OUTPUT x\n@END",
+        "de": "@START\n@REPEAT 10 @TIMES\n  @CALC x = i + 1\n  @IF {{x + 3 > 7}}\n    @YES\n      @OUTPUT x\n@END"
+      },
+      "tests": [
+        []
+      ],
+      "types": [
+        "prepoznaj",
+        "dopuni",
+        "kockice",
+        "dijagram-greska"
+      ],
+      "discussion": {
+        "bs": "Koje vrijednosti brojača zadovoljavaju nejednačinu? Šta bi se promijenilo da uslov glasi x + 3 >= 7?",
+        "en": "Which counter values satisfy the inequality? What would change if the condition were x + 3 >= 7?",
+        "de": "Welche Zählerwerte erfüllen die Ungleichung? Was änderte sich bei x + 3 >= 7?"
+      },
+      "topic": "petlje",
+      "level": 10
+    }
+  ]
+}

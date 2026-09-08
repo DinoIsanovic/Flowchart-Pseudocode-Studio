@@ -16,6 +16,7 @@ import { solutionText, tileLine, tiles } from '../src/exercises/render';
 import { describeGrade, gradeAttempt, gradeWritten } from '../src/exercises/grade';
 import linijska from '../src/exercises/linijska.json';
 import grananje from '../src/exercises/grananje.json';
+import petlje from '../src/exercises/petlje.json';
 
 const pack = linijska as TaskPack;
 const task = (id: string) => pack.tasks.find((t) => t.id === id)!;
@@ -34,9 +35,10 @@ function expect(name: string, id: string, code: string, correct: boolean) {
 }
 
 const branching = grananje as TaskPack;
+const loops = petlje as TaskPack;
 
 // Every authored solution must mark itself correct.
-for (const t of [...pack.tasks, ...branching.tasks]) {
+for (const t of [...pack.tasks, ...branching.tasks, ...loops.tasks]) {
   const r = gradeAttempt(t, solutionText(t, 'bs'), 'bs');
   if (r.correct) pass++;
   else {
@@ -202,7 +204,7 @@ const sidra: Task = { ...ugao, id: 'probni-ugao-sidra', kockice: 'sidra' };
 // Tiles laid out exactly as authored — depth included — must mark correct on
 // every branching task. This is the path that did not exist before tiles
 // carried their level, and the one every 'kockice' exercise in the pack uses.
-for (const t of branching.tasks) {
+for (const t of [...branching.tasks, ...loops.tasks]) {
   const built = tiles(t, 'bs').map(tileLine).join('\n');
   const r = gradeAttempt(t, built, 'bs');
   if (r.correct) pass++;
@@ -221,7 +223,7 @@ for (const t of branching.tasks) {
 console.log('\nnapiši sam:');
 
 const anyTask = (id: string) =>
-  [...pack.tasks, ...branching.tasks].find((t) => t.id === id)!;
+  [...pack.tasks, ...branching.tasks, ...loops.tasks].find((t) => t.id === id)!;
 
 function written(name: string, id: string, code: string, correct: boolean) {
   const result = gradeWritten(anyTask(id), code, 'bs');
@@ -235,7 +237,7 @@ function written(name: string, id: string, code: string, correct: boolean) {
 }
 
 // Every authored solution has to mark itself correct here too.
-for (const t of [...pack.tasks, ...branching.tasks]) {
+for (const t of [...pack.tasks, ...branching.tasks, ...loops.tasks]) {
   const r = gradeWritten(t, solutionText(t, 'bs'), 'bs');
   if (r.correct) pass++;
   else {

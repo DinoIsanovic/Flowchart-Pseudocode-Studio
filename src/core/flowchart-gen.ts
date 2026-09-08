@@ -415,12 +415,16 @@ export function parsePseudocode(text: string, lang: Language = 'en'): { statemen
         const repeatLine = ln;
         const rw = splitWords(ln.text).slice(1);
 
-        // Count loop: REPEAT 5 TIMES / PONOVI 5 PUTA / WIEDERHOLE 5 MAL
-        const isCount =
-          (rw.length === 2 && /^\d+$/.test(rw[0]) && ['PUTA', 'TIMES', 'MAL'].includes(normWord(rw[1])));
+        // Count loop: REPEAT 5 TIMES / PONOVI 5 PUTA / WIEDERHOLE 5 MAL.
+        // How many times may be worked out rather than written down — PONOVI n
+        // PUTA, PONOVI koliko - 1 PUTA — since the number usually comes from
+        // the input in anything past the first exercise. The closing word is
+        // what makes it a count loop; everything before it is the expression.
+        const isCount = rw.length >= 2 && ['PUTA', 'TIMES', 'MAL'].includes(normWord(rw[rw.length - 1]));
         if (isCount) {
           i++;
-          stmts.push({ type: 'count_loop', times: rw[0], body: parseBody(level, repeatLine), line: repeatLine.line });
+          const times = rw.slice(0, -1).join(' ');
+          stmts.push({ type: 'count_loop', times, body: parseBody(level, repeatLine), line: repeatLine.line });
           continue;
         }
 

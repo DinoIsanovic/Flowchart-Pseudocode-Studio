@@ -19,6 +19,7 @@ import { MistakeKind, mistakeFor, plantMistake } from '../exercises/plant';
 import { MiniDiagram } from './MiniDiagram';
 import linijska from '../exercises/linijska.json';
 import grananje from '../exercises/grananje.json';
+import petlje from '../exercises/petlje.json';
 
 interface ExercisesPanelProps {
   language: Language;
@@ -32,7 +33,7 @@ interface ExercisesPanelProps {
  * The topics, in teaching order. A student meets them in this order and the
  * first is what the panel opens on.
  */
-const PACKS = [linijska as TaskPack, grananje as TaskPack];
+const PACKS = [linijska as TaskPack, grananje as TaskPack, petlje as TaskPack];
 const PROGRESS_KEY = 'flowchart_studio_vjezbe_v1';
 
 /**

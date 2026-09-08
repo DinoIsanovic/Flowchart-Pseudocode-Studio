@@ -209,6 +209,20 @@ PONOVI 5 PUTA
   ISPIŠI i
 KRAJ`, { i: 4 });
 
+// How many times is an expression, not only a written number: past the first
+// exercise the count comes from the input.
+prints('broj ponavljanja iz varijable', `POČETAK
+UNESI n
+PONOVI n PUTA
+  ISPIŠI i
+KRAJ`, ['0', '1', '2'], ['3']);
+
+prints('broj ponavljanja kao izraz', `POČETAK
+UNESI koliko
+PONOVI koliko - 1 PUTA
+  ISPIŠI "x"
+KRAJ`, ['x', 'x'], ['3']);
+
 // --- which branch was taken ------------------------------------------------
 
 // The state table has a column for the condition, and it is filled from the

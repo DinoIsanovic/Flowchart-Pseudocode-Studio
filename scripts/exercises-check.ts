@@ -22,8 +22,9 @@ import { traceTask } from '../src/exercises/trace';
 import { buildFlowchart } from '../src/core/flowchart-gen';
 import linijska from '../src/exercises/linijska.json';
 import grananje from '../src/exercises/grananje.json';
+import petlje from '../src/exercises/petlje.json';
 
-const packs = [linijska as TaskPack, grananje as TaskPack];
+const packs = [linijska as TaskPack, grananje as TaskPack, petlje as TaskPack];
 const LANGS: Language[] = ['bs', 'en', 'de', 'hr'];
 
 let problems = 0;
