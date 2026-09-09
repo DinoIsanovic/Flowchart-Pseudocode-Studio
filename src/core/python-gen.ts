@@ -185,12 +185,23 @@ function walk(
  * Generates Python equivalent to the parsed pseudocode. Every line carries the
  * badge of the flowchart node it belongs to, so the export can print the three
  * columns side by side without relying on them lining up geometrically.
+ *
+ * `helper: false` leaves the input helper out. The tab in the editor is code to
+ * copy and run, so it needs the definition; a printed sheet is a comparison
+ * between the drawing and the program, and there the six lines are the only
+ * thing on it that answers to no block of the diagram — they carry no badge,
+ * and they push the program the student is meant to read off the top of the
+ * column. The workbook leaves them out of every solution for the same reason.
  */
-export function statementsToPython(statements: Statement[], lang: Language = 'en'): PythonLine[] {
+export function statementsToPython(
+  statements: Statement[],
+  lang: Language = 'en',
+  { helper = true }: { helper?: boolean } = {}
+): PythonLine[] {
   const stepOf = assignStepNumbers(statements);
   const body = walk(statements, 0, stepOf, lang);
   if (!body.length) return [{ text: 'pass', depth: 0 }];
-  const reads = body.some((l) => l.text.endsWith(`= ${READ_FN[sourceLang(lang)]}()`));
+  const reads = helper && body.some((l) => l.text.endsWith(`= ${READ_FN[sourceLang(lang)]}()`));
   return reads ? [...readHelper(lang), ...body] : body;
 }
 
