@@ -5,8 +5,8 @@ pseudocode and get a laid-out flowchart, or draw the flowchart and get the
 pseudocode back — in English, German, Bosnian, or Croatian.
 
 It is a teaching tool rather than a diagram editor: it runs the algorithm a
-step at a time, sets thirty-five graded exercises across three topics, prints
-worksheets, and writes the lot out as a workbook.
+step at a time, sets thirty-five graded exercises across three topics, and
+prints them as worksheets.
 
 Built as an offline-capable PWA, so it installs on a phone or a school laptop
 and keeps working without a network connection. Windows and Linux builds are on
@@ -105,12 +105,6 @@ cartridge and photocopies to mud.
 Plus JSON project save/load, and debounced autosave to `localStorage` so a
 refresh doesn't lose work.
 
-**Workbook.** `npm run sveska` writes `radna-sveska.docx`: one book with a part
-for each topic, a divider that names each part, every task with the exercise it
-carries and room to draw, and the solutions at the back with the diagram and
-the Python side by side. The script writes the document XML itself — no Word,
-no LibreOffice, no `python-docx`.
-
 **Mobile and PWA.** Touch gestures (pinch-zoom, one-finger pan, drag shapes), a
 mobile nav bar, an install prompt, and a built-in guide for packaging the PWA as
 an Android app via Bubblewrap (TWA) or Capacitor.
@@ -184,7 +178,6 @@ Other scripts:
 npm run build      # production build into dist/
 npm run preview    # serve the production build
 npm run lint       # tsc --noEmit, type-check only
-npm run sveska     # write radna-sveska.docx from the exercise bank
 ```
 
 The self-checks are scripts rather than a test framework: each one exercises a
@@ -278,7 +271,7 @@ don't ship a shared or unrestricted key to a classroom deployment.
 src-tauri/                desktop shell (Tauri, Rust) — window config,
                           bundle targets, CSP, icons
 .github/workflows/        release workflow: Windows .exe, Linux AppImage + deb
-scripts/                  the self-checks, and sveska.py — the workbook writer
+scripts/                  the self-checks
 src/
   App.tsx                 state, history, autosave, import/export, shortcuts
   types.ts                FlowNode, FlowEdge, Statement, AppState
