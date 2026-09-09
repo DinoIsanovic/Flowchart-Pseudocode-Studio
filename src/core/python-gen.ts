@@ -4,7 +4,7 @@
  */
 
 import { Language, SourceLang, Statement } from '../types';
-import { sourceLang } from '../i18n/croatian';
+import { localize, sourceLang } from '../i18n/croatian';
 import { assignStepNumbers } from './flowchart-gen';
 import { counterName } from './counters';
 
@@ -22,6 +22,13 @@ export interface PythonLine {
 }
 
 const INDENT = '    ';
+
+/** Stands in for the loop's test when the pseudocode never wrote one. */
+const MISSING_COND: Record<SourceLang, string> = {
+  bs: 'TODO: uslov petlje nedostaje u pseudokodu',
+  en: 'TODO: condition missing in the pseudocode',
+  de: 'TODO: Bedingung fehlt im Pseudocode',
+};
 
 /**
  * Pseudocode writes equality as a single `=`, which Python reads as
@@ -45,16 +52,17 @@ const READ_FN: Record<SourceLang, string> = { bs: 'unesi', en: 'read', de: 'lies
  * It is emitted only when the program actually reads something.
  */
 function readHelper(lang: Language): PythonLine[] {
-  const fn = READ_FN[lang];
+  const base = sourceLang(lang);
+  const fn = READ_FN[base];
   const note: Record<SourceLang, string> = {
     bs: '# Pročita jednu vrijednost: cijeli broj, decimalni broj ili tekst.',
     en: '# Reads one value: a whole number, a decimal number, or text.',
     de: '# Liest einen Wert: ganze Zahl, Dezimalzahl oder Text.',
   };
   const v: Record<SourceLang, string> = { bs: 'tekst', en: 'text', de: 'text' };
-  const t = v[lang];
+  const t = v[base];
   return [
-    { text: note[lang], depth: 0 },
+    { text: localize(lang, note[base]), depth: 0 },
     { text: `def ${fn}():`, depth: 0 },
     { text: `${t} = input().strip()`, depth: 1 },
     { text: `if ${t}.lstrip("+-").replace(".", "", 1).isdigit():`, depth: 1 },
@@ -73,7 +81,7 @@ function inputTargets(text: string): string[] {
 }
 
 
-function actionLines(stmt: Statement, depth: number, lang: Language, step?: number): PythonLine[] {
+function actionLines(stmt: Statement, depth: number, lang: SourceLang, step?: number): PythonLine[] {
   const text = (stmt.text ?? '').trim();
 
   if (stmt.kind === 'unesi') {
@@ -109,7 +117,7 @@ function walk(
     const step = stepOf.get(stmt);
 
     if (stmt.type === 'action') {
-      out.push(...actionLines(stmt, depth, lang, step));
+      out.push(...actionLines(stmt, depth, sourceLang(lang), step));
       return;
     }
 
@@ -157,7 +165,7 @@ function walk(
       // condition without raising an error, which would emit `while :`.
       const cond = conditionToPython(stmt.cond ?? '');
       const header = !cond
-        ? 'while True:  # TODO: condition missing in the pseudocode'
+        ? `while True:  # ${localize(lang, MISSING_COND[sourceLang(lang)])}`
         : stmt.until
         ? `while not (${cond}):`
         : `while ${cond}:`;
@@ -182,7 +190,7 @@ export function statementsToPython(statements: Statement[], lang: Language = 'en
   const stepOf = assignStepNumbers(statements);
   const body = walk(statements, 0, stepOf, lang);
   if (!body.length) return [{ text: 'pass', depth: 0 }];
-  const reads = body.some((l) => l.text.endsWith(`= ${READ_FN[lang]}()`));
+  const reads = body.some((l) => l.text.endsWith(`= ${READ_FN[sourceLang(lang)]}()`));
   return reads ? [...readHelper(lang), ...body] : body;
 }
 

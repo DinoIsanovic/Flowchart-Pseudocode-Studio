@@ -159,7 +159,7 @@ export default function App() {
   // Language initialization
   const [language, setLanguage] = useState<Language>(() => {
     const saved = localStorage.getItem(LANG_STORAGE_KEY);
-    if (saved === 'en' || saved === 'de' || saved === 'bs') return saved;
+    if (saved === 'en' || saved === 'de' || saved === 'bs' || saved === 'hr') return saved;
     const browserLang = navigator.language.slice(0, 2).toLowerCase();
     if (browserLang === 'de') return 'de';
     if (browserLang === 'bs' || browserLang === 'hr' || browserLang === 'sr') return 'bs';
