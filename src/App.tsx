@@ -68,6 +68,14 @@ const SHEET_W_MM = 210;
 const SHEET_H_MM = 99;
 const SHEET_MARGIN_MM = 6;
 
+/**
+ * Fonts for the exported sheet. `system-ui` first so a browser draws the sheet
+ * in the same face the app does; the named families after it are what a drawing
+ * program falls back to, since none of them resolve the CSS keyword.
+ */
+const EXPORT_SANS = 'system-ui, "Segoe UI", Roboto, "DejaVu Sans", Helvetica, Arial, sans-serif';
+const EXPORT_MONO = '"JetBrains Mono", "DejaVu Sans Mono", Consolas, "Liberation Mono", monospace';
+
 const CRC_TABLE = (() => {
   const t = new Uint32Array(256);
   for (let n = 0; n < 256; n++) {
@@ -1040,8 +1048,6 @@ export default function App() {
 
     const clone = svgEl.cloneNode(true) as SVGSVGElement;
     clone.removeAttribute('id');
-    // Tailwind classes off the live canvas mean nothing in a saved file.
-    clone.removeAttribute('class');
 
     // Remove interactive handles, background grid, and background rects
     clone.querySelectorAll('.edge-handle, #grid-pattern, #canvas-bg-grid, #canvas-bg-fill, rect[fill*="grid-pattern"]').forEach((el) => el.remove());
@@ -1099,19 +1105,6 @@ export default function App() {
       defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
       clone.insertBefore(defs, clone.firstChild);
     }
-
-    // Embed font family for clean canvas text rendering
-    const styleEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
-    styleEl.textContent = `
-      text {
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
-      }
-      text.code-col {
-        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
-        white-space: pre;
-      }
-    `;
-    defs.appendChild(styleEl);
 
     // Insert background right after defs
     if (defs.nextSibling) {
@@ -1215,6 +1208,24 @@ export default function App() {
         pyLines.map((l, i) => ({ badge: l.step, text: pyText[i] }))
       ));
     }
+
+    // Font on the elements themselves rather than in an embedded stylesheet,
+    // and none of the app's own class names left behind. A drawing program
+    // reads attributes; several ignore a <style> block entirely, and one that
+    // honours it still cannot restyle text whose family is pinned there with
+    // `!important`. That is what makes the text feel like part of a picture
+    // even though every word of it is a real `<text>` element.
+    clone.querySelectorAll('text').forEach((el) => {
+      const mono = el.classList.contains('code-col');
+      el.setAttribute('font-family', mono ? EXPORT_MONO : EXPORT_SANS);
+      // Python's indentation again: the attribute is the SVG spelling, the
+      // property the CSS one, and editors are split on which they honour.
+      if (mono) el.setAttribute('style', 'white-space: pre');
+    });
+    clone.querySelectorAll('[class]').forEach((el) => el.removeAttribute('class'));
+    // `querySelectorAll` never returns the root, and the root carries the
+    // canvas's own Tailwind classes.
+    clone.removeAttribute('class');
 
     return { clone, outX, boxY, outW, outH };
   };
