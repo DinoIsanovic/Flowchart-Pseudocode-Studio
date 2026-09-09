@@ -16,6 +16,7 @@ import {
   Trash2,
   AlertTriangle,
   Image,
+  Shapes,
   Save,
   Upload,
   Smartphone,
@@ -59,6 +60,7 @@ interface ToolbarProps {
   onDecreaseFontSize: () => void;
   onLoadTemplate: (templateKey: 'sequence' | 'branch' | 'while' | 'repeat') => void;
   onExportPng: () => void;
+  onExportSvg: () => void;
   onSaveJson: () => void;
   onLoadJson: (file: File) => void;
   onOpenAndroidModal: () => void;
@@ -93,6 +95,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onDecreaseFontSize,
   onLoadTemplate,
   onExportPng,
+  onExportSvg,
   onSaveJson,
   onLoadJson,
   onOpenAndroidModal,
@@ -521,6 +524,13 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           >
             <Image className="w-3.5 h-3.5 shrink-0 text-white/70" />
             <span className="leading-tight text-center">{t.exportPng}</span>
+          </button>
+          <button
+            onClick={onExportSvg}
+            className="flex items-center gap-2 bg-[#141414] hover:bg-[#1F1F1F] border border-white/10 text-white text-[11px] font-bold uppercase tracking-wider p-2 rounded-lg text-left transition-colors"
+          >
+            <Shapes className="w-3.5 h-3.5 shrink-0 text-white/70" />
+            <span className="leading-tight text-center">{t.exportSvg}</span>
           </button>
           <button
             onClick={onSaveJson}

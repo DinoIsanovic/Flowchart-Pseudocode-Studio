@@ -67,6 +67,7 @@ export interface Translations {
   };
   file: string;
   exportPng: string;
+  exportSvg: string;
   saveJson: string;
   loadJson: string;
   androidPrep: string;
@@ -266,6 +267,7 @@ const SOURCE: Record<SourceLang, Translations> = {
     },
     file: 'FILE & EXPORT',
     exportPng: 'Export as Image (PNG)',
+    exportSvg: 'Export as Vector (SVG)',
     saveJson: 'Save Project (.json)',
     loadJson: 'Load Project (.json)',
     androidPrep: '📱 Android App Setup',
@@ -462,6 +464,7 @@ const SOURCE: Record<SourceLang, Translations> = {
     },
     file: 'DATEI & EXPORT',
     exportPng: 'Als Bild exportieren (PNG)',
+    exportSvg: 'Als Vektor exportieren (SVG)',
     saveJson: 'Projekt speichern (.json)',
     loadJson: 'Projekt laden (.json)',
     androidPrep: '📱 Android App Setup',
@@ -658,6 +661,7 @@ const SOURCE: Record<SourceLang, Translations> = {
     },
     file: 'FAJL I IZVOZ',
     exportPng: 'Izvezi kao sliku (PNG)',
+    exportSvg: 'Izvezi kao vektor (SVG)',
     saveJson: 'Sačuvaj (.json)',
     loadJson: 'Učitaj (.json)',
     androidPrep: '📱 Android priprema',

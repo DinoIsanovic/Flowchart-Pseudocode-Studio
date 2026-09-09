@@ -930,21 +930,31 @@ export default function App() {
     doLoadTemplate(templateKey);
   };
 
-  // Export as PNG image
-  const handleExportPng = () => {
+  /**
+   * The print-ready drawing: the diagram repainted for paper with the
+   * pseudocode and Python columns beside it, as an SVG element that is not yet
+   * placed on a sheet. Both exports start here, so the PNG and the SVG are the
+   * same picture and only differ in how the text ends up on it.
+   *
+   * `retry` is called back when the canvas is not mounted because the editor is
+   * in code-only view; the caller passes itself.
+   */
+  const buildExportSvg = (
+    retry: () => void
+  ): { clone: SVGSVGElement; outX: number; boxY: number; outW: number; outH: number } | null => {
     let svgEl = document.getElementById('flowchart-canvas-svg') as unknown as SVGSVGElement | null;
     if (!svgEl) {
       if (viewMode === 'code') {
         setViewMode('split');
-        setTimeout(() => handleExportPng(), 200);
-        return;
+        setTimeout(retry, 200);
+        return null;
       }
-      return;
+      return null;
     }
 
     if (nodes.length === 0) {
       showToast(t.emptyCanvasAlert, 'error');
-      return;
+      return null;
     }
 
     // Calculate bounding box around all nodes and edge waypoints
@@ -974,7 +984,7 @@ export default function App() {
 
     if (![minX, minY, maxX, maxY].every(Number.isFinite)) {
       showToast(t.emptyCanvasAlert, 'error');
-      return;
+      return null;
     }
 
     const pad = 60;
@@ -1026,6 +1036,8 @@ export default function App() {
 
     const clone = svgEl.cloneNode(true) as SVGSVGElement;
     clone.removeAttribute('id');
+    // Tailwind classes off the live canvas mean nothing in a saved file.
+    clone.removeAttribute('class');
 
     // Remove interactive handles, background grid, and background rects
     clone.querySelectorAll('.edge-handle, #grid-pattern, #canvas-bg-grid, #canvas-bg-fill, rect[fill*="grid-pattern"]').forEach((el) => el.remove());
@@ -1141,9 +1153,12 @@ export default function App() {
               'font-size': '11', 'font-weight': '900',
             }, String(row.badge)));
           }
+          // `xml:space` as well as the stylesheet's `white-space: pre`: Python's
+          // indentation is the syntax, and an editor that ignores the CSS would
+          // otherwise collapse every level of it away.
           const line = mk('text', {
             x: `${x + 30}`, y: `${y}`, fill: PRINT_INK, 'font-size': `${COL_FONT}`,
-            class: 'code-col',
+            class: 'code-col', 'xml:space': 'preserve',
           }, row.text);
           g.appendChild(line);
         });
@@ -1197,6 +1212,28 @@ export default function App() {
       ));
     }
 
+    return { clone, outX, boxY, outW, outH };
+  };
+
+  /**
+   * Where the drawing sits on the fixed sheet, in millimetres: scaled to fit
+   * inside the margins without distortion and centred. A tall algorithm simply
+   * comes out smaller on the paper.
+   */
+  const sheetPlacement = (outW: number, outH: number) => {
+    const fit = Math.min(
+      (SHEET_W_MM - SHEET_MARGIN_MM * 2) / outW,
+      (SHEET_H_MM - SHEET_MARGIN_MM * 2) / outH
+    );
+    return { fit, x: (SHEET_W_MM - outW * fit) / 2, y: (SHEET_H_MM - outH * fit) / 2 };
+  };
+
+  // Export as PNG image
+  const handleExportPng = () => {
+    const built = buildExportSvg(handleExportPng);
+    if (!built) return;
+    const { clone, outW, outH } = built;
+
     const xml = new XMLSerializer().serializeToString(clone);
     const svgBlob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(svgBlob);
@@ -1218,16 +1255,15 @@ export default function App() {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
 
-      // Fit the drawing inside the margins without distorting it. A tall
-      // algorithm simply comes out smaller on the sheet.
-      const margin = mmToPx(SHEET_MARGIN_MM);
-      const fit = Math.min(
-        (canvas.width - margin * 2) / outW,
-        (canvas.height - margin * 2) / outH
+      // Same placement the SVG export uses, so the two files print alike.
+      const place = sheetPlacement(outW, outH);
+      ctx.drawImage(
+        img,
+        mmToPx(place.x),
+        mmToPx(place.y),
+        mmToPx(outW * place.fit),
+        mmToPx(outH * place.fit)
       );
-      const drawW = outW * fit;
-      const drawH = outH * fit;
-      ctx.drawImage(img, (canvas.width - drawW) / 2, (canvas.height - drawH) / 2, drawW, drawH);
       URL.revokeObjectURL(url);
 
       canvas.toBlob(async (blob) => {
@@ -1259,6 +1295,57 @@ export default function App() {
     };
 
     img.src = url;
+  };
+
+  /**
+   * Export as SVG: the same sheet as the PNG, but the letters stay letters.
+   * They can be selected, searched, corrected and restyled in Inkscape, Word or
+   * a browser, and they print sharp at any size instead of at 300 dpi. The
+   * sheet is sized in millimetres so the file drops into a document at the
+   * right physical size without anyone rescaling it.
+   */
+  const handleExportSvg = () => {
+    const built = buildExportSvg(handleExportSvg);
+    if (!built) return;
+    const { clone, outX, boxY, outW, outH } = built;
+
+    const NS = 'http://www.w3.org/2000/svg';
+    const { fit, x, y } = sheetPlacement(outW, outH);
+
+    // Everything the builder drew moves into one group that carries the fit,
+    // leaving room for a sheet-sized white ground behind it. The defs stay at
+    // the top level: they hold the arrowhead markers and the font rules, and
+    // the marker ids are referenced from inside the group.
+    const defs = clone.querySelector('defs');
+    const art = document.createElementNS(NS, 'g');
+    art.setAttribute(
+      'transform',
+      `translate(${x - outX * fit} ${y - boxY * fit}) scale(${fit})`
+    );
+    Array.from(clone.childNodes).forEach((child) => {
+      if (child !== defs) art.appendChild(child);
+    });
+
+    const sheet = document.createElementNS(NS, 'rect');
+    sheet.setAttribute('x', '0');
+    sheet.setAttribute('y', '0');
+    sheet.setAttribute('width', `${SHEET_W_MM}`);
+    sheet.setAttribute('height', `${SHEET_H_MM}`);
+    sheet.setAttribute('fill', '#FFFFFF');
+    clone.appendChild(sheet);
+    clone.appendChild(art);
+
+    clone.setAttribute('width', `${SHEET_W_MM}mm`);
+    clone.setAttribute('height', `${SHEET_H_MM}mm`);
+    clone.setAttribute('viewBox', `0 0 ${SHEET_W_MM} ${SHEET_H_MM}`);
+
+    const xml = new XMLSerializer().serializeToString(clone);
+    void saveBytes(
+      `flowchart-${Date.now()}.svg`,
+      new TextEncoder().encode(xml),
+      'image/svg+xml',
+      [{ name: 'SVG', extensions: ['svg'] }]
+    ).catch((e) => showToast(e instanceof Error ? e.message : String(e), 'error'));
   };
 
   // JSON Save / Load
@@ -1371,6 +1458,7 @@ export default function App() {
           onDecreaseFontSize={() => setFontSize((s) => Math.max(12, s - 2))}
           onLoadTemplate={handleLoadTemplate}
           onExportPng={handleExportPng}
+          onExportSvg={handleExportSvg}
           onSaveJson={handleSaveJson}
           onLoadJson={handleLoadJson}
           onOpenAndroidModal={() => setIsAndroidModalOpen(true)}
