@@ -86,7 +86,9 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}-dev', github.run_number) }}
-          name: 'Flowchart & Pseudocode Studio 0.9.0'
+          # Named after the tag being built. It was pinned to 0.9.0, so every
+          # release since has gone out under the first one's name.
+          name: Flowchart & Pseudocode Studio ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}-dev', github.run_number) }}
           body: 'Windows installer (.exe), Linux AppImage and .deb are attached below.'
           draft: false
           files: |
