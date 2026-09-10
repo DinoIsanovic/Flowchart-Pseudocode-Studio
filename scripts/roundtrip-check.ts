@@ -22,7 +22,7 @@
  * algorithm still does what it did.
  */
 
-import { Language } from '../src/types';
+import { FlowNode, Language } from '../src/types';
 import { TaskPack } from '../src/exercises/types';
 import { solutionText } from '../src/exercises/render';
 import { buildFlowchart, diagramToPseudocode, parsePseudocode } from '../src/core/flowchart-gen';
@@ -83,7 +83,51 @@ for (const pack of PACKS) {
   }
 }
 
+// --- a drawing carries less than a generated diagram -----------------------
+
+/**
+ * What a student's own drawing would not have. `buildFlowchart` stamps every
+ * shape with the step badge it wears in the pseudocode, and gives a count loop
+ * a hidden counter name. A student dragging shapes out of a palette produces
+ * neither, so a marker that leaned on them would pass the reference diagram
+ * and fail every real answer.
+ */
+function asDrawn(node: FlowNode): FlowNode {
+  const copy = { ...(node as FlowNode & { step?: number; counter?: string }) };
+  delete copy.step;
+  delete copy.counter;
+  return copy as FlowNode;
+}
+
+let drawable = 0;
+for (const pack of PACKS) {
+  for (const task of pack.tasks) {
+    if (!task.types.includes('nacrtaj')) continue;
+    drawable++;
+    for (const lang of LANGS) {
+      const { statements } = parsePseudocode(solutionText(task, lang), lang);
+      const built = buildFlowchart(statements, lang);
+      const nodes = built.nodes.map(asDrawn);
+
+      const issues = checkDiagram(nodes, built.edges);
+      if (issues.length) {
+        fail++;
+        console.log(`FAIL  ${task.id} [${lang}] — crtež bez oznaka pada na strukturi: ${describeDiagramIssue(issues[0], lang)}`);
+        continue;
+      }
+      const result = gradeWritten(task, diagramToPseudocode(nodes, built.edges, lang), lang);
+      if (result.correct) {
+        pass++;
+      } else {
+        fail++;
+        console.log(`FAIL  ${task.id} [${lang}] — crtež bez oznaka ne prolazi: ${describeGrade(result, lang)}`);
+      }
+    }
+  }
+}
+
 const tasks = PACKS.reduce((n, p) => n + p.tasks.length, 0);
 console.log(`\n${tasks} zadataka × ${LANGS.length} jezika kroz dijagram i nazad`);
+console.log(`${drawable} zadataka nudi „nacrtaj sam" — provjereni i bez oznaka koje crtež nema`);
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

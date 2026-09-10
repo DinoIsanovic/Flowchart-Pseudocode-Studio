@@ -116,7 +116,8 @@
         "prepoznaj",
         "kockice",
         "tabela",
-        "samostalno"
+        "samostalno",
+        "nacrtaj"
       ],
       "discussion": {
         "bs": "Šta bi promijenio da se ime ispiše osam puta? Šta radi brojač i dok se ovo izvršava, iako se nigdje ne ispisuje?",
@@ -151,7 +152,8 @@
         "prepoznaj",
         "dopuni",
         "kockice",
-        "tabela"
+        "tabela",
+        "nacrtaj"
       ],
       "hint": {
         "bs": "PONOVI 5 PUTA broji u varijabli i, i to od 0 do 4.",
@@ -202,7 +204,8 @@
         "prepoznaj",
         "kockice",
         "tabela",
-        "samostalno"
+        "samostalno",
+        "nacrtaj"
       ],
       "distractors": [
         "@CALC s = s + 1"

@@ -49,7 +49,11 @@ and a few test inputs, and the app derives six kinds of exercise from it:
 predict the output, assemble the program from shuffled tiles, fill the blanks,
 find the planted mistake, complete the state table, and write it from scratch.
 A seventh plants a wrong shape or a missing arrow in a diagram and asks the
-student to point at it.
+student to point at it, and an eighth hands over a canvas and asks for the
+flowchart itself. A drawing is marked as a drawing first — a missing arrow is
+something the student can see and fix — and then by running it: the shapes and
+arrows are read back into pseudocode and put through the same tests as a
+written answer, so a correct algorithm drawn a different way is still correct.
 
 The planted mistakes are worked out rather than authored. In a diagram the
 mistake is one a drawing can have and a program cannot, so the pseudocode
@@ -201,7 +205,8 @@ npm run check:diagram      # what the diagram checker names in a bad drawing
 npm run check:exercises    # every task in the bank parses, solves and grades
 npm run check:grade        # right, wrong and equivalent-but-different attempts
 npm run check:mutate       # every planted mistake is real, findable and provable
-npm run check:roundtrip    # a diagram read back into pseudocode is still the same algorithm
+npm run check:roundtrip    # a diagram read back into pseudocode is still the same algorithm,
+                           #   including one drawn by hand rather than generated
 npm run check:croatian     # the Croatian variant covers every Bosnian word
 ```
 
@@ -311,7 +316,7 @@ src/
                           changes what the algorithm prints
     trace.ts              the state table a task is set and printed with
     grade.ts              marks an attempt by running it
-  components/             Canvas, Toolbar, Header, PseudocodePanel,
+  components/             Canvas, DrawingBoard, Toolbar, Header, PseudocodePanel,
                           SimulatorPanel, ExercisesPanel, AITutorPanel,
                           MiniDiagram, modals, toasts, mobile nav
   i18n/

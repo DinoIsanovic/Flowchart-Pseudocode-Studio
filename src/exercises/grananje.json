@@ -245,7 +245,8 @@
         "prepoznaj",
         "dopuni",
         "greska",
-        "samostalno"
+        "samostalno",
+        "nacrtaj"
       ],
       "distractors": [
         "@IF bodovi > 50"
@@ -287,7 +288,8 @@
         "kockice",
         "tabela",
         "greska",
-        "dijagram-greska"
+        "dijagram-greska",
+        "nacrtaj"
       ],
       "mistake": "oblik",
       "discussion": {
@@ -509,7 +511,8 @@
         "prepoznaj",
         "kockice",
         "greska",
-        "samostalno"
+        "samostalno",
+        "nacrtaj"
       ],
       "distractors": [
         "@IF a + b > c"

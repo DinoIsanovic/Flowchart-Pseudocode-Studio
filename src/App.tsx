@@ -17,6 +17,7 @@ import {
   stepsByPseudocodeLine,
 } from './core/flowchart-gen';
 import { statementsToPython } from './core/python-gen';
+import { newShape } from './core/new-node';
 import { save } from '@tauri-apps/plugin-dialog';
 import { writeFile } from '@tauri-apps/plugin-fs';
 import { autoLayoutFlowchart, centerNodesOnCanvas } from './core/auto-layout';
@@ -443,43 +444,16 @@ export default function App() {
   // Node & Edge Handlers
   const handleAddShape = (type: ShapeType) => {
     pushHistory();
-    const defaults = t.shapeDefaults;
-    let text = defaults.process;
-    let w = 180, h = 74;
-
-    if (type === 'start_end') {
-      text = defaults.start_end_start;
-      w = 170; h = 74;
-    } else if (type === 'io') {
-      text = defaults.io;
-      w = 180; h = 74;
-    } else if (type === 'decision') {
-      text = defaults.decision;
-      w = 200; h = 116;
-    } else if (type === 'loop') {
-      text = defaults.loop;
-      w = 200; h = 84;
-    } else if (type === 'subprocess') {
-      text = defaults.subprocess;
-      w = 190; h = 74;
-    } else if (type === 'comment') {
-      text = defaults.comment;
-      w = 210; h = 88;
-    }
-
-    const newNode: FlowNode = {
-      id: getNextUid('n'),
+    const node = newShape(
       type,
-      x: viewBox.x + viewBox.w / 2 - 80 + (nodes.length % 5) * 25,
-      y: viewBox.y + viewBox.h / 2 - 50 + (nodes.length % 5) * 25,
-      w,
-      h,
-      text,
-    };
-
-    setNodes((prev) => [...prev, newNode]);
+      language,
+      getNextUid('n'),
+      { x: viewBox.x + viewBox.w / 2, y: viewBox.y + viewBox.h / 2 },
+      nodes.length
+    );
+    setNodes((prev) => [...prev, node]);
     setSelectedKind('node');
-    setSelectedId(newNode.id);
+    setSelectedId(node.id);
   };
 
   // Node movement handler with optional snap-to-grid & node alignment

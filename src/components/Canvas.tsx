@@ -43,6 +43,13 @@ interface CanvasProps {
   onViewBoxChange: (vb: ViewBox) => void;
   snapGuides?: { x?: number; y?: number } | null;
   onClearSnapGuides?: () => void;
+  /**
+   * How much of the floating hint to show. The main screen explains both modes
+   * there, but an exercise has its instructions on the page already, and the
+   * resting hint also offers the bend handles an exercise does not hand out.
+   * 'connecting' keeps only the one that matters while an arrow is half drawn.
+   */
+  hint?: 'full' | 'connecting';
 }
 
 const SHAPE_DEFS: Record<ShapeType, { fill: string; stroke: string }> = {
@@ -118,6 +125,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   onViewBoxChange,
   snapGuides,
   onClearSnapGuides,
+  hint = 'full',
 }) => {
   const t = translations[language];
   const svgRef = useRef<SVGSVGElement>(null);
@@ -788,8 +796,9 @@ export const Canvas: React.FC<CanvasProps> = ({
       </svg>
 
       {/* Floating Mode Hint */}
+      {(hint === 'full' || pendingConnectFrom) && (
       <div
-        className={`absolute top-3 left-3 backdrop-blur-md text-white text-[11px] font-black uppercase tracking-wider px-3.5 py-1.5 rounded-full pointer-events-none shadow-xl border max-w-[calc(100vw-40px)] truncate flex items-center gap-2 ${
+        className={`absolute top-3 left-3 backdrop-blur-md text-white text-[11px] font-black uppercase tracking-wider px-3.5 py-1.5 rounded-full pointer-events-none shadow-xl border max-w-[calc(100%-24px)] truncate flex items-center gap-2 ${
           mode === 'connect' && pendingConnectFrom
             ? 'bg-[#06B6D4]/20 border-[#06B6D4] text-[#22D3EE] animate-pulse'
             : 'bg-[#121212]/95 border-white/20'
@@ -805,6 +814,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             : '⚡ Povezivanje: Klikni na ciljni blok za strelicu (ili Esc za prekid)'
           : t.hintConnect}
       </div>
+      )}
 
       {/* Overlay Text Editor on Double Click */}
       {editingNodeId && editorPos && (

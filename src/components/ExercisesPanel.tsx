@@ -5,10 +5,10 @@
 
 import React, { useMemo, useState } from 'react';
 import { ArrowLeft, Check, CheckCircle2, ChevronLeft, ChevronRight, GraduationCap, RotateCcw, Workflow, X } from 'lucide-react';
-import { Language } from '../types';
+import { FlowEdge, FlowNode, Language } from '../types';
 import { translations } from '../i18n/translations';
-import { buildFlowchart, parsePseudocode } from '../core/flowchart-gen';
-import { describeDiagramIssue } from '../core/diagram-check';
+import { buildFlowchart, diagramToPseudocode, parsePseudocode } from '../core/flowchart-gen';
+import { checkDiagram, describeDiagramIssue } from '../core/diagram-check';
 import { Interpreter } from '../core/interpreter';
 import { Task, TaskPack, text } from '../exercises/types';
 import { STEP, blankedText, blanks, fillBlanks, renderKeywords, solutionText, tileLine, tiles } from '../exercises/render';
@@ -18,6 +18,7 @@ import { gradeTrace, traceTask } from '../exercises/trace';
 import { MistakeKind, mistakeFor, plantMistake } from '../exercises/plant';
 import { plantCodeMistake } from '../exercises/mutate';
 import { MiniDiagram } from './MiniDiagram';
+import { DrawingBoard } from './DrawingBoard';
 import linijska from '../exercises/linijska.json';
 import grananje from '../exercises/grananje.json';
 import petlje from '../exercises/petlje.json';
@@ -81,7 +82,7 @@ interface Placed {
 }
 
 /** The exercise types this panel can actually run, in the order they appear. */
-const IN_APP_TYPES = ['kockice', 'dopuni', 'prepoznaj', 'tabela', 'greska', 'dijagram-greska', 'samostalno'];
+const IN_APP_TYPES = ['kockice', 'dopuni', 'prepoznaj', 'tabela', 'greska', 'dijagram-greska', 'samostalno', 'nacrtaj'];
 
 /**
  * The words offered above the writing box. The first ten are the sequence and
@@ -120,6 +121,7 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
   const [activeType, setActiveType] = useState<string>('kockice');
   const [pickedShape, setPickedShape] = useState<string | null>(null);
   const [pickedLine, setPickedLine] = useState<number | null>(null);
+  const [drawn, setDrawn] = useState<{ nodes: FlowNode[]; edges: FlowEdge[] }>({ nodes: [], edges: [] });
   const [result, setResult] = useState<GradeResult | null>(null);
   const writingBox = React.useRef<HTMLTextAreaElement>(null);
 
@@ -219,6 +221,7 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
     setWritten('');
     setPickedShape(null);
     setPickedLine(null);
+    setDrawn({ nodes: [], edges: [] });
     setActiveType(primaryType(next, offeredByTask[next.id] ?? []));
     setResult(null);
   };
@@ -254,7 +257,20 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
     const kind = activeType;
     let outcome: GradeResult;
 
-    if (kind === 'greska' && broken) {
+    if (kind === 'nacrtaj') {
+      if (!drawn.nodes.length) {
+        outcome = { correct: false, reason: 'nepotpuno', message: t.drawAll };
+      } else {
+        // A drawing is checked as a drawing first. "The arrow out of this
+        // shape is missing" is something the student can see and fix; the
+        // pseudocode that a broken drawing reads back as would send them
+        // looking for a mistake in an algorithm they did not write.
+        const issues = checkDiagram(drawn.nodes, drawn.edges);
+        outcome = issues.length
+          ? { correct: false, reason: 'dijagram', message: describeDiagramIssue(issues[0], language) }
+          : gradeWritten(task, diagramToPseudocode(drawn.nodes, drawn.edges, language), language);
+      }
+    } else if (kind === 'greska' && broken) {
       if (pickedLine === null) {
         outcome = { correct: false, reason: 'linija', message: t.findCodeMistake };
       } else if (pickedLine === broken.line) {
@@ -576,6 +592,29 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                       </div>
                     ))}
                   </div>
+                </>
+              )}
+
+              {activeType === 'nacrtaj' && (
+                <>
+                  <p className="text-[11px] text-white/45">{t.draw}</p>
+                  <p className="text-[11px] text-white/35">{t.drawNote}</p>
+                  <DrawingBoard
+                    language={language}
+                    nodes={drawn.nodes}
+                    edges={drawn.edges}
+                    onChange={(nodes, edges) => {
+                      setDrawn({ nodes, edges });
+                      setResult(null);
+                    }}
+                    height={420}
+                  />
+                  <p className="text-[11px] text-white/40">
+                    {t.writeTests}{' '}
+                    <span className="font-mono text-white/70">
+                      {task.tests.map((x) => x.join(', ') || t.noInput).join('  ·  ')}
+                    </span>
+                  </p>
                 </>
               )}
 

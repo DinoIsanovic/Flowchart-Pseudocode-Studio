@@ -32,7 +32,8 @@
       "types": [
         "kockice",
         "prepoznaj",
-        "dijagram-greska"
+        "dijagram-greska",
+        "nacrtaj"
       ],
       "mistake": "oblik",
       "interchangeable": [
@@ -128,7 +129,8 @@
         "kockice",
         "greska",
         "tabela",
-        "dijagram-greska"
+        "dijagram-greska",
+        "nacrtaj"
       ],
       "mistake": "kraj"
     },
@@ -376,7 +378,8 @@
         "prepoznaj",
         "greska",
         "dopuni",
-        "samostalno"
+        "samostalno",
+        "nacrtaj"
       ]
     },
     {
@@ -548,7 +551,8 @@
         "prepoznaj",
         "kockice",
         "greska",
-        "samostalno"
+        "samostalno",
+        "nacrtaj"
       ],
       "distractors": [
         "@CALC sati = ukupno % 60",

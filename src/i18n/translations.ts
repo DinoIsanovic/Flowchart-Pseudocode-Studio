@@ -191,6 +191,9 @@ export interface Translations {
     writeNote: string;
     writeAll: string;
     writeTests: string;
+    draw: string;
+    drawNote: string;
+    drawAll: string;
     inputLabel: string;
     outputLabel: string;
     noInput: string;
@@ -374,6 +377,9 @@ const SOURCE: Record<SourceLang, Translations> = {
       writeNote: 'The wording is yours to choose — what is checked is what the program works out for each input.',
       writeAll: 'Write the algorithm first.',
       writeTests: 'Checked with:',
+      draw: 'Draw the flowchart yourself, then check it.',
+      drawNote: 'Add a symbol, drag it into place, then switch to Connect and tap two shapes to draw an arrow. Double click a shape to write in it.',
+      drawAll: 'Draw the algorithm first.',
       inputLabel: 'Input',
       outputLabel: 'Output',
       noInput: 'no input',
@@ -384,6 +390,7 @@ const SOURCE: Record<SourceLang, Translations> = {
         greska: 'find the mistake',
         tabela: 'state table',
         samostalno: 'write it yourself',
+        nacrtaj: 'draw it yourself',
         'dijagram-greska': 'mistake in the diagram',
       },
     },
@@ -564,6 +571,9 @@ const SOURCE: Record<SourceLang, Translations> = {
       writeNote: 'Die Formulierung wählst du selbst — geprüft wird, was das Programm für jede Eingabe herausbekommt.',
       writeAll: 'Schreibe zuerst den Algorithmus.',
       writeTests: 'Geprüft mit:',
+      draw: 'Zeichne das Flussdiagramm selbst und prüfe es dann.',
+      drawNote: 'Symbol hinzufügen, an seinen Platz ziehen, dann auf Verbinden umschalten und zwei Symbole antippen — das ergibt einen Pfeil. Doppelklick auf ein Symbol, um hineinzuschreiben.',
+      drawAll: 'Zeichne zuerst den Algorithmus.',
       inputLabel: 'Eingabe',
       outputLabel: 'Ausgabe',
       noInput: 'keine Eingabe',
@@ -574,6 +584,7 @@ const SOURCE: Record<SourceLang, Translations> = {
         greska: 'Fehler finden',
         tabela: 'Wertetabelle',
         samostalno: 'selbst schreiben',
+        nacrtaj: 'selbst zeichnen',
         'dijagram-greska': 'Fehler im Diagramm',
       },
     },
@@ -754,6 +765,9 @@ const SOURCE: Record<SourceLang, Translations> = {
       writeNote: 'Riječi u ispisu biraš sam — provjerava se šta program izračuna za svaki ulaz.',
       writeAll: 'Prvo napiši algoritam.',
       writeTests: 'Provjerava se za:',
+      draw: 'Nacrtaj dijagram toka sam, pa ga provjeri.',
+      drawNote: 'Dodaj simbol, prevuci ga na mjesto, pa pređi na Povezivanje i dodirni dva bloka — to je strelica. Dvoklik na blok da upišeš tekst.',
+      drawAll: 'Prvo nacrtaj algoritam.',
       inputLabel: 'Ulaz',
       outputLabel: 'Ispis',
       noInput: 'bez unosa',
@@ -764,6 +778,7 @@ const SOURCE: Record<SourceLang, Translations> = {
         greska: 'pronađi grešku',
         tabela: 'tabela stanja',
         samostalno: 'napiši sam',
+        nacrtaj: 'nacrtaj sam',
         'dijagram-greska': 'greška u dijagramu',
       },
     },

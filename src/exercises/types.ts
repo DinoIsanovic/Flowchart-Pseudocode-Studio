@@ -29,7 +29,11 @@ export type ExerciseType =
   /** Complete the state table. */
   | 'tabela'
   /** Write it from scratch. */
-  | 'samostalno';
+  | 'samostalno'
+  /** Draw the flowchart from scratch, and have the drawing run. */
+  | 'nacrtaj'
+  /** Find the mistake planted in a drawing of it. */
+  | 'dijagram-greska';
 
 /** Text the student reads. `bs` is required; the rest fall back to it. */
 export type Text = { bs: string } & Partial<Record<Language, string>>;
