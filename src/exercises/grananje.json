@@ -183,6 +183,7 @@
           "120.5"
         ]
       ],
+      "codeMistake": "poredjenje",
       "types": [
         "prepoznaj",
         "dopuni",
@@ -239,6 +240,7 @@
           "100"
         ]
       ],
+      "codeMistake": "poredjenje",
       "types": [
         "prepoznaj",
         "dopuni",

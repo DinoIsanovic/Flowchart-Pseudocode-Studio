@@ -16,6 +16,7 @@ import { GradeResult, describeGrade, gradeAttempt, gradeWritten } from '../exerc
 import { AUTOCOMPLETE_KEYWORDS } from '../i18n/keywords';
 import { gradeTrace, traceTask } from '../exercises/trace';
 import { MistakeKind, mistakeFor, plantMistake } from '../exercises/plant';
+import { plantCodeMistake } from '../exercises/mutate';
 import { MiniDiagram } from './MiniDiagram';
 import linijska from '../exercises/linijska.json';
 import grananje from '../exercises/grananje.json';
@@ -80,7 +81,7 @@ interface Placed {
 }
 
 /** The exercise types this panel can actually run, in the order they appear. */
-const IN_APP_TYPES = ['kockice', 'dopuni', 'prepoznaj', 'tabela', 'dijagram-greska', 'samostalno'];
+const IN_APP_TYPES = ['kockice', 'dopuni', 'prepoznaj', 'tabela', 'greska', 'dijagram-greska', 'samostalno'];
 
 /**
  * The words offered above the writing box. The first ten are the sequence and
@@ -89,17 +90,21 @@ const IN_APP_TYPES = ['kockice', 'dopuni', 'prepoznaj', 'tabela', 'dijagram-gres
  */
 const WRITING_KEYWORDS = 10;
 
-/** The exercise a task is built for — the first type its author listed. */
-function primaryType(task: Task): string {
-  return task.types.find((x) => IN_APP_TYPES.includes(x)) ?? 'samostalno';
+/**
+ * Everything this task offers on screen, in the order its author listed.
+ *
+ * 'greska' comes off the list when no single edit to this task's algorithm
+ * changes what it prints: there would be a mistake to point at but no way to
+ * tell the student why it is one, and a task marked on a mistake that makes
+ * no difference is worse than one exercise short.
+ */
+function availableTypes(task: Task, canBreak: boolean): string[] {
+  return task.types.filter((x) => IN_APP_TYPES.includes(x) && (x !== 'greska' || canBreak));
 }
 
-/**
- * Everything this task offers on screen. 'greska' — find the mistake in the
- * pseudocode — is authored but has no exercise here yet, so it stays on paper.
- */
-function availableTypes(task: Task): string[] {
-  return task.types.filter((x) => IN_APP_TYPES.includes(x));
+/** The exercise a task opens on — the first one it offers. */
+function primaryType(task: Task, offered: string[]): string {
+  return offered[0] ?? 'samostalno';
 }
 
 export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen, onClose, onReward }) => {
@@ -114,6 +119,7 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
   const [written, setWritten] = useState<string>('');
   const [activeType, setActiveType] = useState<string>('kockice');
   const [pickedShape, setPickedShape] = useState<string | null>(null);
+  const [pickedLine, setPickedLine] = useState<number | null>(null);
   const [result, setResult] = useState<GradeResult | null>(null);
   const writingBox = React.useRef<HTMLTextAreaElement>(null);
 
@@ -173,6 +179,29 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
     return plantMistake(built.nodes, built.edges, (task.mistake as MistakeKind) ?? mistakeFor(task.id));
   }, [task, solution, language]);
 
+  /**
+   * This task's algorithm with one mistake planted in the text, and the test
+   * case that catches it. Same task, same mistake, so a class works on one
+   * version of it.
+   */
+  const broken = useMemo(() => (task ? plantCodeMistake(task, language) : null), [task, language]);
+
+  /**
+   * What every task in this pack offers. Whether 'greska' is among them takes
+   * running the algorithm, so it is worked out once per pack rather than once
+   * per row of the list.
+   */
+  const offeredByTask = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    for (const item of pack.tasks) {
+      map[item.id] = availableTypes(item, plantCodeMistake(item, language) !== null);
+    }
+    return map;
+  }, [pack, language]);
+
+  /** The tabs the open task shows. */
+  const offered = task ? offeredByTask[task.id] ?? [] : [];
+
   /** The run a state-table exercise is filled in against — the first test case. */
   const trace = useMemo(
     () => (task ? traceTask(task, language, task.tests[0] ?? []) : null),
@@ -189,7 +218,8 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
     setTraced([]);
     setWritten('');
     setPickedShape(null);
-    setActiveType(primaryType(next));
+    setPickedLine(null);
+    setActiveType(primaryType(next, offeredByTask[next.id] ?? []));
     setResult(null);
   };
 
@@ -224,7 +254,15 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
     const kind = activeType;
     let outcome: GradeResult;
 
-    if (kind === 'dijagram-greska' && planted) {
+    if (kind === 'greska' && broken) {
+      if (pickedLine === null) {
+        outcome = { correct: false, reason: 'linija', message: t.findCodeMistake };
+      } else if (pickedLine === broken.line) {
+        outcome = { correct: true };
+      } else {
+        outcome = { correct: false, reason: 'linija', message: t.wrongLine };
+      }
+    } else if (kind === 'dijagram-greska' && planted) {
       if (!pickedShape) {
         outcome = { correct: false, reason: 'dijagram', message: t.findMistake };
       } else if (planted.answerIds.includes(pickedShape)) {
@@ -357,7 +395,10 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                         {text(item.title, language)}
                       </span>
                       <span className="block text-[10px] uppercase tracking-wider text-white/35">
-                        {t.types[primaryType(item)] ?? primaryType(item)}
+                        {(() => {
+                          const first = primaryType(item, offeredByTask[item.id] ?? []);
+                          return t.types[first] ?? first;
+                        })()}
                       </span>
                     </span>
                     {progress[item.id] && <CheckCircle2 className="w-4 h-4 text-[#4ADE80] shrink-0" />}
@@ -382,9 +423,9 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                 )}
               </div>
 
-              {availableTypes(task).length > 1 && (
+              {offered.length > 1 && (
                 <div className="flex gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/10">
-                  {availableTypes(task).map((kind) => (
+                  {offered.map((kind) => (
                     <button
                       key={kind}
                       type="button"
@@ -535,6 +576,61 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                       </div>
                     ))}
                   </div>
+                </>
+              )}
+
+              {activeType === 'greska' && broken && (
+                <>
+                  <p className="text-[11px] text-white/45">{t.findCodeMistake}</p>
+                  <div className="rounded-xl border border-white/10 bg-black/50 overflow-hidden font-mono text-[12px] leading-6">
+                    {broken.lines.map((line, i) => {
+                      const no = i + 1;
+                      const picked = pickedLine === no;
+                      const found = !!result?.correct && no === broken.line;
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => {
+                            setPickedLine(no);
+                            setResult(null);
+                          }}
+                          className={`w-full flex items-start gap-2 px-2 py-0.5 text-left transition-colors ${
+                            found
+                              ? 'bg-emerald-500/20 text-emerald-200'
+                              : picked
+                              ? 'bg-[#06B6D4]/20 text-[#A5F3FC]'
+                              : 'text-white/85 hover:bg-white/[0.06]'
+                          }`}
+                        >
+                          <span className="w-4 shrink-0 text-right text-white/25 select-none">{no}</span>
+                          <span className="whitespace-pre overflow-x-auto">{line || ' '}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {result?.correct && (
+                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/30 p-2.5 space-y-1 text-[11.5px]">
+                      <p className="text-emerald-200">
+                        {t.shouldRead}{' '}
+                        <span className="font-mono text-white">{broken.correct}</span>
+                      </p>
+                      <p className="text-white/60">
+                        {t.proofFor}{' '}
+                        <span className="font-mono text-white/85">
+                          {broken.proof.inputs.join(', ') || t.noInput}
+                        </span>{' '}
+                        {t.proofPrints}{' '}
+                        <span className="font-mono text-red-300">
+                          {broken.proof.got.join(' / ') || '—'}
+                        </span>{' '}
+                        {t.proofShould}{' '}
+                        <span className="font-mono text-emerald-300">
+                          {broken.proof.expected.join(' / ') || '—'}
+                        </span>
+                      </p>
+                    </div>
+                  )}
                 </>
               )}
 

@@ -67,6 +67,16 @@ export interface Task {
    * 'kraj' or 'prazan'. Left out, the task gets one picked from its id.
    */
   mistake?: string;
+  /**
+   * Which mistake the 'greska' exercise plants in the pseudocode —
+   * 'poredjenje', 'operator', 'zamjena', 'varijabla' or 'konstanta'. Left out,
+   * the task gets one picked from its id, which spreads the kinds across a
+   * topic. Worth naming where the task is about one particular slip: a task
+   * that teaches the boundary of `>= 50` should have the boundary broken, not
+   * the 50 rewritten. Only used if it actually changes the output; otherwise
+   * the next kind is tried, as if it had not been named.
+   */
+  codeMistake?: string;
   /** A fact the student may need but is not expected to know by heart. */
   hint?: Text;
   /** A question for the class; nothing here is machine-graded. */

@@ -179,6 +179,13 @@ export interface Translations {
     traceCondHint: string;
     findMistake: string;
     wrongPick: string;
+    findCodeMistake: string;
+    wrongLine: string;
+    shouldRead: string;
+    /** Reads as one sentence: "<for> 12, 5 <prints> X <instead of> Y". */
+    proofFor: string;
+    proofPrints: string;
+    proofShould: string;
     predict: string;
     write: string;
     writeNote: string;
@@ -356,6 +363,12 @@ const SOURCE: Record<SourceLang, Translations> = {
       traceCondHint: 'For every condition write yes or no — the branch the program took.',
       findMistake: 'One symbol in this diagram is wrong. Tap it.',
       wrongPick: 'that symbol is fine — look again',
+      findCodeMistake: 'One line of this algorithm is wrong. Tap it.',
+      wrongLine: 'that line is fine — look again',
+      shouldRead: 'It should read:',
+      proofFor: 'For',
+      proofPrints: 'it prints',
+      proofShould: 'instead of',
       predict: 'Read the algorithm and write what it prints.',
       write: 'Write the algorithm yourself, then check it.',
       writeNote: 'The wording is yours to choose — what is checked is what the program works out for each input.',
@@ -540,6 +553,12 @@ const SOURCE: Record<SourceLang, Translations> = {
       traceCondHint: 'Schreibe bei jeder Bedingung ja oder nein — den Zweig, den das Programm genommen hat.',
       findMistake: 'Ein Symbol in diesem Diagramm ist falsch. Tippe es an.',
       wrongPick: 'dieses Symbol ist in Ordnung — schau noch einmal',
+      findCodeMistake: 'Eine Zeile dieses Algorithmus ist falsch. Tippe sie an.',
+      wrongLine: 'diese Zeile ist in Ordnung — schau noch einmal',
+      shouldRead: 'Richtig wäre:',
+      proofFor: 'Für',
+      proofPrints: 'gibt er aus',
+      proofShould: 'statt',
       predict: 'Lies den Algorithmus und schreibe auf, was er ausgibt.',
       write: 'Schreibe den Algorithmus selbst und prüfe ihn dann.',
       writeNote: 'Die Formulierung wählst du selbst — geprüft wird, was das Programm für jede Eingabe herausbekommt.',
@@ -724,6 +743,12 @@ const SOURCE: Record<SourceLang, Translations> = {
       traceCondHint: 'Za svaki uslov upiši DA ili NE — granu kojom je program prošao.',
       findMistake: 'Jedan simbol na ovom dijagramu nije u redu. Dodirni ga.',
       wrongPick: 'taj simbol je u redu — pogledaj ponovo',
+      findCodeMistake: 'Jedna linija ovog algoritma nije u redu. Dodirni je.',
+      wrongLine: 'ta linija je u redu — pogledaj ponovo',
+      shouldRead: 'Treba pisati:',
+      proofFor: 'Za',
+      proofPrints: 'ispisuje',
+      proofShould: 'umjesto',
       predict: 'Pročitaj algoritam i upiši šta ispisuje.',
       write: 'Napiši algoritam sam, pa ga provjeri.',
       writeNote: 'Riječi u ispisu biraš sam — provjerava se šta program izračuna za svaki ulaz.',

@@ -15,6 +15,7 @@
     "check:exercises": "tsx scripts/exercises-check.ts",
     "check:diagram": "tsx scripts/diagram-check.ts",
     "check:grade": "tsx scripts/grade-check.ts",
+    "check:mutate": "tsx scripts/mutate-check.ts",
     "check:croatian": "tsx scripts/croatian-check.ts"
   },
   "dependencies": {

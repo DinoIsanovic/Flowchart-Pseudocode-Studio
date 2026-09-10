@@ -51,6 +51,17 @@ find the planted mistake, complete the state table, and write it from scratch.
 A seventh plants a wrong shape or a missing arrow in a diagram and asks the
 student to point at it.
 
+The planted mistakes are worked out rather than authored. In a diagram the
+mistake is one a drawing can have and a program cannot, so the pseudocode
+behind it still runs and only the picture gives it away. In the pseudocode it
+is the opposite: the algorithm still parses and still runs, and what gives it
+away is the wrong answer it now prints. A mutation — a comparison loosened, an
+operator swapped, the wrong variable used, a number changed — is only used
+once it has been run against the task's own test inputs and caught printing
+something the correct solution does not. That test case is the proof the
+student is shown when they find it, and a mistake that makes no difference to
+any of them is never set.
+
 Nothing stores an answer key. An attempt is marked by running it and comparing
 what it prints, so `a + a + a + a` is accepted for `4 * a`, and two steps whose
 order does not matter are right either way. Progress is kept in `localStorage`,
@@ -189,6 +200,7 @@ npm run check:interpreter  # running pseudocode, and the state table
 npm run check:diagram      # what the diagram checker names in a bad drawing
 npm run check:exercises    # every task in the bank parses, solves and grades
 npm run check:grade        # right, wrong and equivalent-but-different attempts
+npm run check:mutate       # every planted mistake is real, findable and provable
 npm run check:croatian     # the Croatian variant covers every Bosnian word
 ```
 
@@ -293,7 +305,9 @@ src/
     types.ts              what an authored task holds
     render.ts             an authored solution as the student reads it —
                           keywords in their language, tiles, blanks
-    plant.ts              plants the mistake the find-it exercises hide
+    plant.ts              plants the mistake the diagram find-it exercise hides
+    mutate.ts             plants the mistake in the pseudocode, and proves it
+                          changes what the algorithm prints
     trace.ts              the state table a task is set and printed with
     grade.ts              marks an attempt by running it
   components/             Canvas, Toolbar, Header, PseudocodePanel,

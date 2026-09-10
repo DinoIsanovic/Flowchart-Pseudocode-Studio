@@ -34,7 +34,9 @@ export type GradeReason =
   /** A cell of the state table holds the wrong value. */
   | 'tabela'
   /** The wrong shape was picked in a diagram. */
-  | 'dijagram';
+  | 'dijagram'
+  /** The wrong line was picked in an algorithm with a mistake planted in it. */
+  | 'linija';
 
 export interface Mismatch {
   inputs: string[];
@@ -221,7 +223,9 @@ function describeGradeIn(result: GradeResult, lang: SourceLang): string {
     return lang === 'en' ? 'Correct!' : lang === 'de' ? 'Richtig!' : 'Tačno!';
   }
   // Already a finished sentence from the caller, not a run result.
-  if (result.reason === 'nepotpuno' || result.reason === 'dijagram') return result.message ?? '';
+  if (result.reason === 'nepotpuno' || result.reason === 'dijagram' || result.reason === 'linija') {
+    return result.message ?? '';
+  }
   if (result.reason === 'ne-parsira') {
     const head = lang === 'en' ? 'this cannot be read as an algorithm' : lang === 'de' ? 'das lässt sich nicht als Algorithmus lesen' : 'ovo se ne može pročitati kao algoritam';
     return `${head} — ${result.message ?? ''}`;
