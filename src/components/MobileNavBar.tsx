@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { LayoutGrid, FileCode, Menu, GraduationCap, Smartphone } from 'lucide-react';
+import { LayoutGrid, FileCode, Menu, GraduationCap } from 'lucide-react';
 import { Language } from '../types';
 
 interface MobileNavBarProps {
@@ -14,7 +14,6 @@ interface MobileNavBarProps {
   isTutorOpen: boolean;
   onToggleTutor: () => void;
   onToggleMobileToolbar: () => void;
-  onOpenAndroidModal: () => void;
 }
 
 export const MobileNavBar: React.FC<MobileNavBarProps> = ({
@@ -24,7 +23,6 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({
   isTutorOpen,
   onToggleTutor,
   onToggleMobileToolbar,
-  onOpenAndroidModal,
 }) => {
   const isDiagramActive = viewMode === 'canvas' || viewMode === 'split';
   const isCodeActive = viewMode === 'code';
@@ -34,7 +32,6 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({
     code: language === 'en' ? 'Pseudocode' : language === 'de' ? 'Pseudocode' : 'Pseudokod',
     tools: language === 'en' ? 'Tools' : language === 'de' ? 'Werkzeuge' : 'Alati',
     tutor: language === 'en' ? 'Tutor' : language === 'de' ? 'Tutor' : 'Tutor',
-    android: 'Android',
   };
 
   return (
@@ -106,17 +103,6 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({
         {isTutorOpen && (
           <span className="w-4 h-0.5 bg-[#A855F7] rounded-full mt-0.5" />
         )}
-      </button>
-
-      {/* 5. Android APK / PWA Modal */}
-      <button
-        type="button"
-        id="mobile-nav-android"
-        onClick={onOpenAndroidModal}
-        className="flex-1 flex flex-col items-center justify-center h-full py-1 text-[#22D3EE]/80 hover:text-[#22D3EE] font-medium transition-all"
-      >
-        <Smartphone className="w-5 h-5 stroke-[2.2]" />
-        <span className="text-[10px] tracking-tight uppercase mt-0.5">{labels.android}</span>
       </button>
     </nav>
   );

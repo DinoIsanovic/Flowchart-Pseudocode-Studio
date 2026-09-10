@@ -106,8 +106,7 @@ Plus JSON project save/load, and debounced autosave to `localStorage` so a
 refresh doesn't lose work.
 
 **Mobile and PWA.** Touch gestures (pinch-zoom, one-finger pan, drag shapes), a
-mobile nav bar, an install prompt, and a built-in guide for packaging the PWA as
-an Android app via Bubblewrap (TWA) or Capacitor.
+mobile nav bar, and an install prompt.
 
 ## Pseudocode language
 

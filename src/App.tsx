@@ -25,7 +25,6 @@ import { Toolbar } from './components/Toolbar';
 import { Canvas } from './components/Canvas';
 import { PseudocodePanel } from './components/PseudocodePanel';
 import { AITutorPanel } from './components/AITutorPanel';
-import { AndroidBuildModal } from './components/AndroidBuildModal';
 import { ShortcutsModal } from './components/ShortcutsModal';
 import { ConfirmModal, ConfirmDialogState } from './components/ConfirmModal';
 import { ToastContainer, ToastMessage } from './components/Toast';
@@ -203,7 +202,6 @@ export default function App() {
     return 'split';
   });
   const [isTutorOpen, setIsTutorOpen] = useState(false);
-  const [isAndroidModalOpen, setIsAndroidModalOpen] = useState(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
   const [isMobileToolbarOpen, setIsMobileToolbarOpen] = useState(false);
   const [isExercisesOpen, setIsExercisesOpen] = useState(false);
@@ -1412,7 +1410,6 @@ export default function App() {
         onViewModeChange={setViewMode}
         isTutorOpen={isTutorOpen}
         onToggleTutor={() => setIsTutorOpen(!isTutorOpen)}
-        onOpenAndroidModal={() => setIsAndroidModalOpen(true)}
         onOpenShortcutsModal={() => setIsShortcutsModalOpen(true)}
         onToggleMobileToolbar={() => setIsMobileToolbarOpen(!isMobileToolbarOpen)}
       />
@@ -1476,7 +1473,6 @@ export default function App() {
           onExportSvg={handleExportSvg}
           onSaveJson={handleSaveJson}
           onLoadJson={handleLoadJson}
-          onOpenAndroidModal={() => setIsAndroidModalOpen(true)}
         />
 
         {/* Center: Canvas */}
@@ -1576,13 +1572,6 @@ export default function App() {
         />
       </div>
 
-      {/* Android Build & Deployment Modal */}
-      <AndroidBuildModal
-        language={language}
-        isOpen={isAndroidModalOpen}
-        onClose={() => setIsAndroidModalOpen(false)}
-      />
-
       {/* Shortcuts & Gestures Modal */}
       <ShortcutsModal
         language={language}
@@ -1602,7 +1591,7 @@ export default function App() {
         onDismiss={dismissToast}
       />
 
-      {/* Mobile Bottom Navigation Bar (Android & iOS) */}
+      {/* Exercises drawer and the mobile bottom navigation bar */}
       <ExercisesPanel
         language={language}
         isOpen={isExercisesOpen}
@@ -1617,7 +1606,6 @@ export default function App() {
         isTutorOpen={isTutorOpen}
         onToggleTutor={() => setIsTutorOpen(!isTutorOpen)}
         onToggleMobileToolbar={() => setIsMobileToolbarOpen(!isMobileToolbarOpen)}
-        onOpenAndroidModal={() => setIsAndroidModalOpen(true)}
       />
     </div>
   );

@@ -70,7 +70,6 @@ export interface Translations {
   exportSvg: string;
   saveJson: string;
   loadJson: string;
-  androidPrep: string;
   authorCredit: string;
 
   // Header & View
@@ -140,19 +139,6 @@ export interface Translations {
   tutorError: string;
   tutorEmptyReply: string;
 
-  // Android Modal
-  androidModalTitle: string;
-  androidSubtitle: string;
-  androidPwaTitle: string;
-  androidPwaDesc: string;
-  androidPwaStep1: string;
-  androidPwaStep2: string;
-  androidTwaTitle: string;
-  androidTwaDesc: string;
-  androidCapacitorTitle: string;
-  androidCapacitorDesc: string;
-  androidCopyCmd: string;
-  copied: string;
   // Simulator
   sim: {
     title: string;
@@ -270,7 +256,6 @@ const SOURCE: Record<SourceLang, Translations> = {
     exportSvg: 'Export as Vector (SVG)',
     saveJson: 'Save Project (.json)',
     loadJson: 'Load Project (.json)',
-    androidPrep: '📱 Android App Setup',
     authorCredit: 'Original concept: Dino Isanović',
 
     viewSplit: 'Split View',
@@ -334,18 +319,6 @@ const SOURCE: Record<SourceLang, Translations> = {
     tutorError: 'Error from Gemini API: ',
     tutorEmptyReply: 'Empty response from tutor. Please try again or rephrase your question.',
 
-    androidModalTitle: 'Android Application Readiness',
-    androidSubtitle: 'Build and deploy this project as a native Android App (.apk / .aab) or PWA',
-    androidPwaTitle: '1. Progressive Web App (PWA) / Instant Mobile App',
-    androidPwaDesc: 'This application is 100% PWA compliant with offline service workers, web app manifest, and mobile touch gestures.',
-    androidPwaStep1: 'Open this URL in Google Chrome on your Android phone or tablet.',
-    androidPwaStep2: 'Tap "Install App" in the top bar or Chrome menu "Add to Home screen". The app will install with a native app icon and run full-screen offline without browser chrome.',
-    androidTwaTitle: '2. Google Play Store APK / AAB (Bubblewrap / TWA)',
-    androidTwaDesc: 'Package this app directly into an Android Studio APK / AAB for distribution on the Google Play Store using Google’s official CLI:',
-    androidCapacitorTitle: '3. Full Native Android Project (Capacitor / Kotlin)',
-    androidCapacitorDesc: 'Convert into an Android Studio Gradle project with native Android SDK access:',
-    androidCopyCmd: 'Copy commands',
-    copied: 'Copied to clipboard!',
     sim: {
       title: 'Simulation',
       run: 'Run',
@@ -467,7 +440,6 @@ const SOURCE: Record<SourceLang, Translations> = {
     exportSvg: 'Als Vektor exportieren (SVG)',
     saveJson: 'Projekt speichern (.json)',
     loadJson: 'Projekt laden (.json)',
-    androidPrep: '📱 Android App Setup',
     authorCredit: 'Ursprungskonzept: Dino Isanović',
 
     viewSplit: 'Geteilte Ansicht',
@@ -531,18 +503,6 @@ const SOURCE: Record<SourceLang, Translations> = {
     tutorError: 'Fehler von der Gemini API: ',
     tutorEmptyReply: 'Leere Antwort vom Tutor. Bitte versuche es erneut.',
 
-    androidModalTitle: 'Android App Bereitstellung',
-    androidSubtitle: 'Erstelle eine vollwertige Android-App (.apk / .aab) oder installiere die PWA',
-    androidPwaTitle: '1. Progressive Web App (PWA) / Sofortige Mobile Installation',
-    androidPwaDesc: 'Die App ist vollständig PWA-optimiert mit Offline-Service-Worker, Web-App-Manifest und Touch-Gesten.',
-    androidPwaStep1: 'Öffne diese Web-URL in Google Chrome auf deinem Android-Smartphone oder Tablet.',
-    androidPwaStep2: 'Tippe in der oberen Leiste auf "App installieren" oder im Chrome-Menü auf "Zum Startbildschirm hinzufügen". Die App startet nativ im Vollbildmodus und funktioniert offline.',
-    androidTwaTitle: '2. Google Play Store APK / AAB (Bubblewrap TWA)',
-    androidTwaDesc: 'Paketiere die Web-App über das offizielle Google Bubblewrap-Tool in ein Android-Projekt für den Play Store:',
-    androidCapacitorTitle: '3. Vollständiges natives Android-Studio-Projekt (Capacitor)',
-    androidCapacitorDesc: 'In ein natives Android-Studio Gradle-Projekt umwandeln:',
-    androidCopyCmd: 'Befehle kopieren',
-    copied: 'In die Zwischenablage kopiert!',
     sim: {
       title: 'Simulation',
       run: 'Start',
@@ -664,7 +624,6 @@ const SOURCE: Record<SourceLang, Translations> = {
     exportSvg: 'Izvezi kao vektor (SVG)',
     saveJson: 'Sačuvaj (.json)',
     loadJson: 'Učitaj (.json)',
-    androidPrep: '📱 Android priprema',
     authorCredit: 'Autor: Dino Isanović',
 
     viewSplit: 'Podijeljen prikaz',
@@ -728,18 +687,6 @@ const SOURCE: Record<SourceLang, Translations> = {
     tutorError: 'Greška od Gemini API-ja: ',
     tutorEmptyReply: 'Prazan odgovor od tutora. Pokušaj ponovo.',
 
-    androidModalTitle: 'Priprema za Android aplikaciju',
-    androidSubtitle: 'Izgradi pravu Android aplikaciju (.apk / .aab) ili instaliraj PWA',
-    androidPwaTitle: '1. PWA instalacija na Android uređaj (brzo i bez kompajliranja)',
-    androidPwaDesc: 'Aplikacija u potpunosti podržava PWA standard: offline rad preko service workera, web app manifest, dodir i pune ekranske dimenzije.',
-    androidPwaStep1: 'Otvori aplikaciju u Google Chrome pregledniku na svom Android telefonu ili tabletu.',
-    androidPwaStep2: 'Klikni dugme "Instaliraj aplikaciju" u gornjoj traci ili u meniju Chrome-a izaberi "Dodaj na početni ekran" (Add to Home screen). Aplikacija se instalira kao prava nativna aplikacija sa ikonicom i radi offline.',
-    androidTwaTitle: '2. Google Play Store APK / AAB paket (Bubblewrap / TWA)',
-    androidTwaDesc: 'Zapakuj aplikaciju u standardni Android APK ili Google Play AAB paket preko zvaničnog Google Bubblewrap alata:',
-    androidCapacitorTitle: '3. Nativni Android Studio projekat (Capacitor)',
-    androidCapacitorDesc: 'Pretvori u puni Android Studio projekat sa Gradle konfiguracijom:',
-    androidCopyCmd: 'Kopiraj komande',
-    copied: 'Kopirano u međuspremnik!',
     sim: {
       title: 'Simulacija',
       run: 'Pokreni',

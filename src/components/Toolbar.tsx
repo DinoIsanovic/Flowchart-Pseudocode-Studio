@@ -19,7 +19,6 @@ import {
   Shapes,
   Save,
   Upload,
-  Smartphone,
   X,
   LayoutGrid,
   FileCode,
@@ -63,7 +62,6 @@ interface ToolbarProps {
   onExportSvg: () => void;
   onSaveJson: () => void;
   onLoadJson: (file: File) => void;
-  onOpenAndroidModal: () => void;
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({
@@ -98,7 +96,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onExportSvg,
   onSaveJson,
   onLoadJson,
-  onOpenAndroidModal,
 }) => {
   const t = translations[language];
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -513,7 +510,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           </button>
         </div>
 
-        {/* Section 7: File & Android */}
+        {/* Section 7: File */}
         <div className="flex flex-col gap-1.5 pt-2.5 border-t border-white/10">
           <span className="text-[9.5px] font-black tracking-[0.2em] text-white/50 uppercase px-1">
             {t.file}
@@ -553,13 +550,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             onChange={handleFileChange}
             className="hidden"
           />
-          <button
-            onClick={onOpenAndroidModal}
-            className="flex items-center gap-2 bg-[#06B6D4] hover:bg-[#22D3EE] text-black text-[11px] font-black uppercase tracking-wider p-2 rounded-lg text-left mt-1 shadow-sm transition-colors"
-          >
-            <Smartphone className="w-3.5 h-3.5 shrink-0 stroke-[2.5]" />
-            <span className="leading-tight text-center">{t.androidPrep}</span>
-          </button>
         </div>
 
         {/* Author Credit */}

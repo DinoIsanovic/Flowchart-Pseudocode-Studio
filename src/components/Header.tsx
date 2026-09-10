@@ -8,7 +8,6 @@ import {
   Columns,
   Maximize,
   Minimize,
-  Smartphone,
   GraduationCap,
   Keyboard,
   Download,
@@ -28,7 +27,6 @@ interface HeaderProps {
   onViewModeChange: (mode: 'split' | 'canvas' | 'code') => void;
   isTutorOpen: boolean;
   onToggleTutor: () => void;
-  onOpenAndroidModal: () => void;
   onOpenShortcutsModal: () => void;
   onToggleMobileToolbar: () => void;
 }
@@ -40,7 +38,6 @@ export const Header: React.FC<HeaderProps> = ({
   onViewModeChange,
   isTutorOpen,
   onToggleTutor,
-  onOpenAndroidModal,
   onOpenShortcutsModal,
   onToggleMobileToolbar,
 }) => {
@@ -87,11 +84,8 @@ export const Header: React.FC<HeaderProps> = ({
             </svg>
           </div>
           <div className="flex flex-col">
-            <span className="font-black text-sm md:text-base leading-tight tracking-tight uppercase flex items-center gap-1.5 text-white">
+            <span className="font-black text-sm md:text-base leading-tight tracking-tight uppercase text-white">
               {t.appName}
-              <span className="hidden lg:inline-block text-[9px] uppercase font-extrabold tracking-widest bg-white/10 text-white/90 border border-white/20 px-2 py-0.5 rounded-full">
-                Android Ready
-              </span>
             </span>
             <span className="text-[10px] uppercase tracking-wider font-semibold text-white/50 hidden sm:inline leading-none mt-0.5">
               {t.appSubtitle}
@@ -178,16 +172,6 @@ export const Header: React.FC<HeaderProps> = ({
             </>
           )}
         </div>
-
-        {/* Android Build Button */}
-        <button
-          onClick={onOpenAndroidModal}
-          className="flex items-center gap-1.5 bg-[#06B6D4] hover:bg-[#22D3EE] text-black text-xs font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg shadow-sm transition-colors"
-          title={t.androidPrep}
-        >
-          <Smartphone className="w-3.5 h-3.5 stroke-[2.5]" />
-          <span className="hidden sm:inline">{t.androidPrep}</span>
-        </button>
 
         {/* AI Tutor Toggle */}
         <button
