@@ -32,8 +32,12 @@ interface Snapshot {
 
 const EMPTY: Snapshot = { status: 'ready', vars: [], output: [] };
 
-/** Milliseconds between steps while running — slow enough to follow by eye. */
-const TICK = 550;
+/**
+ * Milliseconds between steps while running. A step can change a variable, add
+ * a line of output and move the highlight on the canvas at once, and a student
+ * reading all three needs longer than it takes to notice that something moved.
+ */
+const TICK = 1100;
 
 /**
  * Drives the interpreter and shows what it is doing.
