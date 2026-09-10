@@ -80,6 +80,8 @@ const KEYWORDS_YES = ['DA', 'YES', 'TRUE', 'THEN', 'JA', 'WAHR', 'DANN'];
 const KEYWORDS_NO = ['NE', 'NO', 'FALSE', 'NEIN', 'FALSCH'];
 const KEYWORDS_ELSE = ['INACE', 'ELSE', 'SONST'];
 export const KEYWORDS_REPEAT = ['PONOVI', 'REPEAT', 'WIEDERHOLE'];
+/** The word that closes a count loop's header, and so marks it as one. */
+export const KEYWORDS_TIMES = ['PUTA', 'TIMES', 'MAL'];
 const KEYWORDS_WHILE_LOOP = ['PONAVLJAJ', 'LOOP'];
 export const KEYWORDS_WHILE_COND = ['DOK', 'WHILE', 'SOLANGE'];
 const KEYWORDS_UNTIL = ['UNTIL', 'BIS'];
@@ -420,7 +422,7 @@ export function parsePseudocode(text: string, lang: Language = 'en'): { statemen
         // PUTA, PONOVI koliko - 1 PUTA — since the number usually comes from
         // the input in anything past the first exercise. The closing word is
         // what makes it a count loop; everything before it is the expression.
-        const isCount = rw.length >= 2 && ['PUTA', 'TIMES', 'MAL'].includes(normWord(rw[rw.length - 1]));
+        const isCount = rw.length >= 2 && KEYWORDS_TIMES.includes(normWord(rw[rw.length - 1]));
         if (isCount) {
           i++;
           const times = rw.slice(0, -1).join(' ');
@@ -1126,7 +1128,26 @@ export function diagramToPseudocode(nodes: FlowNode[], edges: FlowEdge[], lang: 
     return String(node.text || '').replace(/\s*\?\s*$/, '').trim();
   }
 
+  /**
+   * How many times a count loop runs, read off the shape's own label.
+   *
+   * The count is usually worked out rather than written down — `PONOVI n PUTA`
+   * is the whole point of a loop whose length is read in — so the words around
+   * it are stripped instead of hunting for digits. Reading digits was what the
+   * parser had already stopped doing in the other direction, and a loop whose
+   * count was a variable then fell past this test into the ordinary walk,
+   * which followed the arrow back into the body and emitted it until the
+   * guard ran out.
+   */
   function countTimes(node: FlowNode): string | null {
+    const words = String(node.text || '').trim().split(/\s+/).filter(Boolean);
+    const closed = words.length >= 3
+      && KEYWORDS_REPEAT.includes(normWord(words[0]))
+      && KEYWORDS_TIMES.includes(normWord(words[words.length - 1]));
+    if (closed) {
+      const inner = words.slice(1, -1).join(' ').trim();
+      if (inner) return inner;
+    }
     const m = /\d+/.exec(String(node.text || ''));
     return m ? m[0] : null;
   }
@@ -1175,8 +1196,11 @@ export function diagramToPseudocode(nodes: FlowNode[], edges: FlowEdge[], lang: 
       const node = byId[current];
       if (!node) break;
 
-      // Count loop
-      if (node.type === 'loop' && countTimes(node)) {
+      // Count loop. Any loop shape with an arrow back into itself is walked
+      // here whatever its label says: falling through to the ordinary walk
+      // means following that arrow, and the body comes out once per turn of a
+      // loop that has no reason to stop.
+      if (node.type === 'loop') {
         if (chain[current]) {
           lines.push(loopNote);
           break;
@@ -1191,8 +1215,13 @@ export function diagramToPseudocode(nodes: FlowNode[], edges: FlowEdge[], lang: 
         if (backCnt) {
           chain[current] = true;
           const bodyCnt = walk(backCnt.to, current, guardCount, { ...chain, [current]: true });
-          const times = countTimes(node)!;
-          const headStr = lang === 'de'
+          const times = countTimes(node);
+          // A label nobody can read a count out of is written back as it
+          // stands, so the student is shown what they typed rather than a
+          // number the diagram never gave.
+          const headStr = times === null
+            ? String(node.text || '').trim()
+            : lang === 'de'
             ? `WIEDERHOLE ${times} MAL`
             : lang === 'en'
             ? `REPEAT ${times} TIMES`

@@ -201,6 +201,7 @@ npm run check:diagram      # what the diagram checker names in a bad drawing
 npm run check:exercises    # every task in the bank parses, solves and grades
 npm run check:grade        # right, wrong and equivalent-but-different attempts
 npm run check:mutate       # every planted mistake is real, findable and provable
+npm run check:roundtrip    # a diagram read back into pseudocode is still the same algorithm
 npm run check:croatian     # the Croatian variant covers every Bosnian word
 ```
 
