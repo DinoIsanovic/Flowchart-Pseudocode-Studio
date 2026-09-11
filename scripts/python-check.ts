@@ -84,6 +84,26 @@ KRAJ`, 'n = int(input())'],
 UNESI a, b
 ISPIŠI a + b
 KRAJ`, 'a = int(input())\nb = int(input())'],
+  ['tekst poređen s tekstom', `POČETAK
+UNESI ime
+AKO JE ime = "Amina"
+  DA
+    ISPIŠI "Zdravo"
+KRAJ`, 'ime = input()'],
+  ['tekst spojen s tekstom', `POČETAK
+UNESI ime
+RAČUNAJ pozdrav = "Zdravo, " + ime
+ISPIŠI pozdrav
+KRAJ`, 'ime = input()'],
+  ['tekst koji se mjeri', `POČETAK
+UNESI ime
+ISPIŠI len(ime)
+KRAJ`, 'ime = input()'],
+  ['broj zalijepljen na tekst', `POČETAK
+UNESI a
+RAČUNAJ b = a * 2
+ISPIŠI "Dvostruko: " + b
+KRAJ`, 'print("Dvostruko: " + str(b))'],
 ];
 
 for (const [name, code, expected] of reads) {

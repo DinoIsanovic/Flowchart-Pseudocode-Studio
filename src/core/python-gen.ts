@@ -52,6 +52,12 @@ const PY_OP: Record<BinaryOp, string> = {
   '+': '+', '-': '-', '*': '*', '/': '/', '%': '%', '**': '**',
 };
 
+/** Whether an expression is text: a written string, or anything joined to one. */
+function isStringy(e: Expr): boolean {
+  if (e.kind === 'str') return true;
+  return e.kind === 'binary' && e.op === '+' && (isStringy(e.left) || isStringy(e.right));
+}
+
 /**
  * Writes one parsed expression as Python, bracketing a part only where Python
  * would otherwise read it differently. `min`, `max`, `abs`, `round`, `int` and
@@ -84,8 +90,15 @@ function emit(e: Expr, minPrec: number): string {
     case 'binary': {
       const prec = PY_PREC[e.op];
       // `**` is the one that groups to the right; everything else to the left.
-      const left = emit(e.left, e.op === '**' ? prec + 1 : prec);
-      const right = emit(e.right, e.op === '**' ? prec : prec + 1);
+      let left = emit(e.left, e.op === '**' ? prec + 1 : prec);
+      let right = emit(e.right, e.op === '**' ? prec : prec + 1);
+      // `+` joins text to a number here and refuses to in Python, so the side
+      // that is not already text is asked for its text: `"Zbir je " + zbir`
+      // would otherwise raise TypeError on the line the student ran.
+      if (e.op === '+' && isStringy(e)) {
+        if (!isStringy(e.left)) left = `str(${emit(e.left, 0)})`;
+        if (!isStringy(e.right)) right = `str(${emit(e.right, 0)})`;
+      }
       return wrap(prec, `${left} ${PY_OP[e.op]} ${right}`);
     }
   }
@@ -198,69 +211,116 @@ function namesIn(src: string, into: Set<string>): void {
 }
 
 /**
- * The names the program computes with: what a condition tests, what an
- * assignment reads, how many times a count loop runs, and anything a `print`
- * works out rather than simply passes along — `ISPIŠI a + b` is arithmetic,
- * `ISPIŠI ime` is not. A name that only ever travels to the screen proves
- * nothing about what it is.
+ * Names the program treats as text. A name compared with a written string —
+ * `AKO JE ime = "Amina"` — or joined to one — `"Zdravo, " + ime` — is text,
+ * and so is whatever `len` is asked to measure. This is the evidence that
+ * beats the arithmetic kind: `int(input())` would refuse the value outright.
  */
-function computedNames(stmts: Statement[], into = new Set<string>()): Set<string> {
+function textEvidence(e: Expr, into: Set<string>): void {
+  if (e.kind === 'binary') {
+    if (isStringy(e.left)) collectVars(e.right, into);
+    if (isStringy(e.right)) collectVars(e.left, into);
+    textEvidence(e.left, into);
+    textEvidence(e.right, into);
+    return;
+  }
+  if (e.kind === 'unary') {
+    textEvidence(e.operand, into);
+    return;
+  }
+  if (e.kind === 'call') {
+    if (e.name === 'len') e.args.forEach((a) => collectVars(a, into));
+    e.args.forEach((a) => textEvidence(a, into));
+  }
+}
+
+/** What a read value turns out to be, as far as the program gives it away. */
+interface ReadKinds {
+  /**
+   * Names the program computes with: what a condition tests, what an
+   * assignment reads, how many times a count loop runs, and anything a `print`
+   * works out rather than simply passes along — `ISPIŠI a + b` is arithmetic,
+   * `ISPIŠI ime` is not. A name that only ever travels to the screen proves
+   * nothing about what it is.
+   */
+  computed: Set<string>;
+  /** Names something in the program says are text. */
+  text: Set<string>;
+}
+
+/** Reads one expression for both kinds of evidence at once. */
+function noteExpression(src: string, kinds: ReadKinds, computing: boolean): void {
+  const source = (src || '').trim();
+  if (!source) return;
+  try {
+    const parsed = parseExpression(source);
+    if (computing) collectVars(parsed, kinds.computed);
+    textEvidence(parsed, kinds.text);
+  } catch {
+    if (computing) namesIn(source, kinds.computed);
+  }
+}
+
+function readKinds(stmts: Statement[], kinds: ReadKinds = { computed: new Set(), text: new Set() }): ReadKinds {
   stmts.forEach((stmt) => {
     if (stmt.type === 'action') {
       const text = stmt.text ?? '';
       if (stmt.kind === 'postavi' || stmt.kind === 'racunaj') {
         const at = text.indexOf('=');
-        namesIn(at < 1 ? text : text.slice(at + 1), into);
+        noteExpression(at < 1 ? text : text.slice(at + 1), kinds, true);
         return;
       }
       if (stmt.kind === 'ispisi') {
         printList(text).forEach((arg) => {
-          if (arg.kind === 'binary' || arg.kind === 'unary' || arg.kind === 'call') collectVars(arg, into);
+          if (arg.kind === 'binary' || arg.kind === 'unary' || arg.kind === 'call') collectVars(arg, kinds.computed);
+          textEvidence(arg, kinds.text);
         });
       }
       return;
     }
     if (stmt.type === 'if') {
-      namesIn(stmt.cond ?? '', into);
-      computedNames(stmt.thenBlock ?? [], into);
-      computedNames(stmt.elseBlock ?? [], into);
+      noteExpression(stmt.cond ?? '', kinds, true);
+      readKinds(stmt.thenBlock ?? [], kinds);
+      readKinds(stmt.elseBlock ?? [], kinds);
       return;
     }
     if (stmt.type === 'loop') {
-      namesIn(stmt.cond ?? '', into);
-      computedNames(stmt.body ?? [], into);
+      noteExpression(stmt.cond ?? '', kinds, true);
+      readKinds(stmt.body ?? [], kinds);
       return;
     }
     if (stmt.type === 'count_loop') {
-      namesIn(stmt.times ?? '', into);
-      computedNames(stmt.body ?? [], into);
+      noteExpression(stmt.times ?? '', kinds, true);
+      readKinds(stmt.body ?? [], kinds);
     }
   });
-  return into;
+  return kinds;
 }
 
 /**
  * How one `UNESI` line is written in Python. A name the program computes with
  * is read as a whole number, the way a school program is written; a name it
  * only prints — someone's own name, a message — is left as the text it is,
- * because `int()` would refuse it.
+ * because `int()` would refuse it. Where the program says both, text wins:
+ * `int("Amina")` stops the program dead, while a number read as text still
+ * compares and prints.
  *
  * The program does not say whether a number may have a decimal point: nothing
  * in `UNESI a` + `povrsina = a * b` marks `a` as 2.5 rather than 2. Where a
  * task is meant to be run with decimals, its `int` has to become `float` by
  * hand.
  */
-function readCall(name: string, computed: Set<string>): string {
-  return computed.has(name) ? 'int(input())' : 'input()';
+function readCall(name: string, kinds: ReadKinds): string {
+  return kinds.computed.has(name) && !kinds.text.has(name) ? 'int(input())' : 'input()';
 }
 
-function actionLines(stmt: Statement, depth: number, computed: Set<string>, step?: number): PythonLine[] {
+function actionLines(stmt: Statement, depth: number, kinds: ReadKinds, step?: number): PythonLine[] {
   const text = (stmt.text ?? '').trim();
 
   if (stmt.kind === 'unesi') {
     const targets = inputTargets(text);
     if (!targets.length) return [{ text: 'value = input()', depth, step }];
-    return targets.map((v) => ({ text: `${v} = ${readCall(v, computed)}`, depth, step }));
+    return targets.map((v) => ({ text: `${v} = ${readCall(v, kinds)}`, depth, step }));
   }
 
   if (stmt.kind === 'ispisi') {
@@ -281,7 +341,7 @@ function walk(
   depth: number,
   stepOf: Map<Statement, number>,
   lang: Language,
-  computed: Set<string>,
+  kinds: ReadKinds,
   loopDepth = 0
 ): PythonLine[] {
   const out: PythonLine[] = [];
@@ -290,14 +350,14 @@ function walk(
     const step = stepOf.get(stmt);
 
     if (stmt.type === 'action') {
-      out.push(...actionLines(stmt, depth, computed, step));
+      out.push(...actionLines(stmt, depth, kinds, step));
       return;
     }
 
     if (stmt.type === 'if') {
       out.push({ text: `if ${expressionToPython(stmt.cond ?? '')}:`, depth, step });
       const thenBlock = stmt.thenBlock ?? [];
-      out.push(...(thenBlock.length ? walk(thenBlock, depth + 1, stepOf, lang, computed, loopDepth) : [{ text: 'pass', depth: depth + 1 }]));
+      out.push(...(thenBlock.length ? walk(thenBlock, depth + 1, stepOf, lang, kinds, loopDepth) : [{ text: 'pass', depth: depth + 1 }]));
 
       const elseBlock = stmt.elseBlock ?? [];
       if (!elseBlock.length) return;
@@ -306,14 +366,14 @@ function walk(
       // writes as elif rather than a nested block.
       const only = elseBlock.length === 1 ? elseBlock[0] : null;
       if (only && only.type === 'if') {
-        const chained = walk(elseBlock, depth, stepOf, lang, computed, loopDepth);
+        const chained = walk(elseBlock, depth, stepOf, lang, kinds, loopDepth);
         chained[0] = { ...chained[0], text: chained[0].text.replace(/^if /, 'elif ') };
         out.push(...chained);
         return;
       }
 
       out.push({ text: 'else:', depth });
-      out.push(...walk(elseBlock, depth + 1, stepOf, lang, computed, loopDepth));
+      out.push(...walk(elseBlock, depth + 1, stepOf, lang, kinds, loopDepth));
       return;
     }
 
@@ -325,7 +385,7 @@ function walk(
       out.push({ text: `for ${name} in range(${stmt.times ?? '3'}):`, depth, step });
       const body = stmt.body ?? [];
       out.push(...(body.length
-        ? walk(body, depth + 1, stepOf, lang, computed, loopDepth + 1)
+        ? walk(body, depth + 1, stepOf, lang, kinds, loopDepth + 1)
         : [{ text: 'pass', depth: depth + 1 }]));
       return;
     }
@@ -345,7 +405,7 @@ function walk(
       out.push({ text: header, depth, step });
       const body = stmt.body ?? [];
       out.push(...(body.length
-        ? walk(body, depth + 1, stepOf, lang, computed, loopDepth)
+        ? walk(body, depth + 1, stepOf, lang, kinds, loopDepth)
         : [{ text: 'pass', depth: depth + 1 }]));
       return;
     }
@@ -365,7 +425,7 @@ function walk(
  */
 export function statementsToPython(statements: Statement[], lang: Language = 'en'): PythonLine[] {
   const stepOf = assignStepNumbers(statements);
-  const body = walk(statements, 0, stepOf, lang, computedNames(statements));
+  const body = walk(statements, 0, stepOf, lang, readKinds(statements));
   return body.length ? body : [{ text: 'pass', depth: 0 }];
 }
 
