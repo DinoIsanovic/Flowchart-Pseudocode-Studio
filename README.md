@@ -84,15 +84,19 @@ and the canvas highlights it. Requires your own API key (see below).
 
 **Python alongside the diagram.** A `Python` tab beside the pseudocode editor
 generates equivalent Python — `if/elif/else`, `while`, `for i in range(n)` —
-with real indentation rather than a flattened transcript. A program that reads
-gets a small `unesi()` / `read()` / `lies()` helper, spelled the way the
-student's own pseudocode spells the keyword, which returns a whole number, a
-decimal or text as the input warrants: `int(input())` is wrong for a price and
-`float(input())` is wrong for a count that later feeds `range()`. The
+with real indentation rather than a flattened transcript. Nothing is printed
+above the first step: a value the program computes with is read as
+`int(input())` and one it only ever prints stays `input()`, so the file begins
+with the block the diagram begins with. A value meant to be typed with a
+decimal point has to have its `int` changed to `float` by hand — nothing in
+`UNESI a` says whether `a` is 2 or 2.5. The words the pseudocode spells its own
+way are translated by parsing, not by replacing text, so `i` is `and` in
+`a > 1 i b < 2` and stays the counter in `i <= 10`. The
 counter a count loop keeps implicit is given a name in the Python, since seeing
 the variable that does the counting is most of the reason to show the code;
-nested loops take `i`, `j`, `k` in turn, and a name the student already used is
-skipped so the loop cannot overwrite their own variable.
+nested loops take `i`, `j`, `k` in turn, and the name is plain: where the
+program already uses it, the loop takes it over, exactly as `for i in range(n)`
+does in Python.
 
 **Step badges.** Every flowchart node carries a number, and the same number
 marks the line that produced it in the pseudocode and in the Python. Branches
@@ -210,6 +214,7 @@ npm run check:roundtrip    # a diagram read back into pseudocode is still the sa
 npm run check:croatian     # the Croatian variant covers every Bosnian word
 npm run check:layout       # a generated diagram never draws one block on top of another,
                            #   and no connector runs through a block it does not touch
+npm run check:python       # python3 runs every generated program and prints what the simulator does
 ```
 
 No environment variables are needed to run the app. `.env.example` is a

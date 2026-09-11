@@ -4,6 +4,7 @@
  */
 
 import { Language, SourceLang, Statement } from '../types';
+import { BinaryOp, Expr, parseExpression } from './expr';
 import { localize, sourceLang } from '../i18n/croatian';
 import { assignStepNumbers } from './flowchart-gen';
 import { counterName } from './counters';
@@ -31,45 +32,121 @@ const MISSING_COND: Record<SourceLang, string> = {
 };
 
 /**
- * Pseudocode writes equality as a single `=`, which Python reads as
- * assignment. Only conditions go through here; assignments keep their `=`.
+ * Python's precedence for the operators the pseudocode has, loosest first. It
+ * is the same order the expression parser uses, so an expression can be
+ * printed back without its original brackets and still mean what it meant.
  */
-export function conditionToPython(cond: string): string {
-  return (cond || '').replace(/(^|[^=!<>])=(?!=)/g, '$1==').trim();
+const PY_PREC: Record<BinaryOp, number> = {
+  or: 1, and: 2,
+  '=': 4, '<>': 4, '<': 4, '<=': 4, '>': 4, '>=': 4,
+  '+': 5, '-': 5,
+  '*': 6, '/': 6, '%': 6,
+  '**': 8,
+};
+const NOT_PREC = 3;
+const UNARY_PREC = 7;
+
+const PY_OP: Record<BinaryOp, string> = {
+  or: 'or', and: 'and',
+  '=': '==', '<>': '!=', '<': '<', '<=': '<=', '>': '>', '>=': '>=',
+  '+': '+', '-': '-', '*': '*', '/': '/', '%': '%', '**': '**',
+};
+
+/**
+ * Writes one parsed expression as Python, bracketing a part only where Python
+ * would otherwise read it differently. `min`, `max`, `abs`, `round`, `int` and
+ * `len` are named after their Python equivalents already; `sqrt` is the one
+ * that is not, and it becomes `** 0.5` rather than an import the diagram has
+ * no block for.
+ */
+function emit(e: Expr, minPrec: number): string {
+  const wrap = (prec: number, text: string) => (prec < minPrec ? `(${text})` : text);
+
+  switch (e.kind) {
+    case 'num':
+      return String(e.value);
+    case 'str':
+      return JSON.stringify(e.value);
+    case 'bool':
+      return e.value ? 'True' : 'False';
+    case 'var':
+      return e.name;
+    case 'unary':
+      return e.op === 'not'
+        ? wrap(NOT_PREC, `not ${emit(e.operand, NOT_PREC + 1)}`)
+        : wrap(UNARY_PREC, `${e.op}${emit(e.operand, UNARY_PREC)}`);
+    case 'call': {
+      if (e.name === 'sqrt' && e.args.length === 1) {
+        return wrap(PY_PREC['**'], `${emit(e.args[0], PY_PREC['**'] + 1)} ** 0.5`);
+      }
+      return `${e.name}(${e.args.map((a) => emit(a, 0)).join(', ')})`;
+    }
+    case 'binary': {
+      const prec = PY_PREC[e.op];
+      // `**` is the one that groups to the right; everything else to the left.
+      const left = emit(e.left, e.op === '**' ? prec + 1 : prec);
+      const right = emit(e.right, e.op === '**' ? prec : prec + 1);
+      return wrap(prec, `${left} ${PY_OP[e.op]} ${right}`);
+    }
+  }
 }
 
 /**
- * The name of the input helper, spelled the way the student's own pseudocode
- * spells the keyword — all three are words `parsePseudocode` already accepts.
+ * Rewrites one pseudocode expression as Python. The words are what make this
+ * more than a search and replace: `i` is the connective in `a > 1 i b < 2` and
+ * a counter in `i <= 10`, and only a parse tells the two apart. Equality is
+ * written `=` here and `==` there, `<>` is `!=`, and `NIJE`, `TAČNO` and
+ * `NETAČNO` are `not`, `True` and `False`.
+ *
+ * Text the parser cannot read — a half-written line in the editor — is handed
+ * back with the one substitution that is safe on raw text, so the Python
+ * column keeps showing something while the student is still typing.
  */
-const READ_FN: Record<SourceLang, string> = { bs: 'unesi', en: 'read', de: 'lies' };
+export function expressionToPython(src: string): string {
+  const text = (src || '').trim();
+  if (!text) return text;
+  try {
+    return emit(parseExpression(text), 0);
+  } catch {
+    return text.replace(/(^|[^=!<>])=(?!=)/g, '$1==');
+  }
+}
 
 /**
- * `int(input())` is wrong for any exercise whose test values have a decimal
- * point, and `float(input())` is wrong for any count a loop later feeds to
- * `range()`. This helper does what the simulator's `readValue` does: a whole
- * number stays whole, a decimal stays decimal, and anything else stays text.
- * It is emitted only when the program actually reads something.
+ * `ISPIŠI` takes a list of things to print, and a comma inside a string or a
+ * call is not a separator. Reading the list as the arguments of a call is what
+ * splits it correctly; text the parser cannot read prints as it stands.
  */
-function readHelper(lang: Language): PythonLine[] {
-  const base = sourceLang(lang);
-  const fn = READ_FN[base];
-  const note: Record<SourceLang, string> = {
-    bs: '# Pročita jednu vrijednost: cijeli broj, decimalni broj ili tekst.',
-    en: '# Reads one value: a whole number, a decimal number, or text.',
-    de: '# Liest einen Wert: ganze Zahl, Dezimalzahl oder Text.',
-  };
-  const v: Record<SourceLang, string> = { bs: 'tekst', en: 'text', de: 'text' };
-  const t = v[base];
-  return [
-    { text: localize(lang, note[base]), depth: 0 },
-    { text: `def ${fn}():`, depth: 0 },
-    { text: `${t} = input().strip()`, depth: 1 },
-    { text: `if ${t}.lstrip("+-").replace(".", "", 1).isdigit():`, depth: 1 },
-    { text: `return float(${t}) if "." in ${t} else int(${t})`, depth: 2 },
-    { text: `return ${t}`, depth: 1 },
-    { text: '', depth: 0 },
-  ];
+function printList(text: string): Expr[] {
+  const list = (text || '').trim();
+  if (!list) return [];
+  try {
+    const parsed = parseExpression(`print(${list})`);
+    if (parsed.kind === 'call') return parsed.args;
+  } catch {
+    /* an unreadable list has no parts to name */
+  }
+  return [];
+}
+
+function printArgs(text: string): string {
+  const list = (text || '').trim();
+  if (!list) return '';
+  const args = printList(list);
+  return args.length ? args.map((a) => emit(a, 0)).join(', ') : list;
+}
+
+/**
+ * `RAČUNAJ zbir = a + b` names what it writes to, and only the right side is
+ * an expression: the `=` in front of it is Python's assignment, not equality.
+ */
+function assignmentToPython(text: string): string {
+  const at = text.indexOf('=');
+  if (at < 1) return text;
+  const target = text.slice(0, at).trim();
+  const value = text.slice(at + 1);
+  if (!target || /[<>!=]$/.test(target)) return text;
+  return `${target} = ${expressionToPython(value)}`;
 }
 
 /** `unesi a, b` names two variables and needs one input() call per name. */
@@ -80,23 +157,118 @@ function inputTargets(text: string): string[] {
     .filter(Boolean);
 }
 
+/** Every name an expression reads. */
+function collectVars(e: Expr, into: Set<string>): void {
+  switch (e.kind) {
+    case 'var':
+      into.add(e.name);
+      return;
+    case 'unary':
+      collectVars(e.operand, into);
+      return;
+    case 'binary':
+      collectVars(e.left, into);
+      collectVars(e.right, into);
+      return;
+    case 'call':
+      e.args.forEach((a) => collectVars(a, into));
+      return;
+    default:
+  }
+}
 
-function actionLines(stmt: Statement, depth: number, lang: SourceLang, step?: number): PythonLine[] {
+/**
+ * The same, from source. A line the parser trips over — one the student is
+ * still typing — is scanned for words instead, so its names still count.
+ */
+function namesIn(src: string, into: Set<string>): void {
+  const text = (src || '').trim();
+  if (!text) return;
+  try {
+    collectVars(parseExpression(text), into);
+  } catch {
+    text
+      .replace(/"[^"]*"/g, ' ')
+      .replace(/'[^']*'/g, ' ')
+      .split(/[^\p{L}\p{N}_]+/u)
+      .forEach((w) => {
+        if (w && !/^\d/.test(w)) into.add(w);
+      });
+  }
+}
+
+/**
+ * The names the program computes with: what a condition tests, what an
+ * assignment reads, how many times a count loop runs, and anything a `print`
+ * works out rather than simply passes along — `ISPIŠI a + b` is arithmetic,
+ * `ISPIŠI ime` is not. A name that only ever travels to the screen proves
+ * nothing about what it is.
+ */
+function computedNames(stmts: Statement[], into = new Set<string>()): Set<string> {
+  stmts.forEach((stmt) => {
+    if (stmt.type === 'action') {
+      const text = stmt.text ?? '';
+      if (stmt.kind === 'postavi' || stmt.kind === 'racunaj') {
+        const at = text.indexOf('=');
+        namesIn(at < 1 ? text : text.slice(at + 1), into);
+        return;
+      }
+      if (stmt.kind === 'ispisi') {
+        printList(text).forEach((arg) => {
+          if (arg.kind === 'binary' || arg.kind === 'unary' || arg.kind === 'call') collectVars(arg, into);
+        });
+      }
+      return;
+    }
+    if (stmt.type === 'if') {
+      namesIn(stmt.cond ?? '', into);
+      computedNames(stmt.thenBlock ?? [], into);
+      computedNames(stmt.elseBlock ?? [], into);
+      return;
+    }
+    if (stmt.type === 'loop') {
+      namesIn(stmt.cond ?? '', into);
+      computedNames(stmt.body ?? [], into);
+      return;
+    }
+    if (stmt.type === 'count_loop') {
+      namesIn(stmt.times ?? '', into);
+      computedNames(stmt.body ?? [], into);
+    }
+  });
+  return into;
+}
+
+/**
+ * How one `UNESI` line is written in Python. A name the program computes with
+ * is read as a whole number, the way a school program is written; a name it
+ * only prints — someone's own name, a message — is left as the text it is,
+ * because `int()` would refuse it.
+ *
+ * The program does not say whether a number may have a decimal point: nothing
+ * in `UNESI a` + `povrsina = a * b` marks `a` as 2.5 rather than 2. Where a
+ * task is meant to be run with decimals, its `int` has to become `float` by
+ * hand.
+ */
+function readCall(name: string, computed: Set<string>): string {
+  return computed.has(name) ? 'int(input())' : 'input()';
+}
+
+function actionLines(stmt: Statement, depth: number, computed: Set<string>, step?: number): PythonLine[] {
   const text = (stmt.text ?? '').trim();
 
   if (stmt.kind === 'unesi') {
-    const fn = READ_FN[lang];
     const targets = inputTargets(text);
-    if (!targets.length) return [{ text: `value = ${fn}()`, depth, step }];
-    return targets.map((v) => ({ text: `${v} = ${fn}()`, depth, step }));
+    if (!targets.length) return [{ text: 'value = input()', depth, step }];
+    return targets.map((v) => ({ text: `${v} = ${readCall(v, computed)}`, depth, step }));
   }
 
   if (stmt.kind === 'ispisi') {
-    return [{ text: `print(${text})`, depth, step }];
+    return [{ text: `print(${printArgs(text)})`, depth, step }];
   }
 
   if (stmt.kind === 'postavi' || stmt.kind === 'racunaj') {
-    return [{ text, depth, step }];
+    return [{ text: assignmentToPython(text), depth, step }];
   }
 
   // A line the parser could not classify: keep it visible but inert, so the
@@ -109,6 +281,7 @@ function walk(
   depth: number,
   stepOf: Map<Statement, number>,
   lang: Language,
+  computed: Set<string>,
   loopDepth = 0
 ): PythonLine[] {
   const out: PythonLine[] = [];
@@ -117,14 +290,14 @@ function walk(
     const step = stepOf.get(stmt);
 
     if (stmt.type === 'action') {
-      out.push(...actionLines(stmt, depth, sourceLang(lang), step));
+      out.push(...actionLines(stmt, depth, computed, step));
       return;
     }
 
     if (stmt.type === 'if') {
-      out.push({ text: `if ${conditionToPython(stmt.cond ?? '')}:`, depth, step });
+      out.push({ text: `if ${expressionToPython(stmt.cond ?? '')}:`, depth, step });
       const thenBlock = stmt.thenBlock ?? [];
-      out.push(...(thenBlock.length ? walk(thenBlock, depth + 1, stepOf, lang, loopDepth) : [{ text: 'pass', depth: depth + 1 }]));
+      out.push(...(thenBlock.length ? walk(thenBlock, depth + 1, stepOf, lang, computed, loopDepth) : [{ text: 'pass', depth: depth + 1 }]));
 
       const elseBlock = stmt.elseBlock ?? [];
       if (!elseBlock.length) return;
@@ -133,14 +306,14 @@ function walk(
       // writes as elif rather than a nested block.
       const only = elseBlock.length === 1 ? elseBlock[0] : null;
       if (only && only.type === 'if') {
-        const chained = walk(elseBlock, depth, stepOf, lang, loopDepth);
+        const chained = walk(elseBlock, depth, stepOf, lang, computed, loopDepth);
         chained[0] = { ...chained[0], text: chained[0].text.replace(/^if /, 'elif ') };
         out.push(...chained);
         return;
       }
 
       out.push({ text: 'else:', depth });
-      out.push(...walk(elseBlock, depth + 1, stepOf, lang, loopDepth));
+      out.push(...walk(elseBlock, depth + 1, stepOf, lang, computed, loopDepth));
       return;
     }
 
@@ -152,7 +325,7 @@ function walk(
       out.push({ text: `for ${name} in range(${stmt.times ?? '3'}):`, depth, step });
       const body = stmt.body ?? [];
       out.push(...(body.length
-        ? walk(body, depth + 1, stepOf, lang, loopDepth + 1)
+        ? walk(body, depth + 1, stepOf, lang, computed, loopDepth + 1)
         : [{ text: 'pass', depth: depth + 1 }]));
       return;
     }
@@ -163,7 +336,7 @@ function walk(
       // negating the condition rather than by moving the test to the bottom.
       // A bare REPEAT with no closing WHILE/UNTIL line parses to an empty
       // condition without raising an error, which would emit `while :`.
-      const cond = conditionToPython(stmt.cond ?? '');
+      const cond = expressionToPython(stmt.cond ?? '');
       const header = !cond
         ? `while True:  # ${localize(lang, MISSING_COND[sourceLang(lang)])}`
         : stmt.until
@@ -172,7 +345,7 @@ function walk(
       out.push({ text: header, depth, step });
       const body = stmt.body ?? [];
       out.push(...(body.length
-        ? walk(body, depth + 1, stepOf, lang, loopDepth)
+        ? walk(body, depth + 1, stepOf, lang, computed, loopDepth)
         : [{ text: 'pass', depth: depth + 1 }]));
       return;
     }
@@ -186,23 +359,14 @@ function walk(
  * badge of the flowchart node it belongs to, so the export can print the three
  * columns side by side without relying on them lining up geometrically.
  *
- * `helper: false` leaves the input helper out. The tab in the editor is code to
- * copy and run, so it needs the definition; a printed sheet is a comparison
- * between the drawing and the program, and there the six lines are the only
- * thing on it that answers to no block of the diagram — they carry no badge,
- * and they push the program the student is meant to read off the top of the
- * column. The workbook leaves them out of every solution for the same reason.
+ * Nothing is emitted above the program: every line answers to a block of the
+ * diagram and carries its badge, so the tab in the editor, the printed sheet
+ * and the drawing all start at the same step.
  */
-export function statementsToPython(
-  statements: Statement[],
-  lang: Language = 'en',
-  { helper = true }: { helper?: boolean } = {}
-): PythonLine[] {
+export function statementsToPython(statements: Statement[], lang: Language = 'en'): PythonLine[] {
   const stepOf = assignStepNumbers(statements);
-  const body = walk(statements, 0, stepOf, lang);
-  if (!body.length) return [{ text: 'pass', depth: 0 }];
-  const reads = helper && body.some((l) => l.text.endsWith(`= ${READ_FN[sourceLang(lang)]}()`));
-  return reads ? [...readHelper(lang), ...body] : body;
+  const body = walk(statements, 0, stepOf, lang, computedNames(statements));
+  return body.length ? body : [{ text: 'pass', depth: 0 }];
 }
 
 /** Flattens the generated lines into a Python source file. */

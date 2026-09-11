@@ -979,11 +979,7 @@ export default function App() {
     // node carries the correspondence instead.
     const pseudoLines = pseudocode.split(/\r?\n/);
     const stepByLine = stepsByPseudocodeLine(pseudocode, language);
-    const pyLines = statementsToPython(
-      parsePseudocode(pseudocode, language).statements,
-      language,
-      { helper: false }
-    );
+    const pyLines = statementsToPython(parsePseudocode(pseudocode, language).statements, language);
     const hasColumns = pseudoLines.some((l) => l.trim().length > 0);
 
     const COL_GAP = 48;
