@@ -785,6 +785,27 @@ export function buildFlowchart(statements: Statement[], lang: Language = 'en'): 
       }
 
       const elseWord = stmt.elseWord ?? 'no';
+      const branchHeight = Math.max(thenR ? thenR.height : 0, elseR ? elseR.height : 0);
+      const totalHeight = DECISION_H + (branchHeight > 0 ? GAP + branchHeight : 0);
+
+      /**
+       * The last block of a branch hands over to whatever follows the whole
+       * decision. Drawn as a straight line it leaves sideways at that block's
+       * own height and crosses the other branch on the way; it drops into the
+       * empty band under the decision instead — the band the sequence leaves
+       * between two statements — and reaches the middle there, the way a
+       * loop's exit walks its own lane. Each exit gets waypoints of its own,
+       * so moving one line in the app leaves the others where they are.
+       */
+      const joinY = y + totalHeight + GAP / 2;
+      const joinLane = (ex: { id: string; label?: string; elseWord?: string; waypoints?: Waypoint[] }) => ({
+        ...ex,
+        waypoints: (ex.waypoints ?? []).concat([
+          { axis: 'y' as const, v: joinY },
+          { axis: 'x' as const, v: cx },
+        ]),
+      });
+
       let allNodes = [decision];
       let allEdges: FlowEdge[] = [];
       let exits: { id: string; label?: string; elseWord?: string; waypoints?: Waypoint[] }[] = [];
@@ -793,7 +814,7 @@ export function buildFlowchart(statements: Statement[], lang: Language = 'en'): 
         allNodes = allNodes.concat(thenR.nodes);
         allEdges = allEdges.concat(thenR.edges);
         allEdges.push({ id: newEdgeId(), from: decision.id, to: thenR.entryId!, label: yesLabel });
-        exits = exits.concat(thenR.exits);
+        exits = exits.concat(thenR.exits.map(joinLane));
       } else {
         exits.push({ id: decision.id, label: yesLabel });
       }
@@ -802,13 +823,11 @@ export function buildFlowchart(statements: Statement[], lang: Language = 'en'): 
         allNodes = allNodes.concat(elseR.nodes);
         allEdges = allEdges.concat(elseR.edges);
         allEdges.push({ id: newEdgeId(), from: decision.id, to: elseR.entryId!, label: elseLabel, elseWord });
-        exits = exits.concat(elseR.exits);
+        exits = exits.concat(elseR.exits.map(joinLane));
       } else {
         exits.push({ id: decision.id, label: elseLabel, elseWord });
       }
 
-      const branchHeight = Math.max(thenR ? thenR.height : 0, elseR ? elseR.height : 0);
-      const totalHeight = DECISION_H + (branchHeight > 0 ? GAP + branchHeight : 0);
       let ifMinX = cx - DECISION_W / 2;
       let ifMaxX = cx + DECISION_W / 2;
       [thenR, elseR].forEach((r) => {

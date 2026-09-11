@@ -208,7 +208,8 @@ npm run check:mutate       # every planted mistake is real, findable and provabl
 npm run check:roundtrip    # a diagram read back into pseudocode is still the same algorithm,
                            #   including one drawn by hand rather than generated
 npm run check:croatian     # the Croatian variant covers every Bosnian word
-npm run check:layout       # a generated diagram never draws one block on top of another
+npm run check:layout       # a generated diagram never draws one block on top of another,
+                           #   and no connector runs through a block it does not touch
 ```
 
 No environment variables are needed to run the app. `.env.example` is a

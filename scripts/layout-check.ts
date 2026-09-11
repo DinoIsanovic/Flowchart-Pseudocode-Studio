@@ -13,15 +13,20 @@
  * (`grananje-najveci`, both `najveci = c` and `najveci = b` at 600,685), so
  * one of the two was invisible on the canvas.
  *
+ * The lines are measured too: a connector that runs straight through a block
+ * it has nothing to do with is just as unreadable, which is what the handover
+ * from a branch to whatever follows the decision used to do — it left
+ * sideways at its own height and crossed the other branch.
+ *
  * Every authored solution is drawn in every language, together with the app's
- * own templates and a few deliberately deep nests, and every pair of blocks is
- * measured.
+ * own templates and a few deliberately deep nests; every pair of blocks is
+ * measured, and every line against every block it does not touch.
  */
 
-import { FlowNode, Language } from '../src/types';
+import { FlowEdge, FlowNode, Language } from '../src/types';
 import { TaskPack } from '../src/exercises/types';
 import { solutionText } from '../src/exercises/render';
-import { buildFlowchart, parsePseudocode } from '../src/core/flowchart-gen';
+import { buildFlowchart, orthogonalRoute, parsePseudocode } from '../src/core/flowchart-gen';
 import { TEMPLATE_CODE } from '../src/i18n/keywords';
 import linijska from '../src/exercises/linijska.json';
 import grananje from '../src/exercises/grananje.json';
@@ -48,6 +53,42 @@ function overlaps(nodes: FlowNode[]): [FlowNode, FlowNode][] {
   return hits;
 }
 
+/**
+ * Lines that run through a block that is neither their source nor their
+ * target. The box is shrunk a little first: a line is allowed to graze a
+ * corner, and the check routes with the plain side points while the canvas
+ * meets the drawn outline of a diamond.
+ */
+function crossings(nodes: FlowNode[], edges: FlowEdge[]): string[] {
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const INSET = 8;
+  const hits: string[] = [];
+
+  for (const e of edges) {
+    const a = byId.get(e.from);
+    const b = byId.get(e.to);
+    if (!a || !b) continue;
+    const pts = orthogonalRoute(a, b, e.waypoints);
+
+    for (let i = 0; i + 1 < pts.length; i++) {
+      const p = pts[i];
+      const q = pts[i + 1];
+      const segMinX = Math.min(p.x, q.x), segMaxX = Math.max(p.x, q.x);
+      const segMinY = Math.min(p.y, q.y), segMaxY = Math.max(p.y, q.y);
+
+      for (const n of nodes) {
+        if (n.id === a.id || n.id === b.id) continue;
+        const l = n.x - n.w / 2 + INSET, r = n.x + n.w / 2 - INSET;
+        const t = n.y - n.h / 2 + INSET, bt = n.y + n.h / 2 - INSET;
+        if (segMaxX > l && segMinX < r && segMaxY > t && segMinY < bt) {
+          hits.push(`"${a.text}" → "${b.text}" prolazi kroz "${n.text}"`);
+        }
+      }
+    }
+  }
+  return hits;
+}
+
 function check(name: string, code: string, lang: Language) {
   const { statements, errors } = parsePseudocode(code, lang);
   if (errors.length) {
@@ -55,17 +96,24 @@ function check(name: string, code: string, lang: Language) {
     console.log(`FAIL  ${name} [${lang}] — ne parsira: ${errors[0].message}`);
     return;
   }
-  const { nodes } = buildFlowchart(statements, lang);
+  const { nodes, edges } = buildFlowchart(statements, lang);
   const hits = overlaps(nodes);
-  if (!hits.length) {
+  const crossed = crossings(nodes, edges);
+  if (!hits.length && !crossed.length) {
     pass++;
     return;
   }
   fail++;
-  console.log(`FAIL  ${name} [${lang}] — blokovi se preklapaju:`);
-  hits.forEach(([a, b]) =>
-    console.log(`        "${a.text}" (${a.x},${a.y}) × "${b.text}" (${b.x},${b.y})`)
-  );
+  if (hits.length) {
+    console.log(`FAIL  ${name} [${lang}] — blokovi se preklapaju:`);
+    hits.forEach(([a, b]) =>
+      console.log(`        "${a.text}" (${a.x},${a.y}) × "${b.text}" (${b.x},${b.y})`)
+    );
+  }
+  if (crossed.length) {
+    console.log(`FAIL  ${name} [${lang}] — veza prolazi kroz blok:`);
+    [...new Set(crossed)].forEach((h) => console.log(`        ${h}`));
+  }
 }
 
 for (const pack of PACKS) {
