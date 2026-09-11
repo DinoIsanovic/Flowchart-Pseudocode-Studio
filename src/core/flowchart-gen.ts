@@ -487,6 +487,8 @@ const START_W = 170, START_H = 74;
 const DECISION_W = 210, DECISION_H = 120;
 const COUNT_W = 230, COUNT_H = 92;
 const BRANCH_GAP_X = 260;
+/** Clear space kept between what hangs under the two branches of a decision. */
+const BRANCH_MIN_GAP = 70;
 const LOOP_LANE_GAP = 62;
 const LOOP_TAIL = 36;
 
@@ -533,6 +535,38 @@ interface LayoutResult {
   height: number;
   minX: number;
   maxX: number;
+}
+
+/**
+ * Moves a finished sub-layout sideways, lanes and all, so a branch can be laid
+ * out first and placed afterwards, once its real width is known.
+ *
+ * Waypoints are shared objects — `exitEdge` puts the same ones in `waypoints`
+ * and `baseWaypoints`, and an exit keeps them after its edge is built — so
+ * each one is moved exactly once.
+ */
+function shiftLayout(r: LayoutResult, dx: number): LayoutResult {
+  if (!dx) return r;
+  const moved = new Set<Waypoint>();
+  const moveWps = (wps?: Waypoint[]) => {
+    wps?.forEach((wp) => {
+      if (wp.axis !== 'x' || moved.has(wp)) return;
+      moved.add(wp);
+      wp.v += dx;
+    });
+  };
+
+  r.nodes.forEach((n) => {
+    n.x += dx;
+  });
+  r.edges.forEach((e) => {
+    moveWps(e.waypoints);
+    moveWps(e.baseWaypoints);
+  });
+  r.exits.forEach((ex) => moveWps(ex.waypoints));
+  r.minX += dx;
+  r.maxX += dx;
+  return r;
 }
 
 /**
@@ -737,6 +771,18 @@ export function buildFlowchart(statements: Statement[], lang: Language = 'en'): 
       const elseX = cx + BRANCH_GAP_X;
       const thenR = stmt.thenBlock && stmt.thenBlock.length ? layoutSequence(stmt.thenBlock, thenX, branchY) : null;
       const elseR = stmt.elseBlock && stmt.elseBlock.length ? layoutSequence(stmt.elseBlock, elseX, branchY) : null;
+
+      // Two branches that grew wider than the step between them — a decision
+      // inside a branch — are pushed apart evenly, so the decision stays in
+      // the middle of what hangs below it.
+      if (thenR && elseR) {
+        const overlap = thenR.maxX + BRANCH_MIN_GAP - elseR.minX;
+        if (overlap > 0) {
+          const push = Math.ceil(overlap / 2);
+          shiftLayout(thenR, -push);
+          shiftLayout(elseR, push);
+        }
+      }
 
       const elseWord = stmt.elseWord ?? 'no';
       let allNodes = [decision];

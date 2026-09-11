@@ -17,7 +17,8 @@
     "check:grade": "tsx scripts/grade-check.ts",
     "check:mutate": "tsx scripts/mutate-check.ts",
     "check:roundtrip": "tsx scripts/roundtrip-check.ts",
-    "check:croatian": "tsx scripts/croatian-check.ts"
+    "check:croatian": "tsx scripts/croatian-check.ts",
+    "check:layout": "tsx scripts/layout-check.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
