@@ -145,7 +145,9 @@ for (const pack of packs) {
       if (traced.rows.some((row) => !row.answer)) fail(task, 'red tabele bez odgovora');
     }
 
-    const real = new Set(tiles(task, 'bs'));
+    // The tiles are objects; comparing a rendered line against the set itself
+    // never matched, so this said nothing for as long as it has been here.
+    const real = new Set(tiles(task, 'bs').map((tile) => tile.text));
     for (const d of task.distractors ?? []) {
       if (real.has(renderKeywords(d, 'bs'))) fail(task, `distraktor je zapravo tačna kockica: ${d}`);
     }
