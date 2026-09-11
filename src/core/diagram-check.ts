@@ -8,10 +8,12 @@ import { localize, sourceLang } from '../i18n/croatian';
 import {
   COMMENT_TYPE,
   KEYWORDS_END,
+  KEYWORDS_CALC,
   KEYWORDS_IF,
   KEYWORDS_INPUT,
   KEYWORDS_OUTPUT,
   KEYWORDS_REPEAT,
+  KEYWORDS_SET,
   KEYWORDS_START,
   isFlowNode,
   normLabel,
@@ -84,6 +86,7 @@ function shapeFromText(node: FlowNode): ShapeType | null {
 
   if (KEYWORDS_START.includes(w) || KEYWORDS_END.includes(w)) return 'start_end';
   if (KEYWORDS_INPUT.includes(w) || KEYWORDS_OUTPUT.includes(w)) return 'io';
+  if (KEYWORDS_SET.includes(w) || KEYWORDS_CALC.includes(w)) return 'process';
   if (KEYWORDS_IF.includes(w)) return 'decision';
   if (KEYWORDS_REPEAT.includes(w)) return 'loop';
   // The generator writes a condition as "a > b ?", which is the diamond.

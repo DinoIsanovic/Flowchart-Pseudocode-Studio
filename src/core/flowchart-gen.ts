@@ -73,8 +73,8 @@ export const KEYWORDS_START = ['POCETAK', 'START', 'BEGIN', 'BEGINN'];
 export const KEYWORDS_END = ['KRAJ', 'END', 'ENDE'];
 export const KEYWORDS_INPUT = ['UNESI', 'INPUT', 'READ', 'EINGABE', 'LIES'];
 export const KEYWORDS_OUTPUT = ['ISPISI', 'OUTPUT', 'PRINT', 'WRITE', 'AUSGABE', 'SCHREIBE', 'ZEIGE'];
-const KEYWORDS_SET = ['POSTAVI', 'SET', 'LET', 'SETZE'];
-const KEYWORDS_CALC = ['RACUNAJ', 'CALCULATE', 'COMPUTE', 'BERECHNE'];
+export const KEYWORDS_SET = ['POSTAVI', 'SET', 'LET', 'SETZE'];
+export const KEYWORDS_CALC = ['RACUNAJ', 'CALCULATE', 'COMPUTE', 'BERECHNE'];
 export const KEYWORDS_IF = ['AKO', 'IF', 'WENN'];
 const KEYWORDS_YES = ['DA', 'YES', 'TRUE', 'THEN', 'JA', 'WAHR', 'DANN'];
 const KEYWORDS_NO = ['NE', 'NO', 'FALSE', 'NEIN', 'FALSCH'];
@@ -516,6 +516,50 @@ function getLocalizedNo(lang: Language): string {
   return 'ne';
 }
 
+/** Splits `zbir = a + b` in two; null when the text assigns nothing. */
+function assignmentParts(text: string): { target: string; value: string } | null {
+  const eq = text.indexOf('=');
+  if (eq < 1 || '<>!='.includes(text[eq - 1]) || text[eq + 1] === '=') return null;
+  const target = text.slice(0, eq).trim();
+  const value = text.slice(eq + 1).trim();
+  return target && value ? { target, value } : null;
+}
+
+/** A number, a piece of text, or one variable's value — nothing to work out. */
+const PLAIN_VALUE = /^(?:[+-]?\d+(?:\.\d+)?|[\p{L}_][\p{L}\p{N}_]*|"[^"]*"|'[^']*')$/u;
+
+/**
+ * Which of the two words a rectangle carries.
+ *
+ * POSTAVI and RAČUNAJ draw the same block, and what separates them is what
+ * stands on the right of the `=`: a value that is simply put into a variable
+ * — `a = 5`, `a = najveći`, `ime = "Ana"` — is POSTAVI, and one that has to be
+ * worked out first — `a = b + c`, `a = 3 + 5` — is RAČUNAJ. The word follows
+ * the expression rather than whichever of the two the student happened to
+ * type, so the block, the pseudocode read back off it and the pseudocode it
+ * was drawn from all name the same thing the same way.
+ *
+ * Null where the rectangle holds no assignment at all, which is text the
+ * generator leaves exactly as it found it.
+ */
+export function processWord(text: string, lang: Language): string | null {
+  const parts = assignmentParts((text || '').trim());
+  if (!parts) return null;
+  return PLAIN_VALUE.test(parts.value)
+    ? (lang === 'de' ? 'setze' : lang === 'en' ? 'set' : 'postavi')
+    : (lang === 'de' ? 'berechne' : lang === 'en' ? 'calculate' : 'računaj');
+}
+
+/** The same rectangle's text with a word it already carries taken off. */
+export function stripProcessWord(text: string): string {
+  const trimmed = (text || '').trim();
+  const at = trimmed.search(/\s/);
+  if (at < 0) return trimmed;
+  const first = normWord(trimmed.slice(0, at));
+  if (!KEYWORDS_SET.includes(first) && !KEYWORDS_CALC.includes(first)) return trimmed;
+  return trimmed.slice(at + 1).trim();
+}
+
 function formatActionLabel(stmt: Statement, lang: Language): string {
   const txt = stmt.text ?? '';
   if (stmt.kind === 'unesi') {
@@ -524,7 +568,8 @@ function formatActionLabel(stmt: Statement, lang: Language): string {
   if (stmt.kind === 'ispisi') {
     return lang === 'de' ? `ausgabe ${txt}` : lang === 'en' ? `output ${txt}` : `ispiši ${txt}`;
   }
-  return txt;
+  const word = processWord(txt, lang);
+  return word ? `${word} ${txt}` : txt;
 }
 
 interface LayoutResult {
@@ -1232,16 +1277,12 @@ export function diagramToPseudocode(nodes: FlowNode[], edges: FlowEdge[], lang: 
       return lang === 'de' ? `AUSGABE ${text}` : lang === 'en' ? `OUTPUT ${text}` : `ISPIŠI ${text}`;
     }
     if (node.type === 'process') {
-      const eq = text.indexOf('=');
-      if (eq !== -1) {
-        const rhs = text.slice(eq + 1).trim();
-        const simple = /^[\w.]+$/.test(rhs);
-        if (simple) {
-          return lang === 'de' ? `SETZE ${text}` : lang === 'en' ? `SET ${text}` : `POSTAVI ${text}`;
-        }
-        return lang === 'de' ? `BERECHNE ${text}` : lang === 'en' ? `CALCULATE ${text}` : `RAČUNAJ ${text}`;
-      }
-      return text;
+      // The block may already carry one of the two words, from the generator
+      // or from the student's own hand; it is taken off and asked again, so
+      // `RAČUNAJ a = 5` comes back as `POSTAVI a = 5` rather than doubled.
+      const bare = stripProcessWord(text);
+      const word = processWord(bare, lang);
+      return word ? `${word.toUpperCase()} ${bare}` : bare;
     }
     return text;
   }

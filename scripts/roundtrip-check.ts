@@ -126,8 +126,52 @@ for (const pack of PACKS) {
   }
 }
 
+// --- which word the rectangle carries --------------------------------------
+
+/**
+ * POSTAVI and RAČUNAJ are one block, and the word follows what stands on the
+ * right of the `=`: a value that is simply put into a variable against one
+ * that has to be worked out. The block says it, and reading the block back
+ * says the same — including when the student typed the other word.
+ */
+const words: [Language, string, string, string][] = [
+  ['bs', 'POSTAVI a = 5', 'postavi a = 5', 'POSTAVI a = 5'],
+  ['bs', 'RAČUNAJ a = 5', 'postavi a = 5', 'POSTAVI a = 5'],
+  ['bs', 'POSTAVI a = najveći', 'postavi a = najveći', 'POSTAVI a = najveći'],
+  ['bs', 'POSTAVI ime = "Ana"', 'postavi ime = "Ana"', 'POSTAVI ime = "Ana"'],
+  ['bs', 'POSTAVI a = -5', 'postavi a = -5', 'POSTAVI a = -5'],
+  ['bs', 'POSTAVI a = b + c', 'računaj a = b + c', 'RAČUNAJ a = b + c'],
+  ['bs', 'RAČUNAJ a = 3 + 5', 'računaj a = 3 + 5', 'RAČUNAJ a = 3 + 5'],
+  ['bs', 'RAČUNAJ d = int(n / 10)', 'računaj d = int(n / 10)', 'RAČUNAJ d = int(n / 10)'],
+  ['en', 'SET a = 5', 'set a = 5', 'SET a = 5'],
+  ['en', 'SET total = a + b', 'calculate total = a + b', 'CALCULATE total = a + b'],
+  ['de', 'BERECHNE a = 5', 'setze a = 5', 'SETZE a = 5'],
+  ['de', 'SETZE summe = a + b', 'berechne summe = a + b', 'BERECHNE summe = a + b'],
+];
+
+for (const [lang, line, block, back] of words) {
+  const start = lang === 'bs' ? 'POČETAK' : 'START';
+  const end = lang === 'de' ? 'ENDE' : lang === 'bs' ? 'KRAJ' : 'END';
+  const { statements, errors } = parsePseudocode(`${start}\n${line}\n${end}`, lang);
+  if (errors.length) {
+    fail++;
+    console.log(`FAIL  ${line} [${lang}] — ne parsira: ${errors[0].message}`);
+    continue;
+  }
+  const built = buildFlowchart(statements, lang);
+  const drawn = built.nodes.find((n: FlowNode) => n.type === 'process')?.text ?? '';
+  const read = diagramToPseudocode(built.nodes, built.edges, lang).split('\n')[1]?.trim() ?? '';
+  if (drawn === block && read === back) {
+    pass++;
+  } else {
+    fail++;
+    console.log(`FAIL  ${line} [${lang}] — blok "${drawn}" (očekivano "${block}"), nazad "${read}" (očekivano "${back}")`);
+  }
+}
+
 const tasks = PACKS.reduce((n, p) => n + p.tasks.length, 0);
 console.log(`\n${tasks} zadataka × ${LANGS.length} jezika kroz dijagram i nazad`);
 console.log(`${drawable} zadataka nudi „nacrtaj sam" — provjereni i bez oznaka koje crtež nema`);
+console.log(`${words.length} pravougaonika provjereno na riječ koju nose`);
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
