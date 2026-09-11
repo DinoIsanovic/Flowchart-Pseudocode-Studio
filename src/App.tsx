@@ -1365,7 +1365,10 @@ export default function App() {
         setEdges(loaded.edges || []);
         setFontSize(loaded.fontSize || 18);
         setPseudocode(loaded.pseudocode || '');
-        if (loaded.language && (loaded.language === 'en' || loaded.language === 'de' || loaded.language === 'bs')) {
+        // Croatian was missing here while the file happily saved it, so a
+        // project written in Croatian came back in whatever language the app
+        // happened to be in.
+        if (loaded.language === 'en' || loaded.language === 'de' || loaded.language === 'bs' || loaded.language === 'hr') {
           setLanguage(loaded.language);
         }
         bumpUidPast(loaded.nodes, loaded.edges || []);
