@@ -87,10 +87,12 @@ and the canvas highlights it. Requires your own API key (see below).
 generates equivalent Python — `if/elif/else`, `while`, `for i in range(n)` —
 with real indentation rather than a flattened transcript. Nothing is printed
 above the first step: a value the program computes with is read as
-`int(input())` and one it only ever prints stays `input()`, so the file begins
-with the block the diagram begins with. A value meant to be typed with a
-decimal point has to have its `int` changed to `float` by hand — nothing in
-`UNESI a` says whether `a` is 2 or 2.5. The words the pseudocode spells its own
+`int(input())` and one it only ever prints, is compared with a written string
+or is measured with `len` stays `input()`, so the file begins with the block
+the diagram begins with. Nothing in `UNESI a` says whether `a` is 2 or 2.5, so
+the simulator settles it: run the program once and each reading line is
+rewritten as `int(input())`, `float(input())` or `input()` for what was
+actually typed, with a line above the code saying so. The words the pseudocode spells its own
 way are translated by parsing, not by replacing text, so `i` is `and` in
 `a > 1 i b < 2` and stays the counter in `i <= 10`. The
 counter a count loop keeps implicit is given a name in the Python, since seeing

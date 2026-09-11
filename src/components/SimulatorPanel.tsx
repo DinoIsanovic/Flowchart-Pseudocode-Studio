@@ -10,12 +10,19 @@ import { translations } from '../i18n/translations';
 import { parsePseudocode } from '../core/flowchart-gen';
 import { Interpreter, StepResult, describeRunError } from '../core/interpreter';
 import { formatValue } from '../core/expr';
+import type { ObservedReads } from '../core/python-gen';
 
 interface SimulatorPanelProps {
   language: Language;
   pseudocode: string;
   /** Step badge of the node being executed, so the canvas can highlight it. */
   onActiveStep: (step: number | null) => void;
+  /**
+   * What the student typed at each UNESI, handed up so the Python tab can
+   * write `int(input())`, `float(input())` or `input()` for the real thing
+   * instead of guessing from the program's shape.
+   */
+  onReadKinds: (kinds: ObservedReads) => void;
 }
 
 interface Snapshot {
@@ -48,7 +55,12 @@ const TICK = 1100;
  * folded away until asked for, so the diagram keeps the full screen — the
  * bottom navigation is only 56px away and there is nothing to spare.
  */
-export const SimulatorPanel: React.FC<SimulatorPanelProps> = ({ language, pseudocode, onActiveStep }) => {
+export const SimulatorPanel: React.FC<SimulatorPanelProps> = ({
+  language,
+  pseudocode,
+  onActiveStep,
+  onReadKinds,
+}) => {
   const t = translations[language].sim;
   const machineRef = useRef<Interpreter | null>(null);
   const [snapshot, setSnapshot] = useState<Snapshot>(EMPTY);
@@ -60,6 +72,8 @@ export const SimulatorPanel: React.FC<SimulatorPanelProps> = ({ language, pseudo
   // value arrives, so the student types and watches instead of typing and
   // then hunting for the play button again.
   const resumeAfterInput = useRef(false);
+  /** What was last handed up, so an unchanged run says nothing. */
+  const lastKinds = useRef('');
 
   const sync = useCallback(
     (result: StepResult) => {
@@ -76,8 +90,15 @@ export const SimulatorPanel: React.FC<SimulatorPanelProps> = ({ language, pseudo
         errorLine: result.error?.line,
       });
       onActiveStep(result.step ?? null);
+      // Only when it actually changed: a fresh map every tick would have the
+      // Python tab regenerate itself on each step of the run.
+      const kinds = [...machine.readKinds].map(([n, k]) => `${n}:${k}`).join(',');
+      if (kinds !== lastKinds.current) {
+        lastKinds.current = kinds;
+        onReadKinds(new Map(machine.readKinds));
+      }
     },
-    [language, onActiveStep]
+    [language, onActiveStep, onReadKinds]
   );
 
   // Editing the pseudocode invalidates the run: the statements it was stepping
@@ -89,7 +110,11 @@ export const SimulatorPanel: React.FC<SimulatorPanelProps> = ({ language, pseudo
     setPlaying(false);
     setDraft('');
     onActiveStep(null);
-  }, [pseudocode, language, onActiveStep]);
+    // A different program has different inputs; what the last one was typed
+    // with says nothing about this one.
+    lastKinds.current = '';
+    onReadKinds(new Map());
+  }, [pseudocode, language, onActiveStep, onReadKinds]);
 
   const stepOnce = useCallback(() => {
     const machine = machineRef.current;

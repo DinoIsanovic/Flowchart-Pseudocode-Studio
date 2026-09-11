@@ -5,6 +5,7 @@
 
 import { Language, SourceLang, Statement } from '../types';
 import { BinaryOp, Expr, parseExpression } from './expr';
+import type { ReadKind } from './interpreter';
 import { localize, sourceLang } from '../i18n/croatian';
 import { assignStepNumbers } from './flowchart-gen';
 import { counterName } from './counters';
@@ -310,17 +311,22 @@ function readKinds(stmts: Statement[], kinds: ReadKinds = { computed: new Set(),
  * task is meant to be run with decimals, its `int` has to become `float` by
  * hand.
  */
-function readCall(name: string, kinds: ReadKinds): string {
+/** What the simulator saw the student type, by variable name. */
+export type ObservedReads = ReadonlyMap<string, ReadKind>;
+
+function readCall(name: string, kinds: ReadKinds, observed?: ObservedReads): string {
+  const seen = observed?.get(name);
+  if (seen) return seen === 'tekst' ? 'input()' : seen === 'decimalni' ? 'float(input())' : 'int(input())';
   return kinds.computed.has(name) && !kinds.text.has(name) ? 'int(input())' : 'input()';
 }
 
-function actionLines(stmt: Statement, depth: number, kinds: ReadKinds, step?: number): PythonLine[] {
+function actionLines(stmt: Statement, depth: number, kinds: ReadKinds, observed: ObservedReads | undefined, step?: number): PythonLine[] {
   const text = (stmt.text ?? '').trim();
 
   if (stmt.kind === 'unesi') {
     const targets = inputTargets(text);
     if (!targets.length) return [{ text: 'value = input()', depth, step }];
-    return targets.map((v) => ({ text: `${v} = ${readCall(v, kinds)}`, depth, step }));
+    return targets.map((v) => ({ text: `${v} = ${readCall(v, kinds, observed)}`, depth, step }));
   }
 
   if (stmt.kind === 'ispisi') {
@@ -342,6 +348,7 @@ function walk(
   stepOf: Map<Statement, number>,
   lang: Language,
   kinds: ReadKinds,
+  observed: ObservedReads | undefined,
   loopDepth = 0
 ): PythonLine[] {
   const out: PythonLine[] = [];
@@ -350,14 +357,14 @@ function walk(
     const step = stepOf.get(stmt);
 
     if (stmt.type === 'action') {
-      out.push(...actionLines(stmt, depth, kinds, step));
+      out.push(...actionLines(stmt, depth, kinds, observed, step));
       return;
     }
 
     if (stmt.type === 'if') {
       out.push({ text: `if ${expressionToPython(stmt.cond ?? '')}:`, depth, step });
       const thenBlock = stmt.thenBlock ?? [];
-      out.push(...(thenBlock.length ? walk(thenBlock, depth + 1, stepOf, lang, kinds, loopDepth) : [{ text: 'pass', depth: depth + 1 }]));
+      out.push(...(thenBlock.length ? walk(thenBlock, depth + 1, stepOf, lang, kinds, observed, loopDepth) : [{ text: 'pass', depth: depth + 1 }]));
 
       const elseBlock = stmt.elseBlock ?? [];
       if (!elseBlock.length) return;
@@ -366,14 +373,14 @@ function walk(
       // writes as elif rather than a nested block.
       const only = elseBlock.length === 1 ? elseBlock[0] : null;
       if (only && only.type === 'if') {
-        const chained = walk(elseBlock, depth, stepOf, lang, kinds, loopDepth);
+        const chained = walk(elseBlock, depth, stepOf, lang, kinds, observed, loopDepth);
         chained[0] = { ...chained[0], text: chained[0].text.replace(/^if /, 'elif ') };
         out.push(...chained);
         return;
       }
 
       out.push({ text: 'else:', depth });
-      out.push(...walk(elseBlock, depth + 1, stepOf, lang, kinds, loopDepth));
+      out.push(...walk(elseBlock, depth + 1, stepOf, lang, kinds, observed, loopDepth));
       return;
     }
 
@@ -385,7 +392,7 @@ function walk(
       out.push({ text: `for ${name} in range(${stmt.times ?? '3'}):`, depth, step });
       const body = stmt.body ?? [];
       out.push(...(body.length
-        ? walk(body, depth + 1, stepOf, lang, kinds, loopDepth + 1)
+        ? walk(body, depth + 1, stepOf, lang, kinds, observed, loopDepth + 1)
         : [{ text: 'pass', depth: depth + 1 }]));
       return;
     }
@@ -405,7 +412,7 @@ function walk(
       out.push({ text: header, depth, step });
       const body = stmt.body ?? [];
       out.push(...(body.length
-        ? walk(body, depth + 1, stepOf, lang, kinds, loopDepth)
+        ? walk(body, depth + 1, stepOf, lang, kinds, observed, loopDepth)
         : [{ text: 'pass', depth: depth + 1 }]));
       return;
     }
@@ -422,10 +429,19 @@ function walk(
  * Nothing is emitted above the program: every line answers to a block of the
  * diagram and carries its badge, so the tab in the editor, the printed sheet
  * and the drawing all start at the same step.
+ *
+ * `observed` is what the simulator watched the student type, and it settles
+ * the one question the program text cannot answer — whether a number has a
+ * decimal point. Where it has nothing to say, the shape of the program decides
+ * as before.
  */
-export function statementsToPython(statements: Statement[], lang: Language = 'en'): PythonLine[] {
+export function statementsToPython(
+  statements: Statement[],
+  lang: Language = 'en',
+  observed?: ObservedReads
+): PythonLine[] {
   const stepOf = assignStepNumbers(statements);
-  const body = walk(statements, 0, stepOf, lang, readKinds(statements));
+  const body = walk(statements, 0, stepOf, lang, readKinds(statements), observed);
   return body.length ? body : [{ text: 'pass', depth: 0 }];
 }
 

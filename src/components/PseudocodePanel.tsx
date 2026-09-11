@@ -10,6 +10,7 @@ import { translations } from '../i18n/translations';
 import { AUTOCOMPLETE_KEYWORDS, KeywordItem } from '../i18n/keywords';
 import { normWord, parsePseudocode } from '../core/flowchart-gen';
 import { statementsToPython, pythonSource } from '../core/python-gen';
+import type { ObservedReads } from '../core/python-gen';
 
 interface PseudocodePanelProps {
   language: Language;
@@ -18,6 +19,8 @@ interface PseudocodePanelProps {
   onGenerateDiagram: () => void;
   onGeneratePseudocode: () => void;
   errors: ParseError[];
+  /** What the simulator saw typed at each UNESI; empty before the first run. */
+  observedReads?: ObservedReads;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -29,6 +32,7 @@ export const PseudocodePanel: React.FC<PseudocodePanelProps> = ({
   onGenerateDiagram,
   onGeneratePseudocode,
   errors,
+  observedReads,
   isOpen,
   onClose,
 }) => {
@@ -41,8 +45,8 @@ export const PseudocodePanel: React.FC<PseudocodePanelProps> = ({
   // the code the student is looking at. The step badges come from the same
   // walk the flowchart uses, so the numbers line up across all three views.
   const pythonLines = useMemo(
-    () => statementsToPython(parsePseudocode(code, language).statements, language),
-    [code, language]
+    () => statementsToPython(parsePseudocode(code, language).statements, language, observedReads),
+    [code, language, observedReads]
   );
 
   const copyPython = () => {
@@ -382,6 +386,18 @@ export const PseudocodePanel: React.FC<PseudocodePanelProps> = ({
 
       {tab === 'python' && (
         <div className="relative flex-1 min-h-0 bg-[#050505] overflow-auto font-mono text-[13px] leading-[21px] p-3">
+          {/* The program cannot say whether a value is whole, decimal or text;
+              once the simulator has seen one typed, the reading line says so
+              rather than guessing, and the student is told why it changed. */}
+          {!!observedReads?.size && (
+            <div className="mb-2 px-2 py-1 rounded border border-[#06B6D4]/25 bg-[#06B6D4]/5 text-[11px] leading-snug text-[#06B6D4]/80 whitespace-normal">
+              {language === 'en'
+                ? 'The input lines follow what was typed in the simulator.'
+                : language === 'de'
+                ? 'Die Eingabezeilen folgen dem, was im Simulator getippt wurde.'
+                : 'Redovi za unos prate ono što je ukucano u simulaciji.'}
+            </div>
+          )}
           {pythonLines.map((line, i) => (
             <div key={i} className="flex gap-3 whitespace-pre">
               <span className="w-5 shrink-0 text-right text-[#06B6D4]/70 select-none">

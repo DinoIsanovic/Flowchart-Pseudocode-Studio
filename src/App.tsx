@@ -17,6 +17,7 @@ import {
   stepsByPseudocodeLine,
 } from './core/flowchart-gen';
 import { statementsToPython } from './core/python-gen';
+import type { ObservedReads } from './core/python-gen';
 import { newShape } from './core/new-node';
 import { save } from '@tauri-apps/plugin-dialog';
 import { writeFile } from '@tauri-apps/plugin-fs';
@@ -193,6 +194,9 @@ export default function App() {
   // than a node id so the panel never has to know about the canvas, and the
   // setter stays stable — a changing callback would restart the run.
   const [simStep, setSimStep] = useState<number | null>(null);
+  // What the simulator watched the student type at each UNESI. The Python tab
+  // reads it instead of guessing whether a value is whole, decimal or text.
+  const [observedReads, setObservedReads] = useState<ObservedReads>(() => new Map());
   const lastSimStep = useRef<number | null>(null);
 
   // UI Panels & Modals
@@ -979,7 +983,11 @@ export default function App() {
     // node carries the correspondence instead.
     const pseudoLines = pseudocode.split(/\r?\n/);
     const stepByLine = stepsByPseudocodeLine(pseudocode, language);
-    const pyLines = statementsToPython(parsePseudocode(pseudocode, language).statements, language);
+    const pyLines = statementsToPython(
+      parsePseudocode(pseudocode, language).statements,
+      language,
+      observedReads
+    );
     const hasColumns = pseudoLines.some((l) => l.trim().length > 0);
 
     const COL_GAP = 48;
@@ -1497,7 +1505,12 @@ export default function App() {
               snapGuides={snapGuides}
               onClearSnapGuides={() => setSnapGuides(null)}
             />
-            <SimulatorPanel language={language} pseudocode={pseudocode} onActiveStep={setSimStep} />
+            <SimulatorPanel
+              language={language}
+              pseudocode={pseudocode}
+              onActiveStep={setSimStep}
+              onReadKinds={setObservedReads}
+            />
           </div>
         )}
 
@@ -1513,6 +1526,7 @@ export default function App() {
             onGenerateDiagram={handleGenerateDiagram}
             onGeneratePseudocode={handleGeneratePseudocode}
             errors={parseErrors}
+            observedReads={observedReads}
             isOpen={true}
             onClose={() => setViewMode('canvas')}
           />

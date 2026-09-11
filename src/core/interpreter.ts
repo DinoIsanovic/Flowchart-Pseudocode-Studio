@@ -77,6 +77,8 @@ interface Ctx {
   output: string[];
   /** Printed values with the words around them left out; see `printedValues`. */
   values: string[];
+  /** What each name read with UNESI turned out to hold; see `readKinds`. */
+  kinds: Map<string, ReadKind>;
   stepOf: Map<Statement, number>;
   count: number;
   /** Statement currently executing, so a thrown error can name its line. */
@@ -194,6 +196,30 @@ function splitAssignment(text: string): { target: string; expr: string } | null 
 const NAME = /^[A-Za-z_À-ɏ][A-Za-z0-9_À-ɏ]*$/;
 
 /**
+ * What a value read with UNESI turned out to be. The pseudocode never says —
+ * `UNESI a` followed by `povrsina = a * b` is the same line whether the
+ * student types 2 or 2.5 — so running the program is the only place the app
+ * ever finds out, and the Python tab asks this rather than guessing.
+ */
+export type ReadKind = 'cijeli' | 'decimalni' | 'tekst';
+
+function kindOf(v: Value): ReadKind {
+  if (typeof v !== 'number') return 'tekst';
+  return Number.isInteger(v) ? 'cijeli' : 'decimalni';
+}
+
+/**
+ * Keeps the widest answer a name has given across runs: text covers what no
+ * number can hold, and a decimal covers a whole number. Narrowing back would
+ * make a program that ran once stop running on the next input.
+ */
+function widen(seen: ReadKind | undefined, now: ReadKind): ReadKind {
+  if (seen === 'tekst' || now === 'tekst') return 'tekst';
+  if (seen === 'decimalni' || now === 'decimalni') return 'decimalni';
+  return 'cijeli';
+}
+
+/**
  * Typed the way the generated Python types it: `int(input())` there, a number
  * here whenever the student typed one, and text otherwise so a name still
  * works in the simulator.
@@ -233,7 +259,9 @@ function* runStatement(stmt: Statement, ctx: Ctx, loopDepth: number): Generator<
         if (!NAME.test(name)) throw new RunSignal('bad-target', name);
         // Pauses here; `provideInput` hands the typed text back in.
         const raw = yield { ...here, awaiting: name };
-        ctx.vars.set(name, readValue(raw));
+        const value = readValue(raw);
+        ctx.kinds.set(name, widen(ctx.kinds.get(name), kindOf(value)));
+        ctx.vars.set(name, value);
         ctx.at = stmt;
         yield { ...here, changed: name };
       }
@@ -341,6 +369,7 @@ export class Interpreter {
       vars: new Map<string, Value>(),
       output: [],
       values: [],
+      kinds: new Map<string, ReadKind>(),
       stepOf: assignStepNumbers(this.statements),
       count: 0,
       at: null,
@@ -367,13 +396,26 @@ export class Interpreter {
     return this.ctx.values;
   }
 
+  /**
+   * What each name read with UNESI held this run — the one thing the program
+   * text cannot say. The Python tab reads it to write `int(input())`,
+   * `float(input())` or `input()` for what the student actually typed.
+   */
+  get readKinds(): ReadonlyMap<string, ReadKind> {
+    return this.ctx.kinds;
+  }
+
   /** Statements executed so far, for a "still running?" readout. */
   get executed(): number {
     return this.ctx.count;
   }
 
   reset(): void {
+    // What the inputs turned out to be belongs to the program, not to one
+    // run: pressing reset must not send the Python tab back to guessing.
+    const kinds = this.ctx.kinds;
     this.ctx = this.freshCtx();
+    this.ctx.kinds = kinds;
     this.gen = runBlock(this.statements, this.ctx, 0);
     this.pending = null;
     this.status = 'ready';

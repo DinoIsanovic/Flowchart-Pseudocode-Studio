@@ -30,7 +30,7 @@ import { TaskPack } from '../src/exercises/types';
 import { solutionText } from '../src/exercises/render';
 import { parsePseudocode } from '../src/core/flowchart-gen';
 import { statementsToPython, pythonSource } from '../src/core/python-gen';
-import { Interpreter } from '../src/core/interpreter';
+import { Interpreter, ReadKind } from '../src/core/interpreter';
 import { TEMPLATE_CODE } from '../src/i18n/keywords';
 import linijska from '../src/exercises/linijska.json';
 import grananje from '../src/exercises/grananje.json';
@@ -113,6 +113,42 @@ for (const [name, code, expected] of reads) {
   } else {
     fail++;
     console.log(`FAIL  ${name} — nema "${expected.replace(/\n/g, ' / ')}":\n${src}`);
+  }
+}
+
+// --- what the simulator saw beats what the program looks like --------------
+
+{
+  const code = `POČETAK
+UNESI a
+RAČUNAJ p = a * 2
+ISPIŠI p
+KRAJ`;
+  const { statements } = parsePseudocode(code, 'bs');
+
+  const seen: [string, ReadKind, string][] = [
+    ['decimalni unos', 'decimalni', 'a = float(input())'],
+    ['cijeli unos', 'cijeli', 'a = int(input())'],
+    ['tekst', 'tekst', 'a = input()'],
+  ];
+
+  for (const [name, kind, expected] of seen) {
+    const src = pythonSource(statementsToPython(statements, 'bs', new Map([['a', kind]])));
+    if (src.startsWith(expected)) {
+      pass++;
+    } else {
+      fail++;
+      console.log(`FAIL  ${name} — očekivano "${expected}":\n${src}`);
+    }
+  }
+
+  // Nothing seen yet: the shape of the program still decides.
+  const guessed = pythonSource(statementsToPython(statements, 'bs'));
+  if (guessed.startsWith('a = int(input())')) {
+    pass++;
+  } else {
+    fail++;
+    console.log(`FAIL  bez simulacije se ne pogađa po programu:\n${guessed}`);
   }
 }
 

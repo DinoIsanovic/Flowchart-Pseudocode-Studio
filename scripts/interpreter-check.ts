@@ -356,6 +356,45 @@ KRAJ`, 'bs');
   }
 }
 
+// --- what a read value turned out to be ------------------------------------
+
+{
+  const { statements } = parsePseudocode(`POČETAK
+UNESI a, ime
+ISPIŠI a, ime
+KRAJ`, 'bs');
+
+  const kindsFor = (inputs: string[], m = new Interpreter(statements)) => {
+    m.runToEnd(inputs);
+    return m;
+  };
+
+  const whole = kindsFor(['5', 'Amina']);
+  if (whole.readKinds.get('a') === 'cijeli' && whole.readKinds.get('ime') === 'tekst') pass++;
+  else {
+    fail++;
+    console.log(`FAIL  vrste unosa: ${JSON.stringify([...whole.readKinds])}`);
+  }
+
+  // A second run with a decimal widens what the first run saw, and reset does
+  // not throw the answer away — the Python tab would go back to guessing.
+  whole.reset();
+  whole.runToEnd(['2.5', 'Tarik']);
+  if (whole.readKinds.get('a') === 'decimalni') pass++;
+  else {
+    fail++;
+    console.log(`FAIL  decimalni unos ne prevlada: ${JSON.stringify([...whole.readKinds])}`);
+  }
+
+  whole.reset();
+  whole.runToEnd(['7', 'Tarik']);
+  if (whole.readKinds.get('a') === 'decimalni') pass++;
+  else {
+    fail++;
+    console.log(`FAIL  cijeli unos suzio vrstu nazad: ${JSON.stringify([...whole.readKinds])}`);
+  }
+}
+
 // --- agreement with the generated Python -----------------------------------
 
 {
