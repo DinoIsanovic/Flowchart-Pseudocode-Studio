@@ -8,9 +8,10 @@ It is a teaching tool rather than a diagram editor: it runs the algorithm a
 step at a time, sets thirty-five graded exercises across three topics, and
 prints them as worksheets.
 
-Built as an offline-capable PWA, so it installs on a phone or a school laptop
-and keeps working without a network connection. Windows and Linux builds are on
-the [releases page](https://github.com/DinoIsanovic/Flowchart-Pseudocode-Studio/releases/latest).
+Built as an offline-capable PWA: one visit fills the cache and it keeps working
+without a network connection, on a phone or a school laptop. The browser's own
+menu installs it as an app for anyone who wants the icon. Windows and Linux
+builds are on the [releases page](https://github.com/DinoIsanovic/Flowchart-Pseudocode-Studio/releases/latest).
 
 > Original concept: Dino Isanović
 
@@ -125,7 +126,7 @@ Plus JSON project save/load, and debounced autosave to `localStorage` so a
 refresh doesn't lose work.
 
 **Mobile and PWA.** Touch gestures (pinch-zoom, one-finger pan, drag shapes), a
-mobile nav bar, and an install prompt.
+mobile nav bar, and a service worker that caches the app on first visit.
 
 ## Pseudocode language
 
@@ -331,7 +332,6 @@ src/
     translations.ts       UI strings (en / de / bs)
     croatian.ts           the Bosnian-to-Croatian word map every string with
                           prose in it is read through
-  hooks/usePWAInstall.ts  beforeinstallprompt handling
 ```
 
 ## Tech stack

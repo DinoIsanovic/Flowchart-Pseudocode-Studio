@@ -10,7 +10,6 @@ import {
   Minimize,
   GraduationCap,
   Keyboard,
-  Download,
   Globe,
   Menu,
   FileCode,
@@ -18,7 +17,6 @@ import {
 } from 'lucide-react';
 import { Language } from '../types';
 import { translations } from '../i18n/translations';
-import { usePWAInstall } from '../hooks/usePWAInstall';
 
 interface HeaderProps {
   language: Language;
@@ -42,7 +40,6 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleMobileToolbar,
 }) => {
   const t = translations[language];
-  const { isInstallable, install } = usePWAInstall();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
 
@@ -195,18 +192,6 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <Keyboard className="w-4 h-4" />
         </button>
-
-        {/* Install PWA Prompt (if available) */}
-        {isInstallable && (
-          <button
-            onClick={install}
-            className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg shadow transition-colors animate-pulse"
-            title={t.installBtn}
-          >
-            <Download className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span className="hidden lg:inline">{t.installBtn}</span>
-          </button>
-        )}
 
         {/* Fullscreen Toggle */}
         <button

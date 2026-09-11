@@ -78,7 +78,6 @@ export interface Translations {
   viewPseudoOnly: string;
   tutorBtn: string;
   shortcutsBtn: string;
-  installBtn: string;
   fullscreen: string;
 
   // Pseudocode Panel
@@ -273,7 +272,6 @@ const SOURCE: Record<SourceLang, Translations> = {
     viewPseudoOnly: 'Code Only',
     tutorBtn: '🎓 AI Tutor',
     shortcutsBtn: '⌨️ Shortcuts',
-    installBtn: '📲 Install App',
     fullscreen: '⛶ Fullscreen',
 
     pseudocodeHeader: 'Pseudocode',
@@ -467,7 +465,6 @@ const SOURCE: Record<SourceLang, Translations> = {
     viewPseudoOnly: 'Nur Code',
     tutorBtn: '🎓 KI-Tutor',
     shortcutsBtn: '⌨️ Tastenkombinationen',
-    installBtn: '📲 App installieren',
     fullscreen: '⛶ Vollbild',
 
     pseudocodeHeader: 'Pseudocode',
@@ -661,7 +658,6 @@ const SOURCE: Record<SourceLang, Translations> = {
     viewPseudoOnly: 'Samo kod',
     tutorBtn: '🎓 AI Tutor',
     shortcutsBtn: '⌨️ Prečice',
-    installBtn: '📲 Instaliraj aplikaciju',
     fullscreen: '⛶ Preko cijelog ekrana',
 
     pseudocodeHeader: 'Pseudokod',
