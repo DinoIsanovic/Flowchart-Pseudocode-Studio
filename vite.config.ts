@@ -1,5 +1,6 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import { readFileSync } from 'node:fs';
 import path from 'path';
 import {defineConfig} from 'vite';
 import {VitePWA} from 'vite-plugin-pwa';
@@ -8,6 +9,14 @@ import {VitePWA} from 'vite-plugin-pwa';
 // served over http, so a service worker cannot register there — shipping one
 // only adds a failed registration and dead files to the bundle.
 const isTauri = !!process.env.TAURI_ENV_PLATFORM;
+
+// The version the toolbar prints, read from the one place it is bumped. An app
+// that does not say which build it is cannot be told apart from an older one
+// still installed beside it, which is exactly how a button removed in 0.15.0
+// went on being reported as present.
+const { version } = JSON.parse(readFileSync(path.resolve(__dirname, 'package.json'), 'utf8')) as {
+  version: string;
+};
 
 export default defineConfig(() => {
   return {
@@ -55,6 +64,9 @@ export default defineConfig(() => {
         },
       }),
     ].filter(Boolean),
+    define: {
+      __APP_VERSION__: JSON.stringify(version),
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

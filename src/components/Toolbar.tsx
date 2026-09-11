@@ -555,6 +555,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         {/* Author Credit */}
         <div className="mt-auto pt-4 border-t border-white/10 text-[10px] leading-tight text-white/40">
           {t.authorCredit}<br />
+          <span className="font-mono">v{__APP_VERSION__}</span><br />
           <a
             href="mailto:sekcijainfor@gmail.com"
             className="text-white/70 hover:underline font-mono"
