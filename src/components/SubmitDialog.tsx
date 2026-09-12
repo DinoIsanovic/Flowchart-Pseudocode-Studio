@@ -291,9 +291,6 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
                 />
               </label>
             )}
-            <div className="mt-2 text-[10px] font-black uppercase tracking-widest text-[#67E8F9]">
-              {t.code} {submission.sum}
-            </div>
           </div>
 
           {/* Who */}
@@ -415,7 +412,7 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
           {outcome?.state === 'recorded' && (
             <p className="flex items-center gap-1.5 text-[12px] text-[#86EFAC]">
               <Check className="w-4 h-4 shrink-0" />
-              {t.recorded} <span className="font-mono text-white/60">{submission.sum}</span>
+              {t.recorded}
             </p>
           )}
           {outcome?.state === 'refused' && (

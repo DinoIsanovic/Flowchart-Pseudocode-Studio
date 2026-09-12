@@ -149,6 +149,17 @@ function submissionFor(task: Task, type: string, lang: Language, correct: boolea
   ok('šifra učenika putuje', parseSubmissions(text).found[0].student.code === 'M4K7');
   ok('zamijenjena šifra se vidi', !intact({ ...sub, student: { ...sub.student, code: 'X9Z1' } }));
 
+  // A code copied off a slip of paper is the same code in either case, with a
+  // stray space or without: three honest attempts, not three students.
+  const typed = (code: string, at: string) =>
+    submissionText(buildSubmission({
+      app: '0.21.1', lang: 'bs', student: { ...STUDENT, code },
+      task: { id: task.id, topic: task.topic, type: 'samostalno', title: 'zadatak' },
+      answer: { code: solutionText(task, 'bs') }, at,
+    }));
+  const sameHand = parseSubmissions([typed('k1', '2026-09-12T10:00Z'), typed('K1 ', '2026-09-12T10:05Z'), typed(' k1', '2026-09-12T10:09Z')].join('\n'));
+  ok('ista šifra u drugom slovu je ista šifra', sameHand.found.length === 1, `${sameHand.found.length} predaje`);
+
   // An answer edited after the fact no longer adds up.
   const tampered = { ...sub, answer: { code: 'POČETAK\nKRAJ' } };
   ok('prepravljen odgovor se vidi', !intact(tampered));

@@ -174,7 +174,6 @@ export interface Translations {
     number: string;
     workTitle: string;
     workTitlePlaceholder: string;
-    code: string;
     copyAndOpen: string;
     copyOnly: string;
     saveFile: string;
@@ -433,7 +432,6 @@ const SOURCE: Record<SourceLang, Translations> = {
       number: 'No. in register',
       workTitle: 'What is this?',
       workTitlePlaceholder: 'e.g. Task 3 from the board',
-      code: 'check code',
       copyAndOpen: 'Copy and open the form',
       copyOnly: 'Copy only',
       saveFile: 'Save as a file',
@@ -697,7 +695,6 @@ const SOURCE: Record<SourceLang, Translations> = {
       number: 'Nr. im Klassenbuch',
       workTitle: 'Worum geht es?',
       workTitlePlaceholder: 'z. B. Aufgabe 3 von der Tafel',
-      code: 'Prüfcode',
       copyAndOpen: 'Kopieren und Formular öffnen',
       copyOnly: 'Nur kopieren',
       saveFile: 'Als Datei speichern',
@@ -961,7 +958,6 @@ const SOURCE: Record<SourceLang, Translations> = {
       number: 'Broj u dnevniku',
       workTitle: 'Šta je ovo?',
       workTitlePlaceholder: 'npr. Zadatak 3 s table',
-      code: 'kontrolni kod',
       copyAndOpen: 'Kopiraj i otvori formu',
       copyOnly: 'Samo kopiraj',
       saveFile: 'Sačuvaj kao datoteku',

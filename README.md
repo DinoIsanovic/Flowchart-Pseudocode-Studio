@@ -157,7 +157,10 @@ and the answer in whatever shape that exercise produces one — a program, a
 drawing, the values of a state table, the line a student pointed at. It also
 carries four characters of checksum, which is not a signature and cannot be
 one: it catches a paste that lost its tail, the failure that otherwise reads as
-a wrong answer.
+a wrong answer. The student is never shown it — it is the app's business, and
+the only code they should be thinking about is the one their teacher gave
+them — but the teacher's list checks every submission against its own and says
+so when they disagree.
 
 `Submissions` is the other half. The teacher copies the column out of the
 spreadsheet — or the whole sheet, timestamps and all — pastes it in, and gets
