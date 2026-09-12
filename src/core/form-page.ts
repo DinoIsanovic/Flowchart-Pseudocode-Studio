@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { FormField, FORM_FIELDS, FIELD_WORDS } from './form-link';
-import { normWord } from './flowchart-gen';
+import { FormField, FIELD_WORDS, fieldOfWord } from './form-link';
 
 /**
  * Reads a published Google form and works out its boxes by itself.
@@ -41,12 +40,7 @@ export const PARAGRAPH = 1;
  * without a teacher having to name their boxes the way we would.
  */
 export function fieldOfTitle(title: string): FormField | null {
-  const word = normWord(title).replace(/[^A-Z0-9]/g, '');
-  if (!word) return null;
-  for (const field of FORM_FIELDS) {
-    if (FIELD_WORDS[field].some((w) => word === w || word.startsWith(w))) return field;
-  }
-  return null;
+  return fieldOfWord(title, true);
 }
 
 /**

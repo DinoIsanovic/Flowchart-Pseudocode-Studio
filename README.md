@@ -118,7 +118,9 @@ rather than a step.
 The teacher makes one form for the whole class and all year — first name, last
 name, class, and a long-answer box — fills each box with the word for it
 (`IME`/`FIRST`, `PREZIME`/`LAST`, `ODJELJENJE`/`CLASS`, `ZADATAK`/`TASK`,
-`ŠIFRA`/`PIN` for each pupil's own code, and `KOD`/`CODE` for the check code), copies its own pre-filled link and
+`KOD`/`ŠIFRA`/`CODE` for each pupil's own code, and `KOD ZADATKA`/`TASK CODE`
+for the check code — a box called simply "Kod" is the one the teacher hands
+out, since that is what a teacher means by it), copies its own pre-filled link and
 pastes it into the app once. The task box has to be the long-answer kind; a
 short one is where an answer gets cut.
 

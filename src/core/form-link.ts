@@ -41,11 +41,14 @@ export const FIELD_WORDS: Record<FormField, string[]> = {
   number: ['BROJ', 'NUMBER', 'NUMMER'],
   payload: ['ZADATAK', 'ODGOVOR', 'TASK', 'ANSWER', 'AUFGABE', 'ANTWORT'],
   // The code the teacher gave this one student, so a name typed by somebody
-  // else stands out in the column beside it.
-  pupil: ['SIFRA', 'SIFRAUCENIKA', 'KODUCENIKA', 'PIN', 'LOZINKA', 'PUPILCODE', 'SCHUELERCODE'],
-  // A column of its own for the check code: four characters a teacher can sort
-  // and compare at a glance, even where the answer itself was pasted by hand.
-  code: ['KOD', 'KODZADATKA', 'KONTROLNIKOD', 'CODE', 'TASKCODE', 'CHECKCODE', 'PRUEFCODE'],
+  // else stands out in the column beside it. A box called simply „Kod" is this
+  // one: it is the code a teacher hands out and sorts by, and the other is
+  // worked out by the app and named accordingly.
+  pupil: ['SIFRA', 'KOD', 'SIFRAUCENIKA', 'KODUCENIKA', 'PIN', 'LOZINKA', 'CODE', 'PUPILCODE', 'SCHUELERCODE'],
+  // The check code, which the app computes over the answer. Worth a column
+  // only where a teacher wants to eye it beside the work; nothing depends on
+  // it being there, since the app recomputes it from the text itself.
+  code: ['KODZADATKA', 'KONTROLNIKOD', 'KONTROLNI', 'TASKCODE', 'CHECKCODE', 'PRUEFCODE'],
 };
 
 export interface FormLink {
@@ -65,13 +68,29 @@ export interface FormLinkResult {
   missing: FormField[];
 }
 
-function fieldOf(value: string): FormField | null {
+/**
+ * The field a word names.
+ *
+ * Whole words are matched before beginnings, which is what keeps „Kod" and
+ * „Kod zadatka" apart: the first is the student's own code and the second is
+ * the one the app works out, and a rule that only looked at beginnings would
+ * read them as the same box.
+ */
+export function fieldOfWord(value: string, prefixes = false): FormField | null {
   const word = normWord(value).replace(/[^A-Z0-9]/g, '');
   if (!word) return null;
   for (const field of FORM_FIELDS) {
     if (FIELD_WORDS[field].includes(word)) return field;
   }
+  if (!prefixes) return null;
+  for (const field of FORM_FIELDS) {
+    if (FIELD_WORDS[field].some((w) => word.startsWith(w))) return field;
+  }
   return null;
+}
+
+function fieldOf(value: string): FormField | null {
+  return fieldOfWord(value);
 }
 
 /** Reads a prefilled link and works out which parameter is which box. */

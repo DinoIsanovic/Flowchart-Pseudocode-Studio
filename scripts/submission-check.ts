@@ -209,7 +209,7 @@ for (const pack of PACKS) {
   // Two boxes whose names both begin with „kod": only the order of the fields
   // keeps the student's code and the check code apart.
   const both = parseFormLink(
-    'https://docs.google.com/forms/d/e/A/viewform?entry.7=Kod ucenika&entry.8=Kod zadatka'
+    'https://docs.google.com/forms/d/e/A/viewform?entry.7=Kod&entry.8=Kod zadatka'
   ).link;
   ok('šifra i kontrolni kod se ne miješaju',
     both?.fields.pupil === 'entry.7' && both?.fields.code === 'entry.8',
@@ -228,7 +228,7 @@ for (const pack of PACKS) {
   const real = parseFormLink(
     'https://docs.google.com/forms/d/e/1FAIpQLSeTYvi_Yj3SbaE0C9nLw-o7Mf5uRBVmXpvRd0tI2HzBwN4E1A/viewform?usp=pp_url' +
       '&entry.1419049343=IME&entry.286611330=PREZIME&entry.1345909731=ODJELJENJE' +
-      '&entry.331646779=GRUPA&entry.1033426925=BROJ&entry.117213090=ZADATAK&entry.308089101=KOD'
+      '&entry.331646779=GRUPA&entry.1033426925=BROJ&entry.117213090=ZADATAK&entry.308089101=Kod zadatka'
   );
   // Everything that form has is recognised. It has no box for a pupil's own
   // code — it was made before there was one — and a box the form does not have
@@ -297,9 +297,16 @@ for (const pack of PACKS) {
   // Titles a teacher actually writes.
   ok('naslovi pitanja → polja',
     fieldOfTitle('Broj u dnevniku') === 'number' &&
-    fieldOfTitle('Kod zadatka') === 'code' &&
     fieldOfTitle('Zadatak') === 'payload' &&
     fieldOfTitle('Algoritmi') === null);
+
+  // The two codes, told apart by the whole word and not by its beginning: a
+  // box called „Kod" is the one the teacher hands out, „Kod zadatka" the one
+  // the app works out.
+  ok('goli „Kod" je šifra učenika', fieldOfTitle('Kod') === 'pupil');
+  ok('„Kod zadatka" ostaje kontrolni', fieldOfTitle('Kod zadatka') === 'code');
+  ok('„Kod učenika" i „Šifra" su isto', fieldOfTitle('Kod učenika') === 'pupil' && fieldOfTitle('Šifra') === 'pupil');
+  ok('„Kontrolni kod" je kontrolni', fieldOfTitle('Kontrolni kod') === 'code');
 
   // A form that would refuse every submission, and one that would cut it.
   const shaped = (kind: number, required: boolean) =>
