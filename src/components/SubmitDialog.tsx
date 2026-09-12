@@ -231,6 +231,46 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
         </div>
 
         <div className="p-4 space-y-4">
+          {/* Where the work goes, first of all: everything about handing in
+              is settled in this one window, and this is the line that says
+              where. Out of the way once the form is known. */}
+          {!link || changing ? (
+            <div className="space-y-1.5">
+              <span className={label}>{t.formAny}</span>
+              <div className="flex gap-2">
+                <input
+                  value={draftLink}
+                  onChange={(e) => setDraftLink(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') void configure();
+                  }}
+                  placeholder="https://docs.google.com/forms/…"
+                  className={field}
+                />
+                <button
+                  type="button"
+                  onClick={() => void configure()}
+                  disabled={!draftLink.trim() || reading}
+                  className="h-9 px-3 shrink-0 rounded-lg bg-white text-black text-[11px] font-black uppercase tracking-wider disabled:opacity-30"
+                >
+                  {reading ? '…' : 'OK'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setChanging(true)}
+              className="flex items-center gap-1.5 text-[10.5px] text-white/40 hover:text-white/70 transition-colors"
+            >
+              <Link2 className="w-3.5 h-3.5 shrink-0" />
+              {t.formOk} {new URL(link.url).hostname} · {t.changeForm}
+            </button>
+          )}
+
+          {!!learned?.blocking.length && <p className="text-[11px] text-[#FCA5A5]">{t.formBlocking} {learned.blocking.map((q) => q.title).join(', ')}</p>}
+          {learned?.shortAnswerBox && <p className="text-[11px] text-[#FCD34D]">{t.formShortBox}</p>}
+
           {/* What is being handed in */}
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
             {work.task.id ? (
@@ -313,45 +353,6 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
             onFocus={(e) => e.currentTarget.select()}
             className="w-full h-20 p-2 rounded-lg bg-black/60 border border-white/10 text-white/60 font-mono text-[10px] leading-snug resize-none outline-none"
           />
-
-          {/* Where the form is set: a plain link on the desktop, a pre-filled
-              one in a browser. Out of the way once it is known. */}
-          {!link || changing ? (
-            <div className="space-y-1.5">
-              <span className={label}>{t.formAny}</span>
-              <div className="flex gap-2">
-                <input
-                  value={draftLink}
-                  onChange={(e) => setDraftLink(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') void configure();
-                  }}
-                  placeholder="https://docs.google.com/forms/…"
-                  className={field}
-                />
-                <button
-                  type="button"
-                  onClick={() => void configure()}
-                  disabled={!draftLink.trim() || reading}
-                  className="h-9 px-3 shrink-0 rounded-lg bg-white text-black text-[11px] font-black uppercase tracking-wider disabled:opacity-30"
-                >
-                  {reading ? '…' : 'OK'}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setChanging(true)}
-              className="flex items-center gap-1.5 text-[10.5px] text-white/40 hover:text-white/70 transition-colors"
-            >
-              <Link2 className="w-3.5 h-3.5 shrink-0" />
-              {t.formOk} {new URL(link.url).hostname} · {t.changeForm}
-            </button>
-          )}
-
-          {!!learned?.blocking.length && <p className="text-[11px] text-[#FCA5A5]">{t.formBlocking} {learned.blocking.map((q) => q.title).join(', ')}</p>}
-          {learned?.shortAnswerBox && <p className="text-[11px] text-[#FCD34D]">{t.formShortBox}</p>}
 
           {tooBig && !postTo && <p className="text-[11px] text-[#FCD34D]">{t.tooBig}</p>}
           {!link && <p className="text-[11px] text-white/50">{t.noForm}</p>}
