@@ -4,7 +4,7 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { ArrowLeft, Check, CheckCircle2, ChevronLeft, ChevronRight, GraduationCap, RotateCcw, Workflow, X } from 'lucide-react';
+import { ArrowLeft, Check, CheckCircle2, ChevronLeft, ChevronRight, GraduationCap, RotateCcw, Send, Workflow, X } from 'lucide-react';
 import { FlowEdge, FlowNode, Language } from '../types';
 import { translations } from '../i18n/translations';
 import { buildFlowchart, diagramToPseudocode, parsePseudocode } from '../core/flowchart-gen';
@@ -19,9 +19,9 @@ import { MistakeKind, mistakeFor, plantMistake } from '../exercises/plant';
 import { plantCodeMistake } from '../exercises/mutate';
 import { MiniDiagram } from './MiniDiagram';
 import { DrawingBoard } from './DrawingBoard';
-import linijska from '../exercises/linijska.json';
-import grananje from '../exercises/grananje.json';
-import petlje from '../exercises/petlje.json';
+import { PACKS } from '../exercises/packs';
+import { SubmissionAnswer } from '../core/submission';
+import { Work } from './SubmitDialog';
 
 interface ExercisesPanelProps {
   language: Language;
@@ -29,13 +29,10 @@ interface ExercisesPanelProps {
   onClose: () => void;
   /** Loads the finished program into the app — the reward for solving one. */
   onReward: (code: string) => void;
+  /** Hands this attempt in, right or wrong: homework is homework. */
+  onSubmit?: (work: Work) => void;
 }
 
-/**
- * The topics, in teaching order. A student meets them in this order and the
- * first is what the panel opens on.
- */
-const PACKS = [linijska as TaskPack, grananje as TaskPack, petlje as TaskPack];
 const PROGRESS_KEY = 'flowchart_studio_vjezbe_v1';
 
 /**
@@ -108,7 +105,7 @@ function primaryType(task: Task, offered: string[]): string {
   return offered[0] ?? 'samostalno';
 }
 
-export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen, onClose, onReward }) => {
+export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen, onClose, onReward, onSubmit }) => {
   const t = translations[language].vjezbe;
   const [openId, setOpenId] = useState<string | null>(null);
   const [topic, setTopic] = useState<string>(PACKS[0].topic);
@@ -336,6 +333,36 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
 
     setResult(outcome);
     if (outcome.correct) markSolved(task.id);
+  };
+
+  /**
+   * The student's own answer, in whatever shape this exercise produces one: a
+   * program, a drawing, the values of a table, or the line they pointed at.
+   * It is never the solution — what is handed in is what they did.
+   */
+  const currentAnswer = (): SubmissionAnswer => {
+    if (!task) return {};
+    if (activeType === 'nacrtaj') {
+      return {
+        diagram: drawn,
+        code: drawn.nodes.length ? diagramToPseudocode(drawn.nodes, drawn.edges, language) : undefined,
+      };
+    }
+    if (activeType === 'greska') return { pick: pickedLine === null ? '' : String(pickedLine) };
+    if (activeType === 'dijagram-greska') return { pick: pickedShape ?? '' };
+    if (activeType === 'tabela') return { values: traced };
+    if (activeType === 'prepoznaj') return { values: predicted };
+    if (activeType === 'samostalno') return { code: written };
+    if (activeType === 'dopuni') return { code: fillBlanks(task, language, filled) };
+    return { code: assembled };
+  };
+
+  const handIn = () => {
+    if (!task || !onSubmit) return;
+    onSubmit({
+      task: { id: task.id, topic: task.topic, type: activeType, title: text(task.title, language) },
+      answer: currentAnswer(),
+    });
   };
 
   const solvedCount = pack.tasks.filter((x) => progress[x.id]).length;
@@ -855,6 +882,16 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                   <RotateCcw className="w-4 h-4" />
                   {t.reset}
                 </button>
+                {onSubmit && (
+                  <button
+                    type="button"
+                    onClick={handIn}
+                    className="flex items-center gap-1.5 h-10 px-3 rounded-xl border border-white/15 text-white/70 text-[11px] font-black uppercase tracking-wider hover:bg-white/10 transition-all"
+                  >
+                    <Send className="w-4 h-4" />
+                    {translations[language].predaja.send}
+                  </button>
+                )}
                 {result?.correct && (
                   <button
                     type="button"

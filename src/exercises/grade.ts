@@ -271,10 +271,22 @@ function describeGradeIn(result: GradeResult, lang: SourceLang): string {
   }
   const m = result.mismatch;
   if (!m) return lang === 'en' ? 'not right yet' : lang === 'de' ? 'noch nicht richtig' : 'još nije tačno';
-  const inputs = m.inputs.length ? m.inputs.join(', ') : '—';
   const got = m.got.join(' / ') || '—';
   const expected = m.expected.join(' / ') || '—';
-  if (lang === 'en') return `for ${inputs} yours prints ${got}, but it should print ${expected}`;
-  if (lang === 'de') return `für ${inputs} gibt deiner ${got} aus, richtig wäre ${expected}`;
-  return `za ${inputs} tvoj ispisuje ${got}, a treba ${expected}`;
+  // A task that reads nothing in — a count loop — has no inputs to name, and
+  // "for — yours prints" was what that came out as.
+  const inputs = m.inputs.length ? m.inputs.join(', ') : null;
+  if (lang === 'en') {
+    return inputs
+      ? `for ${inputs} yours prints ${got}, but it should print ${expected}`
+      : `yours prints ${got}, but it should print ${expected}`;
+  }
+  if (lang === 'de') {
+    return inputs
+      ? `für ${inputs} gibt deiner ${got} aus, richtig wäre ${expected}`
+      : `deiner gibt ${got} aus, richtig wäre ${expected}`;
+  }
+  return inputs
+    ? `za ${inputs} tvoj ispisuje ${got}, a treba ${expected}`
+    : `tvoj ispisuje ${got}, a treba ${expected}`;
 }

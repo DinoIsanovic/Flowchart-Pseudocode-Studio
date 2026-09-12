@@ -162,6 +162,51 @@ export interface Translations {
     clean: string;
     line: string;
   };
+  // Handing work in
+  predaja: {
+    send: string;
+    title: string;
+    who: string;
+    first: string;
+    last: string;
+    klasa: string;
+    group: string;
+    number: string;
+    workTitle: string;
+    workTitlePlaceholder: string;
+    code: string;
+    copyAndOpen: string;
+    copyOnly: string;
+    saveFile: string;
+    copied: string;
+    pasteThere: string;
+    prefilled: string;
+    noForm: string;
+    needName: string;
+    tooBig: string;
+    configured: string;
+    review: string;
+    paste: string;
+    pasteHint: string;
+    found: string;
+    correctN: string;
+    none: string;
+    earlier: string;
+    broken: string;
+    notIntact: string;
+    open: string;
+    noTask: string;
+    form: string;
+    formHow: string;
+    formUrl: string;
+    formOk: string;
+    formBad: string;
+    formNoFields: string;
+    formNoPayload: string;
+    classLink: string;
+    classLinkHint: string;
+    forget: string;
+  };
   // Exercises
   vjezbe: {
     title: string;
@@ -357,6 +402,50 @@ const SOURCE: Record<SourceLang, Translations> = {
       empty: 'Write a program and it will be checked here.',
       clean: 'Nothing to report — the program was read and run on sample values.',
       line: 'line',
+    },
+    predaja: {
+      send: 'Hand in',
+      title: 'Handing in',
+      who: 'Who is handing in',
+      first: 'First name',
+      last: 'Last name',
+      klasa: 'Class',
+      group: 'Group',
+      number: 'No. in register',
+      workTitle: 'What is this?',
+      workTitlePlaceholder: 'e.g. Task 3 from the board',
+      code: 'check code',
+      copyAndOpen: 'Copy and open the form',
+      copyOnly: 'Copy only',
+      saveFile: 'Save as a file',
+      copied: 'The submission is on the clipboard.',
+      pasteThere: 'In the form, paste it into the task box (Ctrl+V), then send.',
+      prefilled: 'The answer is already filled in — check it and press Send.',
+      noForm: 'No hand-in form is set up yet. Copy the text or save the file and hand it over the way your teacher asked.',
+      needName: 'Write your first and last name.',
+      tooBig: 'This submission is long for a form box — save it as a file instead.',
+      configured: 'The hand-in form is set up.',
+      review: 'Submissions',
+      paste: 'Paste the submissions',
+      pasteHint: 'Copy the column out of the spreadsheet — or the whole sheet — and paste it here. Everything else in the paste is passed over.',
+      found: 'submissions',
+      correctN: 'correct',
+      none: 'No submission found in what was pasted.',
+      earlier: 'earlier versions',
+      broken: 'unreadable',
+      notIntact: 'the text does not match its own check code — it may have been cut short',
+      open: 'Open on the canvas',
+      noTask: 'free work — not marked',
+      form: 'Hand-in form',
+      formHow: 'Make a form with boxes for first name, last name, class and the task, plus a long-answer box for the answer. Fill each box with the word for it — IME/FIRST, PREZIME/LAST, ODJELJENJE/CLASS, GRUPA/GROUP, BROJ/NUMBER, ZADATAK/TASK — then copy its pre-filled link and paste it below.',
+      formUrl: 'Pre-filled link to the form',
+      formOk: 'Form set up:',
+      formBad: 'That is not a usable link.',
+      formNoFields: 'No box in that link carries one of the words above.',
+      formNoPayload: 'No box for the answer was recognised, so it will be pasted by hand.',
+      classLink: 'Link for the class',
+      classLinkHint: 'Give this to the students: opening it once sets the form up in their app.',
+      forget: 'Forget this form',
     },
     vjezbe: {
       title: 'Exercises',
@@ -559,6 +648,50 @@ const SOURCE: Record<SourceLang, Translations> = {
       clean: 'Nichts zu beanstanden — das Programm wurde gelesen und mit Probewerten ausgeführt.',
       line: 'Zeile',
     },
+    predaja: {
+      send: 'Abgeben',
+      title: 'Abgabe',
+      who: 'Wer gibt ab',
+      first: 'Vorname',
+      last: 'Nachname',
+      klasa: 'Klasse',
+      group: 'Gruppe',
+      number: 'Nr. im Klassenbuch',
+      workTitle: 'Worum geht es?',
+      workTitlePlaceholder: 'z. B. Aufgabe 3 von der Tafel',
+      code: 'Prüfcode',
+      copyAndOpen: 'Kopieren und Formular öffnen',
+      copyOnly: 'Nur kopieren',
+      saveFile: 'Als Datei speichern',
+      copied: 'Die Abgabe liegt in der Zwischenablage.',
+      pasteThere: 'Im Formular in das Aufgabenfeld einfügen (Strg+V) und absenden.',
+      prefilled: 'Die Antwort steht schon im Formular — prüfen und absenden.',
+      noForm: 'Es ist noch kein Abgabeformular eingerichtet. Kopiere den Text oder speichere die Datei und gib sie so ab, wie deine Lehrkraft es gesagt hat.',
+      needName: 'Schreibe deinen Vor- und Nachnamen.',
+      tooBig: 'Diese Abgabe ist lang für ein Formularfeld — speichere sie lieber als Datei.',
+      configured: 'Das Abgabeformular ist eingerichtet.',
+      review: 'Abgaben',
+      paste: 'Abgaben einfügen',
+      pasteHint: 'Kopiere die Spalte aus der Tabelle — oder das ganze Blatt — und füge sie hier ein. Alles andere darin wird übergangen.',
+      found: 'Abgaben',
+      correctN: 'richtig',
+      none: 'Im eingefügten Text steht keine Abgabe.',
+      earlier: 'frühere Fassungen',
+      broken: 'unlesbar',
+      notIntact: 'der Text passt nicht zu seinem Prüfcode — er wurde vielleicht abgeschnitten',
+      open: 'Auf der Zeichenfläche öffnen',
+      noTask: 'freie Arbeit — nicht bewertet',
+      form: 'Abgabeformular',
+      formHow: 'Lege ein Formular mit Feldern für Vorname, Nachname, Klasse und Aufgabe an, dazu ein Feld für eine lange Antwort. Trage in jedes Feld das Wort dafür ein — VORNAME/IME, NACHNAME/PREZIME, KLASSE/ODJELJENJE, GRUPPE/GRUPA, NUMMER/BROJ, AUFGABE/ZADATAK — kopiere dann den vorausgefüllten Link und füge ihn unten ein.',
+      formUrl: 'Vorausgefüllter Link zum Formular',
+      formOk: 'Formular eingerichtet:',
+      formBad: 'Das ist kein brauchbarer Link.',
+      formNoFields: 'Kein Feld in diesem Link trägt eines der Wörter oben.',
+      formNoPayload: 'Für die Antwort wurde kein Feld erkannt, sie wird also von Hand eingefügt.',
+      classLink: 'Link für die Klasse',
+      classLinkHint: 'Gib diesen an die Klasse: einmal öffnen richtet das Formular in ihrer App ein.',
+      forget: 'Formular vergessen',
+    },
     vjezbe: {
       title: 'Übungen',
       tasks: 'Aufgaben',
@@ -759,6 +892,50 @@ const SOURCE: Record<SourceLang, Translations> = {
       empty: 'Napiši program pa će ovdje biti provjeren.',
       clean: 'Nema primjedbi — program je pročitan i pokrenut na probnim vrijednostima.',
       line: 'red',
+    },
+    predaja: {
+      send: 'Pošalji zadatak',
+      title: 'Predaja zadatka',
+      who: 'Ko predaje',
+      first: 'Ime',
+      last: 'Prezime',
+      klasa: 'Odjeljenje',
+      group: 'Grupa',
+      number: 'Broj u dnevniku',
+      workTitle: 'Šta je ovo?',
+      workTitlePlaceholder: 'npr. Zadatak 3 s table',
+      code: 'kontrolni kod',
+      copyAndOpen: 'Kopiraj i otvori formu',
+      copyOnly: 'Samo kopiraj',
+      saveFile: 'Sačuvaj kao datoteku',
+      copied: 'Predaja je u međuspremniku.',
+      pasteThere: 'U formi zalijepi u polje za zadatak (Ctrl+V) pa pošalji.',
+      prefilled: 'Odgovor je već upisan u formu — pogledaj i pošalji.',
+      noForm: 'Forma za predaju još nije podešena. Kopiraj tekst ili sačuvaj datoteku pa predaj kako je nastavnik rekao.',
+      needName: 'Upiši svoje ime i prezime.',
+      tooBig: 'Ova predaja je dugačka za polje forme — radije je sačuvaj kao datoteku.',
+      configured: 'Forma za predaju je podešena.',
+      review: 'Pregled predaja',
+      paste: 'Zalijepi predaje',
+      pasteHint: 'Kopiraj kolonu iz tabele — ili cijeli list — i zalijepi ovdje. Sve ostalo iz tog teksta se preskače.',
+      found: 'predaja',
+      correctN: 'tačno',
+      none: 'U zalijepljenom tekstu nema nijedne predaje.',
+      earlier: 'ranijih verzija',
+      broken: 'nečitljivih',
+      notIntact: 'tekst se ne slaže sa svojim kontrolnim kodom — možda je odsječen',
+      open: 'Otvori na platnu',
+      noTask: 'slobodan rad — bez ocjene',
+      form: 'Forma za predaju',
+      formHow: 'Napravi formu s poljima za ime, prezime, odjeljenje i zadatak, uz jedno polje za dugi odgovor. U svako polje upiši riječ za njega — IME, PREZIME, ODJELJENJE, GRUPA, BROJ, ZADATAK — pa kopiraj njenu „pre-filled" vezu i zalijepi je ispod.',
+      formUrl: 'Unaprijed popunjena veza do forme',
+      formOk: 'Forma je podešena:',
+      formBad: 'Ovo nije upotrebljiva veza.',
+      formNoFields: 'Nijedno polje u toj vezi ne nosi neku od riječi iznad.',
+      formNoPayload: 'Polje za odgovor nije prepoznato, pa će se lijepiti ručno.',
+      classLink: 'Veza za razred',
+      classLinkHint: 'Ovo daj učenicima: kad je jednom otvore, forma se podesi u njihovoj aplikaciji.',
+      forget: 'Zaboravi ovu formu',
     },
     vjezbe: {
       title: 'Vježbe',

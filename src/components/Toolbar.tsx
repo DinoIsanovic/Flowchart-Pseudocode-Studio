@@ -26,6 +26,8 @@ import {
   Workflow,
   AlignCenter,
   GraduationCap,
+  Send,
+  Inbox,
 } from 'lucide-react';
 import { Language, ShapeType } from '../types';
 import { translations } from '../i18n/translations';
@@ -62,6 +64,10 @@ interface ToolbarProps {
   onExportSvg: () => void;
   onSaveJson: () => void;
   onLoadJson: (file: File) => void;
+  /** Hands the work on the canvas in; the exercises have their own button. */
+  onSubmitWork?: () => void;
+  /** The teacher's side: read a pasted column of submissions. */
+  onOpenSubmissions?: () => void;
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({
@@ -96,6 +102,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onExportSvg,
   onSaveJson,
   onLoadJson,
+  onSubmitWork,
+  onOpenSubmissions,
 }) => {
   const t = translations[language];
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -551,6 +559,33 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             className="hidden"
           />
         </div>
+
+        {/* Section 8: Handing in */}
+        {(onSubmitWork || onOpenSubmissions) && (
+          <div className="flex flex-col gap-1.5 pt-2.5 border-t border-white/10">
+            <span className="text-[9.5px] font-black tracking-[0.2em] text-white/50 uppercase px-1">
+              {t.predaja.title}
+            </span>
+            {onSubmitWork && (
+              <button
+                onClick={() => { onSubmitWork(); onCloseMobile(); }}
+                className="flex items-center gap-2 bg-[#141414] hover:bg-[#1F1F1F] border border-white/10 text-white text-[11px] font-bold uppercase tracking-wider p-2 rounded-lg text-left transition-colors"
+              >
+                <Send className="w-3.5 h-3.5 shrink-0 text-[#06B6D4]" />
+                <span className="leading-tight text-center">{t.predaja.send}</span>
+              </button>
+            )}
+            {onOpenSubmissions && (
+              <button
+                onClick={() => { onOpenSubmissions(); onCloseMobile(); }}
+                className="flex items-center gap-2 bg-[#141414] hover:bg-[#1F1F1F] border border-white/10 text-white text-[11px] font-bold uppercase tracking-wider p-2 rounded-lg text-left transition-colors"
+              >
+                <Inbox className="w-3.5 h-3.5 shrink-0 text-white/70" />
+                <span className="leading-tight text-center">{t.predaja.review}</span>
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Author Credit */}
         <div className="mt-auto pt-4 border-t border-white/10 text-[10px] leading-tight text-white/40">

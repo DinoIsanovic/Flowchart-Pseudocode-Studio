@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { FlowEdge, FlowNode, Language, ParseError, ShapeType, ViewBox } from './types';
 import { translations } from './i18n/translations';
 import { TEMPLATE_CODE } from './i18n/keywords';
@@ -33,6 +33,10 @@ import { ToastContainer, ToastMessage } from './components/Toast';
 import { MobileNavBar } from './components/MobileNavBar';
 import { SimulatorPanel } from './components/SimulatorPanel';
 import { ExercisesPanel } from './components/ExercisesPanel';
+import { SubmitDialog, Work } from './components/SubmitDialog';
+import { SubmissionsPanel } from './components/SubmissionsPanel';
+import { Submission, SubmissionStudent } from './core/submission';
+import { CONFIG_PARAM, configFromSearch, parseFormLink } from './core/form-link';
 
 // Warnings describe the diagram that was drawn; only real errors withhold it.
 const isBlocking = (e: ParseError) => e.severity !== 'warning';
@@ -40,6 +44,11 @@ const isBlocking = (e: ParseError) => e.severity !== 'warning';
 const STORAGE_KEY = 'flowchart_studio_state_v2';
 const LANG_STORAGE_KEY = 'flowchart_studio_lang_v2';
 const SNAP_STORAGE_KEY = 'flowchart_studio_snap_v2';
+// Who is handing in, and the form they hand in to. Both belong to the device
+// rather than to the project: a class shares a room of computers, and the form
+// is the same one all year.
+const STUDENT_KEY = 'flowchart_studio_ucenik_v1';
+const FORM_KEY = 'flowchart_studio_predaja_v1';
 
 interface HistoryState {
   nodes: FlowNode[];
@@ -210,6 +219,21 @@ export default function App() {
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
   const [isMobileToolbarOpen, setIsMobileToolbarOpen] = useState(false);
   const [isExercisesOpen, setIsExercisesOpen] = useState(false);
+  const [isSubmissionsOpen, setIsSubmissionsOpen] = useState(false);
+  /** The piece of work the hand-in dialog is open on, if any. */
+  const [submitWork, setSubmitWork] = useState<Work | null>(null);
+  const [student, setStudent] = useState<SubmissionStudent>(() => {
+    try {
+      const saved = localStorage.getItem(STUDENT_KEY);
+      const parsed = saved ? JSON.parse(saved) : null;
+      if (parsed && typeof parsed.first === 'string') return parsed as SubmissionStudent;
+    } catch {
+      // A device with storage off just asks for the name again.
+    }
+    return { first: '', last: '' };
+  });
+  /** The teacher's prefilled form link, exactly as it was pasted. */
+  const [formSource, setFormSource] = useState<string | null>(() => localStorage.getItem(FORM_KEY));
   const [parseErrors, setParseErrors] = useState<ParseError[]>([]);
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -883,10 +907,10 @@ export default function App() {
    * A solved exercise hands its program back: the reward for getting it right
    * is seeing the flowchart build itself, so it loads like a template.
    */
-  const loadSolvedExercise = (code: string) => {
+  const loadSolvedExercise = (code: string, lang: Language = language) => {
     pushHistory();
-    const parsed = parsePseudocode(code, language);
-    const built = buildFlowchart(parsed.statements, language);
+    const parsed = parsePseudocode(code, lang);
+    const built = buildFlowchart(parsed.statements, lang);
     setNodes(built.nodes);
     setEdges(built.edges);
     setPseudocode(code);
@@ -894,6 +918,109 @@ export default function App() {
     bumpUidPast(built.nodes, built.edges);
     fitViewBoxToContent(built.nodes);
     setViewMode('canvas');
+  };
+
+  // --- Handing work in -----------------------------------------------------
+
+  /** The teacher's form as the app understands it, or null while unset. */
+  const formLink = useMemo(() => (formSource ? parseFormLink(formSource).link : null), [formSource]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STUDENT_KEY, JSON.stringify(student));
+    } catch {
+      // Storage off: the name is asked for again next time, nothing worse.
+    }
+  }, [student]);
+
+  // The teacher hands out one link; opening it once sets their form up here.
+  useEffect(() => {
+    const incoming = configFromSearch(window.location.search);
+    if (!incoming) return;
+    if (parseFormLink(incoming).link) {
+      setFormSource(incoming);
+      try {
+        localStorage.setItem(FORM_KEY, incoming);
+      } catch {
+        // Not remembered, but this session can still hand in.
+      }
+      showToast(t.predaja.configured, 'success');
+    }
+    // The address bar goes back to the plain app, so a refresh or a bookmark
+    // does not carry the form around for ever.
+    const url = new URL(window.location.href);
+    url.searchParams.delete(CONFIG_PARAM);
+    window.history.replaceState({}, '', url.toString());
+    // Once, on the way in.
+  }, []);
+
+  const configureForm = (prefilled: string): 'ok' | 'no-url' | 'no-fields' => {
+    const { link, reason } = parseFormLink(prefilled);
+    if (!link) return reason ?? 'no-url';
+    setFormSource(prefilled.trim());
+    try {
+      localStorage.setItem(FORM_KEY, prefilled.trim());
+    } catch {
+      // Set for this session only.
+    }
+    return 'ok';
+  };
+
+  const forgetForm = () => {
+    setFormSource(null);
+    try {
+      localStorage.removeItem(FORM_KEY);
+    } catch {
+      // Nothing was stored to begin with.
+    }
+  };
+
+  /**
+   * Work done on the canvas rather than in the exercise bank — what a teacher
+   * dictates in class. It goes in as both the program and the drawing, and the
+   * student writes down what it was.
+   */
+  const handleSubmitCanvas = () => {
+    const code = pseudocode.trim() || (nodes.length ? diagramToPseudocode(nodes, edges, language) : '');
+    if (!code && !nodes.length) {
+      showToast(t.emptyCanvasAlert, 'error');
+      return;
+    }
+    setSubmitWork({
+      task: { id: null, title: '' },
+      answer: { code, diagram: nodes.length ? { nodes, edges } : undefined },
+    });
+  };
+
+  const saveSubmissionFile = (name: string, text: string) => {
+    const bytes = new TextEncoder().encode(text);
+    void saveBytes(name, bytes, 'application/json', [{ name: 'JSON', extensions: ['json'] }]).catch((e) =>
+      showToast(e instanceof Error ? e.message : String(e), 'error')
+    );
+  };
+
+  /**
+   * A submission opened on the canvas, in the language it was written in — the
+   * pseudocode of a student working in Croatian does not parse as English.
+   */
+  const openSubmittedWork = (sub: Submission) => {
+    const drawing = sub.answer.diagram;
+    const code = sub.answer.code ?? (drawing ? diagramToPseudocode(drawing.nodes, drawing.edges, sub.lang) : '');
+    if (sub.lang !== language) setLanguage(sub.lang);
+
+    if (drawing?.nodes?.length) {
+      pushHistory();
+      setNodes(drawing.nodes);
+      setEdges(drawing.edges ?? []);
+      setPseudocode(code);
+      setParseErrors([]);
+      bumpUidPast(drawing.nodes, drawing.edges ?? []);
+      fitViewBoxToContent(drawing.nodes);
+      setViewMode('split');
+    } else if (code) {
+      loadSolvedExercise(code, sub.lang);
+    }
+    setIsSubmissionsOpen(false);
   };
 
   // Template Loader
@@ -1453,6 +1580,8 @@ export default function App() {
           onExportPng={handleExportPng}
           onExportSvg={handleExportSvg}
           onSaveJson={handleSaveJson}
+          onSubmitWork={handleSubmitCanvas}
+          onOpenSubmissions={() => setIsSubmissionsOpen(true)}
           onLoadJson={handleLoadJson}
         />
 
@@ -1584,6 +1713,32 @@ export default function App() {
         isOpen={isExercisesOpen}
         onClose={() => setIsExercisesOpen(false)}
         onReward={loadSolvedExercise}
+        onSubmit={setSubmitWork}
+      />
+
+      {/* Handing work in, and reading what was handed in */}
+      <SubmitDialog
+        language={language}
+        isOpen={!!submitWork}
+        onClose={() => setSubmitWork(null)}
+        student={student}
+        onStudentChange={setStudent}
+        link={formLink}
+        work={submitWork}
+        onSaveFile={saveSubmissionFile}
+        onToast={showToast}
+      />
+
+      <SubmissionsPanel
+        language={language}
+        isOpen={isSubmissionsOpen}
+        onClose={() => setIsSubmissionsOpen(false)}
+        link={formLink}
+        linkSource={formSource}
+        onConfigure={configureForm}
+        onForget={forgetForm}
+        onOpenWork={openSubmittedWork}
+        onToast={showToast}
       />
 
       <MobileNavBar

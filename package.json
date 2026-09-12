@@ -20,7 +20,8 @@
     "check:croatian": "tsx scripts/croatian-check.ts",
     "check:layout": "tsx scripts/layout-check.ts",
     "check:python": "tsx scripts/python-check.ts",
-    "check:diagnose": "tsx scripts/diagnose-check.ts"
+    "check:diagnose": "tsx scripts/diagnose-check.ts",
+    "check:submission": "tsx scripts/submission-check.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

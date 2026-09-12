@@ -100,6 +100,40 @@ authored solution in the exercise bank, in all four languages, through the same
 pass and fails if any of them is flagged. A check that cries wolf on the app's
 own exercises would teach students to ignore it.
 
+**Handing work in.** `Hand in` turns one piece of work — an exercise attempt or
+anything drawn on the canvas — into a single line of text and opens the form
+the teacher made. There is no server of ours anywhere in it: the app copies the
+submission, the student presses Send in the form, and the answers land in the
+teacher's own spreadsheet. Where there is no network, the same text saves as a
+file.
+
+The teacher makes one form for the whole class and all year — first name, last
+name, class, and a long-answer box — fills each box with the word for it
+(`IME`/`FIRST`, `PREZIME`/`LAST`, `ODJELJENJE`/`CLASS`, `ZADATAK`/`TASK`),
+copies its own pre-filled link and pastes it into the app once. The app reads
+which box is which from the values standing in them rather than from field
+names, so it works with Google Forms and with anything else that prefills from
+a query string. It then hands back a link to give the class: opening it once
+sets the form up in their app, and from then on a student's name, class and
+register number are filled in for them. The answer itself travels in the link
+only while it is short; beyond that it is pasted, because a form service may
+cut a long query value without saying so.
+
+One line of text carries which task, which kind of exercise, which language,
+and the answer in whatever shape that exercise produces one — a program, a
+drawing, the values of a state table, the line a student pointed at. It also
+carries four characters of checksum, which is not a signature and cannot be
+one: it catches a paste that lost its tail, the failure that otherwise reads as
+a wrong answer.
+
+`Submissions` is the other half. The teacher copies the column out of the
+spreadsheet — or the whole sheet, timestamps and all — pastes it in, and gets
+one line per student, marked. Nothing in the submission is taken as a verdict:
+the task is solved again from the bank and the student's answer put through the
+same tests the app itself uses, so an answer edited on the way loses only its
+own credibility. Clicking a row opens that student's work on the canvas, in the
+language they wrote it in.
+
 **AI Tutor (optional).** A side panel that sends the current diagram and
 pseudocode to the Gemini API along with a Socratic teaching prompt — it asks a
 guiding question before handing over a solution. It can point at a specific node
@@ -242,6 +276,8 @@ npm run check:layout       # a generated diagram never draws one block on top of
 npm run check:python       # python3 runs every generated program and prints what the simulator does
 npm run check:diagnose     # every beginner mistake the offline check names, and silence
                            #   on every authored solution in all four languages
+npm run check:submission   # a submission survives a spreadsheet, and every task in the bank
+                           #   is marked again from what was handed in
 ```
 
 No environment variables are needed to run the app. `.env.example` is a
@@ -336,6 +372,9 @@ src/
                           one cannot be read
     diagnose.ts           the offline check: reads the program, then runs it on
                           sample values, and words what it found
+    submission.ts         what a student hands in, as one line of text, and how
+                          to find those lines again in a pasted spreadsheet
+    form-link.ts          the teacher's own form, learnt from a prefilled link
     diagram-check.ts      checks a flowchart as a drawing rather than as a
                           program: wrong symbol, missing arrow, no start
     auto-layout.ts        automatic node placement and canvas centering
@@ -352,9 +391,13 @@ src/
                           changes what the algorithm prints
     trace.ts              the state table a task is set and printed with
     grade.ts              marks an attempt by running it
+    packs.ts              the task bank in teaching order, and finding one by id
+    regrade.ts            marks a submission by doing the work again — never by
+                          believing what it says about itself
   components/             Canvas, DrawingBoard, Toolbar, Header, PseudocodePanel,
                           SimulatorPanel, DiagnosticsPanel, ExercisesPanel,
-                          AITutorPanel, MiniDiagram, modals, toasts, mobile nav
+                          SubmitDialog, SubmissionsPanel, AITutorPanel,
+                          MiniDiagram, modals, toasts, mobile nav
   i18n/
     keywords.ts           per-language keywords, templates, tutor prompts
     translations.ts       UI strings (en / de / bs)
