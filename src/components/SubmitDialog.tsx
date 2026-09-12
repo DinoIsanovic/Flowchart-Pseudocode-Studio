@@ -110,6 +110,8 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
       group: student.group,
       number: student.number,
       payload: inLink ? text : undefined,
+      // Four characters, so it goes in whether or not the answer did.
+      code: submission.sum,
     });
     window.open(url, '_blank', 'noopener');
   };

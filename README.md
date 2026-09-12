@@ -109,8 +109,10 @@ file.
 
 The teacher makes one form for the whole class and all year — first name, last
 name, class, and a long-answer box — fills each box with the word for it
-(`IME`/`FIRST`, `PREZIME`/`LAST`, `ODJELJENJE`/`CLASS`, `ZADATAK`/`TASK`),
-copies its own pre-filled link and pastes it into the app once. The app reads
+(`IME`/`FIRST`, `PREZIME`/`LAST`, `ODJELJENJE`/`CLASS`, `ZADATAK`/`TASK`, and
+`KOD`/`CODE` for a column of check codes), copies its own pre-filled link and
+pastes it into the app once. The task box has to be the long-answer kind; a
+short one is where an answer gets cut. The app reads
 which box is which from the values standing in them rather than from field
 names, so it works with Google Forms and with anything else that prefills from
 a query string. It then hands back a link to give the class: opening it once

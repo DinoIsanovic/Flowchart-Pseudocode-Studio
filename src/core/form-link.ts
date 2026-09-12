@@ -21,9 +21,9 @@ import { normWord } from './flowchart-gen';
  * class hands in without typing their names thirty times.
  */
 
-export type FormField = 'first' | 'last' | 'class' | 'group' | 'number' | 'payload';
+export type FormField = 'first' | 'last' | 'class' | 'group' | 'number' | 'payload' | 'code';
 
-export const FORM_FIELDS: FormField[] = ['first', 'last', 'class', 'group', 'number', 'payload'];
+export const FORM_FIELDS: FormField[] = ['first', 'last', 'class', 'group', 'number', 'payload', 'code'];
 
 /**
  * What the teacher types into each box of their own form to mark it. Matched
@@ -37,6 +37,9 @@ export const FIELD_WORDS: Record<FormField, string[]> = {
   group: ['GRUPA', 'GROUP', 'GRUPPE'],
   number: ['BROJ', 'NUMBER', 'NUMMER'],
   payload: ['ZADATAK', 'ODGOVOR', 'TASK', 'ANSWER', 'AUFGABE', 'ANTWORT'],
+  // A column of its own for the check code: four characters a teacher can sort
+  // and compare at a glance, even where the answer itself was pasted by hand.
+  code: ['KOD', 'KODZADATKA', 'KONTROLNIKOD', 'CODE', 'TASKCODE', 'CHECKCODE', 'PRUEFCODE'],
 };
 
 export interface FormLink {
@@ -105,6 +108,8 @@ export interface FormValues {
   number?: number;
   /** The submission itself, when it is short enough to travel in the link. */
   payload?: string;
+  /** The check code, which always fits. */
+  code?: string;
 }
 
 /** The address that opens the teacher's form with what is known filled in. */

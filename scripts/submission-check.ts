@@ -191,18 +191,31 @@ for (const pack of PACKS) {
 {
   const prefilled =
     'https://docs.google.com/forms/d/e/1FAIpQLSxxxx/viewform?usp=pp_url' +
-    '&entry.111=IME&entry.222=PREZIME&entry.333=Odjeljenje&entry.444=BROJ&entry.555=ZADATAK';
+    '&entry.111=IME&entry.222=PREZIME&entry.333=Odjeljenje&entry.444=BROJ&entry.555=ZADATAK&entry.666=Kod zadatka';
   const { link, missing } = parseFormLink(prefilled);
   ok('veza je pročitana', !!link);
   ok('polja su prepoznata', link?.fields.first === 'entry.111' && link?.fields.payload === 'entry.555');
   ok('grupa nedostaje i to se zna', missing.includes('group') && !missing.includes('class'));
+  // A column of its own for the check code, named in two words on a real form.
+  ok('kod zadatka je svoje polje', link?.fields.code === 'entry.666');
 
-  const url = new URL(submitUrl(link!, { first: 'Amina', last: 'Hodžić', class: '7-2', number: 12, payload: '{"v":1}' }));
+  const url = new URL(submitUrl(link!, { first: 'Amina', last: 'Hodžić', class: '7-2', number: 12, payload: '{"v":1}', code: 'K7F2' }));
   ok('forma dobija svoje parametre nazad', url.searchParams.get('usp') === 'pp_url');
   ok('ime je upisano', url.searchParams.get('entry.111') === 'Amina');
   ok('prezime s dijakritikom', url.searchParams.get('entry.222') === 'Hodžić');
   ok('paket je upisan', url.searchParams.get('entry.555') === '{"v":1}');
+  ok('kod ide u svoju kolonu', url.searchParams.get('entry.666') === 'K7F2');
   ok('nepoznato polje se ne izmišlja', url.searchParams.get('entry.999') === null);
+
+  // The shape a real Google form turned out to have, checked on 2026-09-12
+  // against „Zadaća Algoritmi": seven boxes, every one of them recognised.
+  const real = parseFormLink(
+    'https://docs.google.com/forms/d/e/1FAIpQLSeTYvi_Yj3SbaE0C9nLw-o7Mf5uRBVmXpvRd0tI2HzBwN4E1A/viewform?usp=pp_url' +
+      '&entry.1419049343=IME&entry.286611330=PREZIME&entry.1345909731=ODJELJENJE' +
+      '&entry.331646779=GRUPA&entry.1033426925=BROJ&entry.117213090=ZADATAK&entry.308089101=KOD'
+  );
+  ok('prava forma: sva polja prepoznata', real.missing.length === 0, real.missing.join(', '));
+  ok('prava forma: odgovor u svoje polje', real.link?.fields.payload === 'entry.117213090');
 
   // A form made in German, and one box left unmarked.
   const german = parseFormLink('https://forms.example.org/f/1?a=VORNAME&b=NACHNAME&c=AUFGABE');
