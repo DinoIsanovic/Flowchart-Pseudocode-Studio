@@ -110,8 +110,11 @@ class RunSignal extends Error {
 /**
  * Splits on commas that are not inside brackets or a string, so
  * `ISPIŠI "a, b", max(x, y)` stays two arguments rather than four.
+ *
+ * Exported because the offline check reads the same lines without running
+ * them, and two readings of where an argument ends would disagree one day.
  */
-function splitArguments(text: string): string[] {
+export function splitArguments(text: string): string[] {
   const out: string[] = [];
   let depth = 0;
   let quote = '';
@@ -166,9 +169,10 @@ function isTextLiteral(src: string): boolean {
 /**
  * Splits `zbir = a + b` at the assignment. The `=` of a comparison is left
  * alone, so `RAČUNAJ veci = a > b` assigns the result of the comparison
- * instead of being read as a chain.
+ * instead of being read as a chain. Shared with the offline check, for the
+ * same reason as `splitArguments`.
  */
-function splitAssignment(text: string): { target: string; expr: string } | null {
+export function splitAssignment(text: string): { target: string; expr: string } | null {
   let quote = '';
   let depth = 0;
   for (let i = 0; i < text.length; i++) {

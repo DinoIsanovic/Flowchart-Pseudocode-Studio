@@ -19,6 +19,7 @@ import { translations } from '../src/i18n/translations';
 import { AUTOCOMPLETE_KEYWORDS, TEMPLATE_CODE, TUTOR_PROMPTS } from '../src/i18n/keywords';
 import { TaskPack, text } from '../src/exercises/types';
 import { solutionText } from '../src/exercises/render';
+import { describeFinding, sampleFindings } from '../src/core/diagnose';
 import linijska from '../src/exercises/linijska.json';
 import grananje from '../src/exercises/grananje.json';
 
@@ -78,6 +79,19 @@ for (const [name, hr, bs] of [
     console.log(`  ✗ ${name}: hrvatski je identičan bosanskom — varijanta nije uključena`);
   }
   walk(`${name}.hr`, hr);
+}
+
+// --- the offline check's messages --------------------------------------------
+// Written in the module beside the codes they explain rather than in the table
+// of translations, the way the parser's and the simulator's messages are, so
+// the walk above does not reach them.
+for (const f of sampleFindings()) {
+  const bs = describeFinding(f, 'bs');
+  note(bs.message);
+  note(bs.fix);
+  const hr = describeFinding(f, 'hr');
+  check(`diagnose.${f.code}`, hr.message);
+  check(`diagnose.${f.code}.fix`, hr.fix);
 }
 
 // --- the exercises -----------------------------------------------------------

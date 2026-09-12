@@ -76,6 +76,8 @@ const WORDS: Record<string, string> = {
   tačne: 'točne',
   tačni: 'točni',
   netačno: 'netočno',
+  netačan: 'netočan',
+  netačna: 'netočna',
 
   // everyday words the exercises use
   sedmica: 'tjedan',
@@ -128,7 +130,7 @@ export const BOSNIAN_ONLY: RegExp[] = [
   /\bugl(?!avnom)\p{L}*/giu,
   /\bobim\p{L}*/giu,
   /\btroug\p{L}*/giu,
-  /\bne?tačn\p{L}*/giu,
+  /\b(?:ne)?tač(?:n|an)\p{L}*/giu,
   /\bsedmic\p{L}*/giu,
   /\bcifr\p{L}*/giu,
   /\bdvocifr\p{L}*/giu,

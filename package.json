@@ -19,7 +19,8 @@
     "check:roundtrip": "tsx scripts/roundtrip-check.ts",
     "check:croatian": "tsx scripts/croatian-check.ts",
     "check:layout": "tsx scripts/layout-check.ts",
-    "check:python": "tsx scripts/python-check.ts"
+    "check:python": "tsx scripts/python-check.ts",
+    "check:diagnose": "tsx scripts/diagnose-check.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

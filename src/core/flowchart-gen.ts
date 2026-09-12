@@ -117,7 +117,8 @@ const CONNECTIVES = new Set<string>([
   'ILI', 'NIJE', 'NA', 'SA', 'ZA', 'OD', 'DO', 'JE', 'SU', 'TE', 'PA', 'ALI',
 ]);
 
-function editDistance(a: string, b: string): number {
+/** Also used by the offline check, to spot a variable name missed by one letter. */
+export function editDistance(a: string, b: string): number {
   const m = a.length;
   const n = b.length;
   let prev = Array.from({ length: n + 1 }, (_, j) => j);

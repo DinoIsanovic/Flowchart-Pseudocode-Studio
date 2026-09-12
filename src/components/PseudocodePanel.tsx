@@ -11,6 +11,8 @@ import { AUTOCOMPLETE_KEYWORDS, KeywordItem } from '../i18n/keywords';
 import { normWord, parsePseudocode } from '../core/flowchart-gen';
 import { statementsToPython, pythonSource } from '../core/python-gen';
 import type { ObservedReads } from '../core/python-gen';
+import { Finding, diagnose } from '../core/diagnose';
+import { DiagnosticsPanel } from './DiagnosticsPanel';
 
 interface PseudocodePanelProps {
   language: Language;
@@ -38,7 +40,7 @@ export const PseudocodePanel: React.FC<PseudocodePanelProps> = ({
 }) => {
   const t = translations[language];
   const [legendOpen, setLegendOpen] = useState(false);
-  const [tab, setTab] = useState<'pseudo' | 'python'>('pseudo');
+  const [tab, setTab] = useState<'pseudo' | 'python' | 'provjera'>('pseudo');
   const [copied, setCopied] = useState(false);
 
   // Derived from the pseudocode in the editor, so the Python view always shows
@@ -48,6 +50,33 @@ export const PseudocodePanel: React.FC<PseudocodePanelProps> = ({
     () => statementsToPython(parsePseudocode(code, language).statements, language, observedReads),
     [code, language, observedReads]
   );
+
+  // Reading the program and running it on sample values costs more than every
+  // keystroke can afford, so the check waits for the typing to stop. It runs
+  // whichever tab is open: the count on the tab is how a student finds out
+  // there is something to look at.
+  const [findings, setFindings] = useState<Finding[]>([]);
+  useEffect(() => {
+    const id = window.setTimeout(() => setFindings(code.trim() ? diagnose(code, language) : []), 500);
+    return () => window.clearTimeout(id);
+  }, [code, language]);
+
+  const flagged = findings.filter((f) => f.severity !== 'savjet').length;
+
+  /** Takes the student to the line a finding names, selected and in view. */
+  const goToLine = (line: number) => {
+    setTab('pseudo');
+    const lines = code.split('\n');
+    const start = lines.slice(0, line - 1).reduce((n, l) => n + l.length + 1, 0);
+    const end = start + (lines[line - 1]?.length ?? 0);
+    setTimeout(() => {
+      const el = textareaRef.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(start, end);
+      el.scrollTop = Math.max(0, (line - 1) * 21 - el.clientHeight / 2);
+    }, 0);
+  };
 
   const copyPython = () => {
     navigator.clipboard.writeText(pythonSource(pythonLines));
@@ -222,18 +251,23 @@ export const PseudocodePanel: React.FC<PseudocodePanelProps> = ({
           pseudocode, so it lives beside the editor rather than in a third
           panel, which would not fit the width. */}
       <div className="flex border-b border-white/10 bg-[#0F0F0F] shrink-0">
-        {(['pseudo', 'python'] as const).map((id) => (
+        {(['pseudo', 'python', 'provjera'] as const).map((id) => (
           <button
             key={id}
             type="button"
             onClick={() => setTab(id)}
-            className={`flex-1 px-3 py-2 text-[11px] font-black uppercase tracking-widest transition-colors border-b-2 ${
+            className={`flex-1 px-2 py-2 text-[11px] font-black uppercase tracking-widest transition-colors border-b-2 flex items-center justify-center gap-1.5 ${
               tab === id
                 ? 'text-white border-[#06B6D4] bg-white/5'
                 : 'text-white/45 border-transparent hover:text-white/80 hover:bg-white/5'
             }`}
           >
-            {id === 'pseudo' ? t.pseudocodeHeader : 'Python'}
+            <span className="truncate">{id === 'pseudo' ? t.pseudocodeHeader : id === 'python' ? 'Python' : t.diag.tab}</span>
+            {id === 'provjera' && flagged > 0 && (
+              <span className="shrink-0 min-w-[16px] px-1 rounded-full bg-[#F87171]/20 border border-[#F87171]/40 text-[9px] leading-[14px] text-[#FCA5A5]">
+                {flagged}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -412,7 +446,17 @@ export const PseudocodePanel: React.FC<PseudocodePanelProps> = ({
         </div>
       )}
 
+      {tab === 'provjera' && (
+        <DiagnosticsPanel
+          language={language}
+          hasCode={!!code.trim()}
+          findings={findings}
+          onSelectLine={goToLine}
+        />
+      )}
+
       {/* Action Buttons */}
+      {tab !== 'provjera' && (
       <div className="p-3 border-t border-white/10 bg-[#121212] flex flex-col gap-2">
         {tab === 'python' && (
           <button
@@ -450,6 +494,7 @@ export const PseudocodePanel: React.FC<PseudocodePanelProps> = ({
         </>
         )}
       </div>
+      )}
     </div>
   );
 };

@@ -153,6 +153,15 @@ export interface Translations {
     noOutput: string;
     inputFor: string;
   };
+  // Offline diagnostics
+  diag: {
+    tab: string;
+    title: string;
+    note: string;
+    empty: string;
+    clean: string;
+    line: string;
+  };
   // Exercises
   vjezbe: {
     title: string;
@@ -340,6 +349,14 @@ const SOURCE: Record<SourceLang, Translations> = {
       noVars: 'no variables yet',
       noOutput: 'nothing printed yet',
       inputFor: 'value for',
+    },
+    diag: {
+      tab: 'Check',
+      title: 'Program check',
+      note: 'Offline: the program is read line by line and then run on a few sample values.',
+      empty: 'Write a program and it will be checked here.',
+      clean: 'Nothing to report — the program was read and run on sample values.',
+      line: 'line',
     },
     vjezbe: {
       title: 'Exercises',
@@ -534,6 +551,14 @@ const SOURCE: Record<SourceLang, Translations> = {
       noOutput: 'noch keine Ausgabe',
       inputFor: 'Wert für',
     },
+    diag: {
+      tab: 'Prüfung',
+      title: 'Programmprüfung',
+      note: 'Ohne Internet: das Programm wird Zeile für Zeile gelesen und dann mit einigen Probewerten ausgeführt.',
+      empty: 'Schreibe ein Programm, dann wird es hier geprüft.',
+      clean: 'Nichts zu beanstanden — das Programm wurde gelesen und mit Probewerten ausgeführt.',
+      line: 'Zeile',
+    },
     vjezbe: {
       title: 'Übungen',
       tasks: 'Aufgaben',
@@ -726,6 +751,14 @@ const SOURCE: Record<SourceLang, Translations> = {
       noVars: 'još nema varijabli',
       noOutput: 'još nema ispisa',
       inputFor: 'vrijednost za',
+    },
+    diag: {
+      tab: 'Provjera',
+      title: 'Provjera programa',
+      note: 'Radi bez interneta: program se pročita red po red, pa pokrene na nekoliko probnih vrijednosti.',
+      empty: 'Napiši program pa će ovdje biti provjeren.',
+      clean: 'Nema primjedbi — program je pročitan i pokrenut na probnim vrijednostima.',
+      line: 'red',
     },
     vjezbe: {
       title: 'Vježbe',

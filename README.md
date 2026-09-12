@@ -78,6 +78,28 @@ being executed is highlighted on the canvas, and a program that reads stops and
 asks. It is the same interpreter that marks the exercises, so the screen and
 the marker cannot disagree about what an algorithm does.
 
+**Offline check.** A `Check` tab beside the pseudocode editor answers "why
+doesn't my program work?" without a key, an account or a network — which is the
+only way a class of thirty can use it at once. It reads the program and then
+runs it. Reading it finds a name used before anything gives it a value, a name
+misspelt one letter away from one that exists, a value worked out and never
+used, a program that computes and never prints, a condition with no variable in
+it, a rung of an `IF` ladder no value can reach — `bodovi >= 50` written above
+`bodovi >= 85` — and a loop whose condition the body never touches. Running it
+tries the program on a handful of sample values and reports what happened: a
+run that never stops, an error that happens whatever is typed, and one that
+happens only for a particular value, which is usually the case the student
+never thought about. Each finding says what is wrong and what to do about it,
+in the student's own language, and clicking it selects the line it means.
+
+A loop steered by a value typed inside it is not judged by the sample values —
+answering `5` for ever to `INPUT` says nothing about a program waiting for `0`
+— and a program the parser refused is reported as those errors alone. The
+guard that matters is the other way round: `npm run check:diagnose` puts every
+authored solution in the exercise bank, in all four languages, through the same
+pass and fails if any of them is flagged. A check that cries wolf on the app's
+own exercises would teach students to ignore it.
+
 **AI Tutor (optional).** A side panel that sends the current diagram and
 pseudocode to the Gemini API along with a Socratic teaching prompt — it asks a
 guiding question before handing over a solution. It can point at a specific node
@@ -218,6 +240,8 @@ npm run check:croatian     # the Croatian variant covers every Bosnian word
 npm run check:layout       # a generated diagram never draws one block on top of another,
                            #   and no connector runs through a block it does not touch
 npm run check:python       # python3 runs every generated program and prints what the simulator does
+npm run check:diagnose     # every beginner mistake the offline check names, and silence
+                           #   on every authored solution in all four languages
 ```
 
 No environment variables are needed to run the app. `.env.example` is a
@@ -310,6 +334,8 @@ src/
                           exercise marker are the same interpreter
     expr.ts               expression parser, evaluator, and what to say when
                           one cannot be read
+    diagnose.ts           the offline check: reads the program, then runs it on
+                          sample values, and words what it found
     diagram-check.ts      checks a flowchart as a drawing rather than as a
                           program: wrong symbol, missing arrow, no start
     auto-layout.ts        automatic node placement and canvas centering
@@ -327,8 +353,8 @@ src/
     trace.ts              the state table a task is set and printed with
     grade.ts              marks an attempt by running it
   components/             Canvas, DrawingBoard, Toolbar, Header, PseudocodePanel,
-                          SimulatorPanel, ExercisesPanel, AITutorPanel,
-                          MiniDiagram, modals, toasts, mobile nav
+                          SimulatorPanel, DiagnosticsPanel, ExercisesPanel,
+                          AITutorPanel, MiniDiagram, modals, toasts, mobile nav
   i18n/
     keywords.ts           per-language keywords, templates, tutor prompts
     translations.ts       UI strings (en / de / bs)
