@@ -23,6 +23,9 @@ tauri = { version = "2.11.3", features = [] }
 tauri-plugin-log = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
+# Reads a teacher's form page and posts a submission from the Rust side, where
+# a browser's same-origin rules do not apply — see src/core/form-post.ts.
+tauri-plugin-http = "2"
 
 [profile.release]
 codegen-units = 1

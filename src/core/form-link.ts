@@ -112,17 +112,38 @@ export interface FormValues {
   code?: string;
 }
 
-/** The address that opens the teacher's form with what is known filled in. */
-export function submitUrl(link: FormLink, values: FormValues): string {
-  const params = new URLSearchParams();
-  for (const [name, value] of link.extra) params.set(name, value);
+/** Every box this form wants, with what goes in it. */
+export function submitFields(link: FormLink, values: FormValues): [string, string][] {
+  const out: [string, string][] = [...link.extra];
   for (const field of FORM_FIELDS) {
     const name = link.fields[field];
     const value = values[field];
     if (!name || value === undefined || value === null || value === '') continue;
-    params.set(name, String(value));
+    out.push([name, String(value)]);
   }
+  return out;
+}
+
+/** The address that opens the teacher's form with what is known filled in. */
+export function submitUrl(link: FormLink, values: FormValues): string {
+  const params = new URLSearchParams();
+  for (const [name, value] of submitFields(link, values)) params.set(name, value);
   return `${link.url}?${params.toString()}`;
+}
+
+/**
+ * Where this form takes its answers, for handing one in without opening it.
+ *
+ * Null for anything that is not a Google form: the address is the one part of
+ * the arrangement that is Google's own, and guessing it for another service
+ * would send a class's homework nowhere in particular.
+ *
+ * Note what changes when the answer is posted rather than carried in a link:
+ * nothing is measured against `PREFILL_MAX` any more, because a form field is
+ * not a query string. The whole submission goes, drawing and all.
+ */
+export function responseUrl(link: FormLink): string | null {
+  return link.url.endsWith('/viewform') ? `${link.url.slice(0, -'/viewform'.length)}/formResponse` : null;
 }
 
 /** The parameter a teacher's own link carries, so a student's app sets itself up. */

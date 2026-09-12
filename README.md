@@ -101,18 +101,31 @@ pass and fails if any of them is flagged. A check that cries wolf on the app's
 own exercises would teach students to ignore it.
 
 **Handing work in.** `Hand in` turns one piece of work — an exercise attempt or
-anything drawn on the canvas — into a single line of text and opens the form
-the teacher made. There is no server of ours anywhere in it: the app copies the
-submission, the student presses Send in the form, and the answers land in the
-teacher's own spreadsheet. Where there is no network, the same text saves as a
-file.
+anything drawn on the canvas — into a single line of text and hands it to the
+form the teacher made, in one press. There is no server of ours anywhere in it,
+and the student is never told "sent" on trust: the form's own answer comes
+back in front of them. In a browser it is rendered in a frame inside the dialog
+— a page may post to another site but may not read the reply — while the
+desktop build reads the reply itself and says either that the form recorded it
+or which required question it refused for. Where there is no network, the same
+text saves as a file.
 
 The teacher makes one form for the whole class and all year — first name, last
 name, class, and a long-answer box — fills each box with the word for it
 (`IME`/`FIRST`, `PREZIME`/`LAST`, `ODJELJENJE`/`CLASS`, `ZADATAK`/`TASK`, and
 `KOD`/`CODE` for a column of check codes), copies its own pre-filled link and
 pastes it into the app once. The task box has to be the long-answer kind; a
-short one is where an answer gets cut. The app reads
+short one is where an answer gets cut.
+
+The desktop build shortens even that: paste the plain address of the form and
+it reads the form's own published page — every question, its `entry` id, its
+kind and whether it is required — and builds the pre-filled link itself. While
+it is there it says the two things a class would otherwise find out the hard
+way: a required question the app cannot fill (every submission would be
+refused) and an answer box that is a short one (every submission would be cut).
+A browser cannot do this and never will: `docs.google.com` does not let another
+site read its pages, and this app deliberately has no server to read them for
+it. The app reads
 which box is which from the values standing in them rather than from field
 names, so it works with Google Forms and with anything else that prefills from
 a query string. It then hands back a link to give the class: opening it once

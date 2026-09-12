@@ -42,7 +42,9 @@ import {
   parseSubmissions,
   submissionText,
 } from '../src/core/submission';
-import { configFromSearch, configLink, parseFormLink, submitUrl } from '../src/core/form-link';
+import { configFromSearch, configLink, parseFormLink, responseUrl, submitFields, submitUrl } from '../src/core/form-link';
+import { fieldOfTitle, learnForm, parseFormPage } from '../src/core/form-page';
+import { readFileSync } from 'node:fs';
 
 let pass = 0;
 let fail = 0;
@@ -226,6 +228,63 @@ for (const pack of PACKS) {
 
   const shared = configLink('https://dino.example/studio/?nesto=1', prefilled);
   ok('veza za razred vodi nazad na formu', configFromSearch(new URL(shared).search) === prefilled);
+}
+
+// --- posting it instead of opening it ---------------------------------------
+
+{
+  const google = parseFormLink(
+    'https://docs.google.com/forms/d/e/ABC/viewform?usp=pp_url&entry.1=IME&entry.2=ZADATAK'
+  ).link!;
+  ok('adresa za slanje', responseUrl(google) === 'https://docs.google.com/forms/d/e/ABC/formResponse');
+
+  const other = parseFormLink('https://forms.example.org/f/1?a=IME&b=ZADATAK').link!;
+  ok('tuđa forma se ne pogađa', responseUrl(other) === null);
+
+  // A posted field is not a query string: the whole submission goes, however
+  // big, which is the point of posting it.
+  const big = 'x'.repeat(PREFILL_MAX * 2);
+  const posted = submitFields(google, { first: 'Amina', payload: big });
+  ok('cijela predaja ide u POST', posted.some(([, v]) => v === big));
+  ok('parametri forme idu s njom', posted.some(([n, v]) => n === 'usp' && v === 'pp_url'));
+}
+
+// --- reading a form's own page ----------------------------------------------
+
+{
+  const page = readFileSync('scripts/fixtures/google-form.html', 'utf8');
+  const questions = parseFormPage(page);
+  ok('osam pitanja pročitano', questions.length === 8, `našlo ${questions.length}`);
+  ok('brojevi polja', questions[1].entry === 'entry.1419049343' && questions[1].field === 'first');
+  ok('obavezno se vidi', questions[1].required && !questions[6].required);
+  ok('dugi odgovor se vidi', questions[6].kind === 1 && questions[6].field === 'payload');
+
+  const learned = learnForm('https://docs.google.com/forms/d/e/XYZ/viewform?usp=publish-editor', page);
+  ok('naučena veza postoji', !!learned.prefilled);
+  ok('ništa ne blokira predaju', learned.blocking.length === 0);
+  ok('polje za odgovor je dugo', !learned.shortAnswerBox);
+
+  // What was learnt has to be exactly what a pre-filled link would have said.
+  const { missing } = parseFormLink(learned.prefilled!);
+  ok('naučena veza pokriva sva polja', missing.length === 0, missing.join(', '));
+
+  // Titles a teacher actually writes.
+  ok('naslovi pitanja → polja',
+    fieldOfTitle('Broj u dnevniku') === 'number' &&
+    fieldOfTitle('Kod zadatka') === 'code' &&
+    fieldOfTitle('Zadatak') === 'payload' &&
+    fieldOfTitle('Algoritmi') === null);
+
+  // A form that would refuse every submission, and one that would cut it.
+  const shaped = (kind: number, required: boolean) =>
+    `<script>FB_PUBLIC_LOAD_DATA_ = [null,[null,[[1,"Datum",null,9,[[11,null,${required ? 1 : 0}]]],[2,"Ime",null,0,[[12,null,1]]],[3,"Zadatak",null,${kind},[[13,null,0]]]]]];</script>`;
+  const refusing = learnForm('https://docs.google.com/forms/d/e/A/viewform', shaped(1, true));
+  ok('obavezno pitanje koje ne umijemo popuniti se prijavljuje',
+    refusing.blocking.length === 1 && refusing.blocking[0].title === 'Datum');
+  const cutting = learnForm('https://docs.google.com/forms/d/e/A/viewform', shaped(0, false));
+  ok('kratko polje za odgovor se prijavljuje', cutting.shortAnswerBox);
+
+  ok('stranica bez podataka ne izmišlja', parseFormPage('<html><body>ništa</body></html>').length === 0);
 }
 
 // --- size ------------------------------------------------------------------

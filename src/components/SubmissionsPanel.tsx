@@ -9,6 +9,8 @@ import { Language } from '../types';
 import { translations } from '../i18n/translations';
 import { Submission, parseSubmissions, studentName } from '../core/submission';
 import { FormLink, configLink } from '../core/form-link';
+import { LearnedForm, learnForm } from '../core/form-page';
+import { fetchFormPage, onDesktop } from '../core/form-post';
 import { Regraded, regrade } from '../exercises/regrade';
 import { describeGrade } from '../exercises/grade';
 import { text as taskText } from '../exercises/types';
@@ -50,6 +52,9 @@ export const SubmissionsPanel: React.FC<SubmissionsPanelProps> = ({
   const [pasted, setPasted] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [draftLink, setDraftLink] = useState('');
+  const [reading, setReading] = useState(false);
+  /** What the form's own page said about itself, where it could be read. */
+  const [learned, setLearned] = useState<LearnedForm | null>(null);
 
   const read = useMemo(() => {
     if (!pasted.trim()) return { rows: [] as Regraded[], skipped: 0, superseded: 0 };
@@ -63,11 +68,36 @@ export const SubmissionsPanel: React.FC<SubmissionsPanelProps> = ({
   const marked = read.rows.filter((r) => r.result);
   const correct = marked.filter((r) => r.result?.correct).length;
 
-  const configure = () => {
+  /**
+   * A pre-filled link is understood everywhere. A plain link to the form is
+   * understood on the desktop, where the app may read the form's own page and
+   * work out the boxes itself — and, while it is there, say which questions
+   * would refuse a submission before a class finds out the hard way.
+   */
+  const configure = async () => {
     const outcome = onConfigure(draftLink);
     if (outcome === 'ok') {
       setDraftLink('');
+      setLearned(null);
       onToast(t.configured, 'success');
+      return;
+    }
+
+    if (outcome === 'no-fields' && onDesktop()) {
+      setReading(true);
+      const html = await fetchFormPage(draftLink);
+      setReading(false);
+      const read = html ? learnForm(draftLink, html) : null;
+      if (read?.prefilled && onConfigure(read.prefilled) === 'ok') {
+        setDraftLink('');
+        setLearned(read);
+        onToast(t.configured, 'success');
+        return;
+      }
+    }
+
+    if (outcome === 'no-fields' && !onDesktop()) {
+      onToast(t.formPlainNeedsDesktop, 'error');
       return;
     }
     onToast(outcome === 'no-url' ? t.formBad : t.formNoFields, 'error');
@@ -122,11 +152,11 @@ export const SubmissionsPanel: React.FC<SubmissionsPanelProps> = ({
                   />
                   <button
                     type="button"
-                    onClick={configure}
-                    disabled={!draftLink.trim()}
+                    onClick={() => void configure()}
+                    disabled={!draftLink.trim() || reading}
                     className="h-9 px-3 shrink-0 rounded-lg bg-white text-black text-[11px] font-black uppercase tracking-wider disabled:opacity-30"
                   >
-                    OK
+                    {reading ? '…' : 'OK'}
                   </button>
                 </div>
 
@@ -137,6 +167,25 @@ export const SubmissionsPanel: React.FC<SubmissionsPanelProps> = ({
                       <span className="font-mono text-white/70">{Object.keys(link.fields).join(', ')}</span>
                     </p>
                     {!link.fields.payload && <p className="text-[11px] text-[#FCD34D]">{t.formNoPayload}</p>}
+
+                    {/* What reading the form itself turned up — the two things
+                        that would otherwise be found out by a class. */}
+                    {!!learned && (
+                      <>
+                        <p className="text-[11px] text-white/55">
+                          {t.formLearned}{' '}
+                          <span className="text-white/75">
+                            {learned.questions.map((q) => q.title).filter(Boolean).join(' · ')}
+                          </span>
+                        </p>
+                        {learned.shortAnswerBox && <p className="text-[11px] text-[#FCD34D]">{t.formShortBox}</p>}
+                        {learned.blocking.length > 0 && (
+                          <p className="text-[11px] text-[#FCA5A5]">
+                            {t.formBlocking} {learned.blocking.map((q) => q.title).join(', ')}
+                          </p>
+                        )}
+                      </>
+                    )}
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"

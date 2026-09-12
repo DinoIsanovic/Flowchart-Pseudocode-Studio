@@ -46,6 +46,14 @@
           "ipc:",
           "http://ipc.localhost",
           "https://generativelanguage.googleapis.com"
+        ],
+        "frame-src": [
+          "'self'",
+          "https://docs.google.com"
+        ],
+        "form-action": [
+          "'self'",
+          "https://docs.google.com"
         ]
       }
     }

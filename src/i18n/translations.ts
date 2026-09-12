@@ -206,6 +206,18 @@ export interface Translations {
     classLink: string;
     classLinkHint: string;
     forget: string;
+    sendNow: string;
+    sending: string;
+    sendHow: string;
+    openForm: string;
+    recorded: string;
+    refused: string;
+    failed: string;
+    formReading: string;
+    formLearned: string;
+    formBlocking: string;
+    formShortBox: string;
+    formPlainNeedsDesktop: string;
   };
   // Exercises
   vjezbe: {
@@ -446,6 +458,18 @@ const SOURCE: Record<SourceLang, Translations> = {
       classLink: 'Link for the class',
       classLinkHint: 'Give this to the students: opening it once sets the form up in their app.',
       forget: 'Forget this form',
+      sendNow: 'Hand it in',
+      sending: 'Sending…',
+      sendHow: 'One press hands it in. The form\u2019s own answer appears below — read it before you leave.',
+      openForm: 'Open the form',
+      recorded: 'Recorded by the form.',
+      refused: 'The form refused it. Not filled in:',
+      failed: 'The form could not be reached — check the network.',
+      formReading: 'Reading the form…',
+      formLearned: 'Read from the form itself:',
+      formBlocking: 'These questions are required and the app cannot fill them, so every submission would be refused:',
+      formShortBox: 'The answer box is a short one — a submission would be cut. Make it a long-answer question.',
+      formPlainNeedsDesktop: 'A plain form link can only be read by the desktop app. In a browser, paste the pre-filled link.',
     },
     vjezbe: {
       title: 'Exercises',
@@ -691,6 +715,18 @@ const SOURCE: Record<SourceLang, Translations> = {
       classLink: 'Link für die Klasse',
       classLinkHint: 'Gib diesen an die Klasse: einmal öffnen richtet das Formular in ihrer App ein.',
       forget: 'Formular vergessen',
+      sendNow: 'Abgeben',
+      sending: 'Wird gesendet…',
+      sendHow: 'Ein Druck gibt ab. Die Antwort des Formulars erscheint unten — lies sie, bevor du weggehst.',
+      openForm: 'Formular öffnen',
+      recorded: 'Vom Formular aufgezeichnet.',
+      refused: 'Das Formular hat abgelehnt. Nicht ausgefüllt:',
+      failed: 'Das Formular war nicht erreichbar — prüfe die Verbindung.',
+      formReading: 'Formular wird gelesen…',
+      formLearned: 'Aus dem Formular selbst gelesen:',
+      formBlocking: 'Diese Fragen sind Pflicht und die App kann sie nicht ausfüllen — jede Abgabe würde abgelehnt:',
+      formShortBox: 'Das Antwortfeld ist ein kurzes — eine Abgabe würde abgeschnitten. Mach eine Frage mit langer Antwort daraus.',
+      formPlainNeedsDesktop: 'Einen einfachen Formularlink kann nur die Desktop-App lesen. Im Browser den vorausgefüllten Link einfügen.',
     },
     vjezbe: {
       title: 'Übungen',
@@ -936,6 +972,18 @@ const SOURCE: Record<SourceLang, Translations> = {
       classLink: 'Veza za razred',
       classLinkHint: 'Ovo daj učenicima: kad je jednom otvore, forma se podesi u njihovoj aplikaciji.',
       forget: 'Zaboravi ovu formu',
+      sendNow: 'Pošalji',
+      sending: 'Šaljem…',
+      sendHow: 'Jedan pritisak i predaja je poslana. Odgovor same forme pojavi se ispod — pročitaj ga prije nego odeš.',
+      openForm: 'Otvori formu',
+      recorded: 'Forma je zabilježila predaju.',
+      refused: 'Forma je odbila predaju. Nije popunjeno:',
+      failed: 'Ne mogu doći do forme — provjeri vezu.',
+      formReading: 'Čitam formu…',
+      formLearned: 'Pročitano iz same forme:',
+      formBlocking: 'Ova pitanja su obavezna, a aplikacija ih ne popunjava — svaka predaja bi bila odbijena:',
+      formShortBox: 'Polje za zadatak je kratko — predaja bi bila odsječena. Napravi ga pitanjem s dugim odgovorom.',
+      formPlainNeedsDesktop: 'Običnu vezu na formu može pročitati samo desktop verzija. U pregledniku zalijepi „pre-filled" vezu.',
     },
     vjezbe: {
       title: 'Vježbe',

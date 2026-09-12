@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useMemo, useState } from 'react';
-import { Copy, Download, ExternalLink, Send, X } from 'lucide-react';
+import React, { useMemo, useRef, useState } from 'react';
+import { AlertTriangle, Check, Copy, Download, ExternalLink, Send, X } from 'lucide-react';
 import { Language } from '../types';
 import { translations } from '../i18n/translations';
 import { stripDiacritics } from '../core/flowchart-gen';
@@ -17,7 +17,11 @@ import {
   buildSubmission,
   submissionText,
 } from '../core/submission';
-import { FormLink, submitUrl } from '../core/form-link';
+import { FormLink, responseUrl, submitFields, submitUrl } from '../core/form-link';
+import { PostOutcome, onDesktop, postSubmission } from '../core/form-post';
+
+/** The frame the form's own answer is rendered in; see `sendInPlace`. */
+const FRAME = 'predaja-odgovor';
 
 export interface Work {
   task: SubmissionTask;
@@ -62,6 +66,10 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
 }) => {
   const t = translations[language].predaja;
   const [title, setTitle] = useState('');
+  const [sending, setSending] = useState(false);
+  const [outcome, setOutcome] = useState<PostOutcome | null>(null);
+  const [framed, setFramed] = useState(false);
+  const postForm = useRef<HTMLFormElement>(null);
 
   const submission = useMemo(() => {
     if (!work) return null;
@@ -82,6 +90,23 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
   const named = !!student.first.trim() && !!student.last.trim();
   const tooBig = text.length > SIZE_WARN;
   const inLink = !!link?.fields.payload && text.length <= PREFILL_MAX;
+  /** Where this form takes answers, when it is one that can be posted to. */
+  const postTo = link ? responseUrl(link) : null;
+
+  const values = (withPayload: boolean) => ({
+    first: student.first,
+    last: student.last,
+    class: student.class,
+    group: student.group,
+    number: student.number,
+    // A posted field is not a query string, so the whole submission goes;
+    // only a link has a length worth worrying about.
+    payload: withPayload ? text : undefined,
+    code: submission.sum,
+  });
+
+  /** What a posted submission carries — everything, whatever its size. */
+  const fields = link ? submitFields(link, values(true)) : [];
 
   const set = (patch: Partial<SubmissionStudent>) => onStudentChange({ ...student, ...patch });
 
@@ -103,17 +128,49 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
     }
     copy();
     if (!link) return;
-    const url = submitUrl(link, {
-      first: student.first,
-      last: student.last,
-      class: student.class,
-      group: student.group,
-      number: student.number,
-      payload: inLink ? text : undefined,
-      // Four characters, so it goes in whether or not the answer did.
-      code: submission.sum,
-    });
-    window.open(url, '_blank', 'noopener');
+    window.open(submitUrl(link, values(inLink)), '_blank', 'noopener');
+  };
+
+  /**
+   * One press, and the form's own answer comes back in front of the student.
+   *
+   * On the desktop the answer is read and judged here; in a browser it is
+   * rendered in the frame below, because a page may post to another site but
+   * not read the reply — and telling a student "sent" without knowing is the
+   * one thing this must not do.
+   */
+  const send = () => {
+    if (!named) {
+      onToast(t.needName, 'error');
+      return;
+    }
+    if (!postTo) return;
+    setOutcome(null);
+
+    if (onDesktop()) {
+      setSending(true);
+      void postSubmission(postTo, fields)
+        .then((result) => {
+          // Nothing was reached at all — fall back to the way the browser does
+          // it rather than leaving a student with a message and no way out.
+          if (result.state === 'failed') {
+            setFramed(true);
+            postForm.current?.submit();
+            return;
+          }
+          setOutcome(result);
+        })
+        .finally(() => setSending(false));
+      return;
+    }
+
+    setFramed(true);
+    postForm.current?.submit();
+  };
+
+  const openForm = () => {
+    if (!link) return;
+    window.open(submitUrl(link, values(inLink)), '_blank', 'noopener');
   };
 
   const saveFile = () => {
@@ -216,27 +273,51 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
             className="w-full h-20 p-2 rounded-lg bg-black/60 border border-white/10 text-white/60 font-mono text-[10px] leading-snug resize-none outline-none"
           />
 
-          {tooBig && <p className="text-[11px] text-[#FCD34D]">{t.tooBig}</p>}
+          {tooBig && !postTo && <p className="text-[11px] text-[#FCD34D]">{t.tooBig}</p>}
           {!link && <p className="text-[11px] text-white/50">{t.noForm}</p>}
-          {link && <p className="text-[11px] text-white/50">{inLink ? t.prefilled : t.pasteThere}</p>}
+          {link && !postTo && <p className="text-[11px] text-white/50">{inLink ? t.prefilled : t.pasteThere}</p>}
+          {postTo && <p className="text-[11px] text-white/50">{t.sendHow}</p>}
+
+          {/* Posted rather than typed: a real form submission, aimed at the
+              frame below so the form's own answer lands in front of the
+              student instead of in a tab they have to come back from. */}
+          {postTo && (
+            <form ref={postForm} action={postTo} method="post" target={FRAME} className="hidden">
+              {fields.map(([name, value]) => (
+                <input key={name} type="hidden" name={name} value={value} readOnly />
+              ))}
+            </form>
+          )}
 
           <div className="flex flex-wrap gap-2 pb-1">
-            <button
-              type="button"
-              onClick={copyAndOpen}
-              className="flex items-center gap-1.5 h-10 px-4 rounded-xl bg-white text-black text-[11px] font-black uppercase tracking-wider hover:bg-neutral-200 active:scale-95 transition-all"
-            >
-              {link ? <ExternalLink className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              {link ? t.copyAndOpen : t.copyOnly}
-            </button>
+            {postTo ? (
+              <button
+                type="button"
+                onClick={send}
+                disabled={sending}
+                className="flex items-center gap-1.5 h-10 px-4 rounded-xl bg-white text-black text-[11px] font-black uppercase tracking-wider hover:bg-neutral-200 active:scale-95 transition-all disabled:opacity-40"
+              >
+                <Send className="w-4 h-4" />
+                {sending ? t.sending : t.sendNow}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={copyAndOpen}
+                className="flex items-center gap-1.5 h-10 px-4 rounded-xl bg-white text-black text-[11px] font-black uppercase tracking-wider hover:bg-neutral-200 active:scale-95 transition-all"
+              >
+                {link ? <ExternalLink className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {link ? t.copyAndOpen : t.copyOnly}
+              </button>
+            )}
             {link && (
               <button
                 type="button"
-                onClick={copy}
+                onClick={postTo ? openForm : copy}
                 className="flex items-center gap-1.5 h-10 px-3 rounded-xl border border-white/15 text-white/70 text-[11px] font-black uppercase tracking-wider hover:bg-white/10 transition-all"
               >
-                <Copy className="w-4 h-4" />
-                {t.copyOnly}
+                {postTo ? <ExternalLink className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {postTo ? t.openForm : t.copyOnly}
               </button>
             )}
             <button
@@ -248,6 +329,35 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
               {t.saveFile}
             </button>
           </div>
+
+          {/* The verdict, where the app was able to read one. */}
+          {outcome?.state === 'recorded' && (
+            <p className="flex items-center gap-1.5 text-[12px] text-[#86EFAC]">
+              <Check className="w-4 h-4 shrink-0" />
+              {t.recorded} <span className="font-mono text-white/60">{submission.sum}</span>
+            </p>
+          )}
+          {outcome?.state === 'refused' && (
+            <p className="flex items-start gap-1.5 text-[12px] text-[#FCA5A5]">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>
+                {t.refused} {outcome.missing.map((q) => q.title).join(', ') || '—'}
+              </span>
+            </p>
+          )}
+          {outcome?.state === 'failed' && (
+            <p className="flex items-center gap-1.5 text-[12px] text-[#FCD34D]">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              {t.failed}
+            </p>
+          )}
+
+          {/* The form's own page, for the build that cannot read it. */}
+          <iframe
+            name={FRAME}
+            title={t.title}
+            className={framed ? 'w-full h-64 rounded-lg border border-white/15 bg-white' : 'hidden'}
+          />
         </div>
       </div>
     </div>
