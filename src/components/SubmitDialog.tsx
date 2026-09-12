@@ -112,6 +112,7 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
     // A posted field is not a query string, so the whole submission goes;
     // only a link has a length worth worrying about.
     payload: withPayload ? text : undefined,
+    pupil: student.code,
     code: submission.sum,
   });
 
@@ -294,7 +295,15 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
                   className={field}
                 />
               </div>
+              {/* The one box nobody else can fill in for them. */}
+              <input
+                value={student.code ?? ''}
+                onChange={(e) => set({ code: e.target.value })}
+                placeholder={t.pupilCode}
+                className={`${field} col-span-2 font-mono tracking-wider`}
+              />
             </div>
+            <p className="text-[10.5px] text-white/40">{t.pupilHint}</p>
           </div>
 
           {/* The text itself — what leaves the computer, in full */}

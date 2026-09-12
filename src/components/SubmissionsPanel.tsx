@@ -58,10 +58,38 @@ export const SubmissionsPanel: React.FC<SubmissionsPanelProps> = ({
   const [reading, setReading] = useState(false);
 
   const read = useMemo(() => {
-    if (!pasted.trim()) return { rows: [] as Regraded[], skipped: 0, superseded: 0 };
+    if (!pasted.trim()) {
+      return { rows: [] as Regraded[], clashing: new Map<string, 'codes' | 'names'>(), skipped: 0, superseded: 0 };
+    }
     const { found, skipped, superseded } = parseSubmissions(pasted);
     const rows = found.map(regrade).sort((a, b) => studentName(a.submission).localeCompare(studentName(b.submission)));
-    return { rows, skipped, superseded };
+
+    // A code belongs to one student and a student has one code. Where the pile
+    // says otherwise, somebody has typed a name that is not theirs — which is
+    // the whole reason the codes are handed out.
+    const namesOfCode = new Map<string, Set<string>>();
+    const codesOfName = new Map<string, Set<string>>();
+    for (const { submission } of rows) {
+      const code = submission.student.code;
+      if (!code) continue;
+      const name = studentName(submission).toLocaleLowerCase();
+      if (!namesOfCode.has(code)) namesOfCode.set(code, new Set());
+      if (!codesOfName.has(name)) codesOfName.set(name, new Set());
+      namesOfCode.get(code)!.add(name);
+      codesOfName.get(name)!.add(code);
+    }
+    // Which of the two it is matters to whoever reads it: a name under two
+    // codes is not the same story as a code under two names.
+    const clashing = new Map<string, 'codes' | 'names'>();
+    for (const { submission } of rows) {
+      const code = submission.student.code;
+      if (!code) continue;
+      const name = studentName(submission).toLocaleLowerCase();
+      if ((codesOfName.get(name)?.size ?? 0) > 1) clashing.set(`${name}|${code}`, 'codes');
+      else if ((namesOfCode.get(code)?.size ?? 0) > 1) clashing.set(`${name}|${code}`, 'names');
+    }
+
+    return { rows, clashing, skipped, superseded };
   }, [pasted]);
 
   if (!isOpen) return null;
@@ -265,6 +293,9 @@ export const SubmissionsPanel: React.FC<SubmissionsPanelProps> = ({
                       <span className="text-[11px] text-white/40">
                         {[sub.student.class, sub.student.group, sub.student.number].filter(Boolean).join(' · ')}
                       </span>
+                      <span className={`text-[11px] font-mono ${sub.student.code ? 'text-[#67E8F9]' : 'text-white/25 italic'}`}>
+                        {sub.student.code ?? t.noCode}
+                      </span>
                     </div>
                     <div className="text-[11px] text-white/55">
                       {title}
@@ -275,6 +306,16 @@ export const SubmissionsPanel: React.FC<SubmissionsPanelProps> = ({
                       <div className="text-[11px] text-[#FCA5A5] mt-0.5">{describeGrade(verdict, language)}</div>
                     )}
                     {!verdict && <div className="text-[11px] text-white/40 mt-0.5">{t.noTask}</div>}
+                    {(() => {
+                      const clash = read.clashing.get(`${studentName(sub).toLocaleLowerCase()}|${sub.student.code}`);
+                      if (!clash) return null;
+                      return (
+                        <div className="flex items-center gap-1 text-[11px] text-[#FCD34D] mt-0.5">
+                          <AlertTriangle className="w-3 h-3 shrink-0" />
+                          {clash === 'codes' ? t.clashCodes : t.clashNames}
+                        </div>
+                      );
+                    })()}
                     {!row.intact && (
                       <div className="flex items-center gap-1 text-[11px] text-[#FCD34D] mt-0.5">
                         <AlertTriangle className="w-3 h-3 shrink-0" />

@@ -220,6 +220,11 @@ export interface Translations {
     formPlainNeedsDesktop: string;
     formAny: string;
     changeForm: string;
+    pupilCode: string;
+    pupilHint: string;
+    clashCodes: string;
+    clashNames: string;
+    noCode: string;
   };
   // Exercises
   vjezbe: {
@@ -451,7 +456,7 @@ const SOURCE: Record<SourceLang, Translations> = {
       open: 'Open on the canvas',
       noTask: 'free work — not marked',
       form: 'Hand-in form',
-      formHow: 'Make a form with boxes for first name, last name, class and the task, plus a long-answer box for the answer. Fill each box with the word for it — FIRST, LAST, CLASS, GROUP, NUMBER, TASK, and CODE for a column of check codes — then copy its pre-filled link and paste it below. The task box must be the long-answer kind: a short one is where an answer gets cut.',
+      formHow: 'Make a form with boxes for first name, last name, class and the task, plus a long-answer box for the answer. Fill each box with the word for it — FIRST, LAST, CLASS, GROUP, NUMBER, TASK, PIN for each pupil\u2019s own code, and CODE for the check code — then copy its pre-filled link and paste it below. The task box must be the long-answer kind: a short one is where an answer gets cut.',
       formUrl: 'Pre-filled link to the form',
       formOk: 'Form set up:',
       formBad: 'That is not a usable link.',
@@ -474,6 +479,11 @@ const SOURCE: Record<SourceLang, Translations> = {
       formPlainNeedsDesktop: 'A plain form link can only be read by the desktop app. In a browser, paste the pre-filled link.',
       formAny: 'Link to the form',
       changeForm: 'another form',
+      pupilCode: 'Your code',
+      pupilHint: 'The code your teacher gave you. It is how they know the work is yours.',
+      clashCodes: 'this name hands in under two different codes',
+      clashNames: 'this code stands beside another name too',
+      noCode: 'no code',
     },
     vjezbe: {
       title: 'Exercises',
@@ -710,7 +720,7 @@ const SOURCE: Record<SourceLang, Translations> = {
       open: 'Auf der Zeichenfläche öffnen',
       noTask: 'freie Arbeit — nicht bewertet',
       form: 'Abgabeformular',
-      formHow: 'Lege ein Formular mit Feldern für Vorname, Nachname, Klasse und Aufgabe an, dazu ein Feld für eine lange Antwort. Trage in jedes Feld das Wort dafür ein — VORNAME, NACHNAME, KLASSE, GRUPPE, NUMMER, AUFGABE, und CODE für eine Spalte mit Prüfcodes — kopiere dann den vorausgefüllten Link und füge ihn unten ein. Das Aufgabenfeld muss das lange sein: im kurzen wird eine Antwort abgeschnitten.',
+      formHow: 'Lege ein Formular mit Feldern für Vorname, Nachname, Klasse und Aufgabe an, dazu ein Feld für eine lange Antwort. Trage in jedes Feld das Wort dafür ein — VORNAME, NACHNAME, KLASSE, GRUPPE, NUMMER, AUFGABE, PIN für die eigene Kennung, und CODE für den Prüfcode — kopiere dann den vorausgefüllten Link und füge ihn unten ein. Das Aufgabenfeld muss das lange sein: im kurzen wird eine Antwort abgeschnitten.',
       formUrl: 'Vorausgefüllter Link zum Formular',
       formOk: 'Formular eingerichtet:',
       formBad: 'Das ist kein brauchbarer Link.',
@@ -733,6 +743,11 @@ const SOURCE: Record<SourceLang, Translations> = {
       formPlainNeedsDesktop: 'Einen einfachen Formularlink kann nur die Desktop-App lesen. Im Browser den vorausgefüllten Link einfügen.',
       formAny: 'Link zum Formular',
       changeForm: 'anderes Formular',
+      pupilCode: 'Deine Kennung',
+      pupilHint: 'Die Kennung von deiner Lehrkraft. Daran erkennt sie, dass die Arbeit von dir ist.',
+      clashCodes: 'dieser Name gibt unter zwei verschiedenen Kennungen ab',
+      clashNames: 'diese Kennung steht auch neben einem anderen Namen',
+      noCode: 'ohne Kennung',
     },
     vjezbe: {
       title: 'Übungen',
@@ -969,7 +984,7 @@ const SOURCE: Record<SourceLang, Translations> = {
       open: 'Otvori na platnu',
       noTask: 'slobodan rad — bez ocjene',
       form: 'Forma za predaju',
-      formHow: 'Napravi formu s poljima za ime, prezime, odjeljenje i zadatak, uz jedno polje za dugi odgovor. U svako polje upiši riječ za njega — IME, PREZIME, ODJELJENJE, GRUPA, BROJ, ZADATAK, i KOD ako hoćeš kolonu s kontrolnim kodovima — pa kopiraj njenu „pre-filled" vezu i zalijepi je ispod. Polje za zadatak mora biti ono za dugi odgovor: u kratkom se odgovor odsiječe.',
+      formHow: 'Napravi formu s poljima za ime, prezime, odjeljenje i zadatak, uz jedno polje za dugi odgovor. U svako polje upiši riječ za njega — IME, PREZIME, ODJELJENJE, GRUPA, BROJ, ZADATAK, ŠIFRA za šifru učenika, i KOD za kontrolni kod — pa kopiraj njenu „pre-filled" vezu i zalijepi je ispod. Polje za zadatak mora biti ono za dugi odgovor: u kratkom se odgovor odsiječe.',
       formUrl: 'Unaprijed popunjena veza do forme',
       formOk: 'Forma je podešena:',
       formBad: 'Ovo nije upotrebljiva veza.',
@@ -992,6 +1007,11 @@ const SOURCE: Record<SourceLang, Translations> = {
       formPlainNeedsDesktop: 'Običnu vezu na formu može pročitati samo desktop verzija. U pregledniku zalijepi „pre-filled" vezu.',
       formAny: 'Veza na formu',
       changeForm: 'druga forma',
+      pupilCode: 'Tvoja šifra',
+      pupilHint: 'Šifru ti je dao nastavnik. Po njoj zna da je rad tvoj.',
+      clashCodes: 'isto ime predaje pod dvije različite šifre',
+      clashNames: 'ista šifra stoji i uz drugo ime',
+      noCode: 'bez šifre',
     },
     vjezbe: {
       title: 'Vježbe',

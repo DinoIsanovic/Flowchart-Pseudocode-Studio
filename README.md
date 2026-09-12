@@ -117,8 +117,8 @@ rather than a step.
 
 The teacher makes one form for the whole class and all year — first name, last
 name, class, and a long-answer box — fills each box with the word for it
-(`IME`/`FIRST`, `PREZIME`/`LAST`, `ODJELJENJE`/`CLASS`, `ZADATAK`/`TASK`, and
-`KOD`/`CODE` for a column of check codes), copies its own pre-filled link and
+(`IME`/`FIRST`, `PREZIME`/`LAST`, `ODJELJENJE`/`CLASS`, `ZADATAK`/`TASK`,
+`ŠIFRA`/`PIN` for each pupil's own code, and `KOD`/`CODE` for the check code), copies its own pre-filled link and
 pastes it into the app once. The task box has to be the long-answer kind; a
 short one is where an answer gets cut.
 
@@ -138,6 +138,16 @@ sets the form up in their app, and from then on a student's name, class and
 register number are filled in for them. The answer itself travels in the link
 only while it is short; beyond that it is pasted, because a form service may
 cut a long query value without saying so.
+
+Each student also carries the code their teacher gave them, typed once and
+remembered. A name in a box is worth nothing on its own — anyone can type
+anyone's — and the code is what makes a wrong one show: the teacher's list puts
+it beside every name and says which of the two ways it went wrong, a name
+handing in under two different codes or a code standing beside two names. It is
+a slip of paper, not a password. It makes an impersonation visible rather than
+impossible, which is the part that matters in a classroom. Two submissions
+carrying different codes are two claims and never replace one another, however
+alike the names on them.
 
 One line of text carries which task, which kind of exercise, which language,
 and the answer in whatever shape that exercise produces one — a program, a

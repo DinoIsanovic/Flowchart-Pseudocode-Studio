@@ -58,7 +58,7 @@ function ok(name: string, condition: boolean, detail = '') {
   console.log(`FAIL  ${name}${detail ? `\n      ${detail}` : ''}`);
 }
 
-const STUDENT = { first: 'Amina', last: 'Hodžić', class: '7-2', number: 12 };
+const STUDENT = { first: 'Amina', last: 'Hodžić', class: '7-2', number: 12, code: 'M4K7' };
 
 function submissionFor(task: Task, type: string, lang: Language, correct: boolean): Submission {
   const solution = solutionText(task, lang);
@@ -144,6 +144,11 @@ function submissionFor(task: Task, type: string, lang: Language, correct: boolea
   ok('novija predaja stoji', twice.found.length === 1 && twice.found[0].at === '2026-09-12T11:00Z');
   ok('ranija je izbrojana', twice.superseded === 1);
 
+  // The code a student was given travels with the work and is part of what
+  // the checksum covers, so a name swapped for another's does not go unnoticed.
+  ok('šifra učenika putuje', parseSubmissions(text).found[0].student.code === 'M4K7');
+  ok('zamijenjena šifra se vidi', !intact({ ...sub, student: { ...sub.student, code: 'X9Z1' } }));
+
   // An answer edited after the fact no longer adds up.
   const tampered = { ...sub, answer: { code: 'POČETAK\nKRAJ' } };
   ok('prepravljen odgovor se vidi', !intact(tampered));
@@ -201,6 +206,15 @@ for (const pack of PACKS) {
   // A column of its own for the check code, named in two words on a real form.
   ok('kod zadatka je svoje polje', link?.fields.code === 'entry.666');
 
+  // Two boxes whose names both begin with „kod": only the order of the fields
+  // keeps the student's code and the check code apart.
+  const both = parseFormLink(
+    'https://docs.google.com/forms/d/e/A/viewform?entry.7=Kod ucenika&entry.8=Kod zadatka'
+  ).link;
+  ok('šifra i kontrolni kod se ne miješaju',
+    both?.fields.pupil === 'entry.7' && both?.fields.code === 'entry.8',
+    JSON.stringify(both?.fields));
+
   const url = new URL(submitUrl(link!, { first: 'Amina', last: 'Hodžić', class: '7-2', number: 12, payload: '{"v":1}', code: 'K7F2' }));
   ok('forma dobija svoje parametre nazad', url.searchParams.get('usp') === 'pp_url');
   ok('ime je upisano', url.searchParams.get('entry.111') === 'Amina');
@@ -216,7 +230,10 @@ for (const pack of PACKS) {
       '&entry.1419049343=IME&entry.286611330=PREZIME&entry.1345909731=ODJELJENJE' +
       '&entry.331646779=GRUPA&entry.1033426925=BROJ&entry.117213090=ZADATAK&entry.308089101=KOD'
   );
-  ok('prava forma: sva polja prepoznata', real.missing.length === 0, real.missing.join(', '));
+  // Everything that form has is recognised. It has no box for a pupil's own
+  // code — it was made before there was one — and a box the form does not have
+  // is not a box the app failed to find.
+  ok('prava forma: sva polja prepoznata', real.missing.join(',') === 'pupil', real.missing.join(', '));
   ok('prava forma: odgovor u svoje polje', real.link?.fields.payload === 'entry.117213090');
 
   // A form made in German, and one box left unmarked.
@@ -266,7 +283,16 @@ for (const pack of PACKS) {
 
   // What was learnt has to be exactly what a pre-filled link would have said.
   const { missing } = parseFormLink(learned.prefilled!);
-  ok('naučena veza pokriva sva polja', missing.length === 0, missing.join(', '));
+  ok('naučena veza pokriva sva polja forme', missing.join(',') === 'pupil', missing.join(', '));
+
+  // A form that does have one: the box is read and the two codes stay apart.
+  const withPin = learnForm(
+    'https://docs.google.com/forms/d/e/A/viewform',
+    '<script>FB_PUBLIC_LOAD_DATA_ = [null,[null,[[1,"Ime",null,0,[[11,null,1]]],[2,"Šifra",null,0,[[12,null,1]]],[3,"Zadatak",null,1,[[13,null,0]]],[4,"Kod zadatka",null,0,[[14,null,0]]]]]];</script>'
+  );
+  const pinned = parseFormLink(withPin.prefilled!).link;
+  ok('forma sa šifrom učenika', pinned?.fields.pupil === 'entry.12' && pinned?.fields.code === 'entry.14',
+    JSON.stringify(pinned?.fields));
 
   // Titles a teacher actually writes.
   ok('naslovi pitanja → polja',
