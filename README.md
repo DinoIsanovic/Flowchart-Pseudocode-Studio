@@ -110,6 +110,11 @@ desktop build reads the reply itself and says either that the form recorded it
 or which required question it refused for. Where there is no network, the same
 text saves as a file.
 
+The link to the form is pasted in the hand-in window itself, where the work is
+handed over — on a school computer it is whoever is sitting there who is told
+"paste this". `Submissions` is the teacher's side of it and stays an option
+rather than a step.
+
 The teacher makes one form for the whole class and all year — first name, last
 name, class, and a long-answer box — fills each box with the word for it
 (`IME`/`FIRST`, `PREZIME`/`LAST`, `ODJELJENJE`/`CLASS`, `ZADATAK`/`TASK`, and

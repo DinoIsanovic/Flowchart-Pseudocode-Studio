@@ -9,8 +9,7 @@ import { Language } from '../types';
 import { translations } from '../i18n/translations';
 import { Submission, parseSubmissions, studentName } from '../core/submission';
 import { FormLink, configLink } from '../core/form-link';
-import { LearnedForm, learnForm } from '../core/form-page';
-import { fetchFormPage, onDesktop } from '../core/form-post';
+import { LearnedForm } from '../core/form-page';
 import { Regraded, regrade } from '../exercises/regrade';
 import { describeGrade } from '../exercises/grade';
 import { text as taskText } from '../exercises/types';
@@ -22,7 +21,10 @@ interface SubmissionsPanelProps {
   link: FormLink | null;
   /** The prefilled link exactly as the teacher pasted it, for sharing on. */
   linkSource: string | null;
-  onConfigure: (prefilled: string) => 'ok' | 'no-url' | 'no-fields';
+  /** Takes a link to the form — pre-filled, or plain where it can be read. */
+  onConfigure: (pasted: string) => Promise<'ok' | 'no-url' | 'no-fields' | 'needs-desktop'>;
+  /** What reading the form's own page turned up, when it could be read. */
+  learned: LearnedForm | null;
   onForget: () => void;
   onOpenWork: (sub: Submission) => void;
   onToast: (message: string, kind?: 'success' | 'error') => void;
@@ -44,6 +46,7 @@ export const SubmissionsPanel: React.FC<SubmissionsPanelProps> = ({
   link,
   linkSource,
   onConfigure,
+  learned,
   onForget,
   onOpenWork,
   onToast,
@@ -53,8 +56,6 @@ export const SubmissionsPanel: React.FC<SubmissionsPanelProps> = ({
   const [formOpen, setFormOpen] = useState(false);
   const [draftLink, setDraftLink] = useState('');
   const [reading, setReading] = useState(false);
-  /** What the form's own page said about itself, where it could be read. */
-  const [learned, setLearned] = useState<LearnedForm | null>(null);
 
   const read = useMemo(() => {
     if (!pasted.trim()) return { rows: [] as Regraded[], skipped: 0, superseded: 0 };
@@ -68,39 +69,19 @@ export const SubmissionsPanel: React.FC<SubmissionsPanelProps> = ({
   const marked = read.rows.filter((r) => r.result);
   const correct = marked.filter((r) => r.result?.correct).length;
 
-  /**
-   * A pre-filled link is understood everywhere. A plain link to the form is
-   * understood on the desktop, where the app may read the form's own page and
-   * work out the boxes itself — and, while it is there, say which questions
-   * would refuse a submission before a class finds out the hard way.
-   */
   const configure = async () => {
-    const outcome = onConfigure(draftLink);
+    setReading(true);
+    const outcome = await onConfigure(draftLink);
+    setReading(false);
     if (outcome === 'ok') {
       setDraftLink('');
-      setLearned(null);
       onToast(t.configured, 'success');
       return;
     }
-
-    if (outcome === 'no-fields' && onDesktop()) {
-      setReading(true);
-      const html = await fetchFormPage(draftLink);
-      setReading(false);
-      const read = html ? learnForm(draftLink, html) : null;
-      if (read?.prefilled && onConfigure(read.prefilled) === 'ok') {
-        setDraftLink('');
-        setLearned(read);
-        onToast(t.configured, 'success');
-        return;
-      }
-    }
-
-    if (outcome === 'no-fields' && !onDesktop()) {
-      onToast(t.formPlainNeedsDesktop, 'error');
-      return;
-    }
-    onToast(outcome === 'no-url' ? t.formBad : t.formNoFields, 'error');
+    onToast(
+      outcome === 'no-url' ? t.formBad : outcome === 'needs-desktop' ? t.formPlainNeedsDesktop : t.formNoFields,
+      'error'
+    );
   };
 
   const copyClassLink = async () => {

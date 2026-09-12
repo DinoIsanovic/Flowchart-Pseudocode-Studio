@@ -218,6 +218,8 @@ export interface Translations {
     formBlocking: string;
     formShortBox: string;
     formPlainNeedsDesktop: string;
+    formAny: string;
+    changeForm: string;
   };
   // Exercises
   vjezbe: {
@@ -470,6 +472,8 @@ const SOURCE: Record<SourceLang, Translations> = {
       formBlocking: 'These questions are required and the app cannot fill them, so every submission would be refused:',
       formShortBox: 'The answer box is a short one — a submission would be cut. Make it a long-answer question.',
       formPlainNeedsDesktop: 'A plain form link can only be read by the desktop app. In a browser, paste the pre-filled link.',
+      formAny: 'Link to the form',
+      changeForm: 'another form',
     },
     vjezbe: {
       title: 'Exercises',
@@ -727,6 +731,8 @@ const SOURCE: Record<SourceLang, Translations> = {
       formBlocking: 'Diese Fragen sind Pflicht und die App kann sie nicht ausfüllen — jede Abgabe würde abgelehnt:',
       formShortBox: 'Das Antwortfeld ist ein kurzes — eine Abgabe würde abgeschnitten. Mach eine Frage mit langer Antwort daraus.',
       formPlainNeedsDesktop: 'Einen einfachen Formularlink kann nur die Desktop-App lesen. Im Browser den vorausgefüllten Link einfügen.',
+      formAny: 'Link zum Formular',
+      changeForm: 'anderes Formular',
     },
     vjezbe: {
       title: 'Übungen',
@@ -984,6 +990,8 @@ const SOURCE: Record<SourceLang, Translations> = {
       formBlocking: 'Ova pitanja su obavezna, a aplikacija ih ne popunjava — svaka predaja bi bila odbijena:',
       formShortBox: 'Polje za zadatak je kratko — predaja bi bila odsječena. Napravi ga pitanjem s dugim odgovorom.',
       formPlainNeedsDesktop: 'Običnu vezu na formu može pročitati samo desktop verzija. U pregledniku zalijepi „pre-filled" vezu.',
+      formAny: 'Veza na formu',
+      changeForm: 'druga forma',
     },
     vjezbe: {
       title: 'Vježbe',

@@ -37,6 +37,8 @@ import { SubmitDialog, Work } from './components/SubmitDialog';
 import { SubmissionsPanel } from './components/SubmissionsPanel';
 import { Submission, SubmissionStudent } from './core/submission';
 import { CONFIG_PARAM, configFromSearch, parseFormLink } from './core/form-link';
+import { LearnedForm, learnForm } from './core/form-page';
+import { fetchFormPage, onDesktop } from './core/form-post';
 
 // Warnings describe the diagram that was drawn; only real errors withhold it.
 const isBlocking = (e: ParseError) => e.severity !== 'warning';
@@ -234,6 +236,8 @@ export default function App() {
   });
   /** The teacher's prefilled form link, exactly as it was pasted. */
   const [formSource, setFormSource] = useState<string | null>(() => localStorage.getItem(FORM_KEY));
+  /** What the form's own page said, where the app was able to read it. */
+  const [learnedForm, setLearnedForm] = useState<LearnedForm | null>(null);
   const [parseErrors, setParseErrors] = useState<ParseError[]>([]);
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -954,20 +958,42 @@ export default function App() {
     // Once, on the way in.
   }, []);
 
-  const configureForm = (prefilled: string): 'ok' | 'no-url' | 'no-fields' => {
-    const { link, reason } = parseFormLink(prefilled);
-    if (!link) return reason ?? 'no-url';
-    setFormSource(prefilled.trim());
-    try {
-      localStorage.setItem(FORM_KEY, prefilled.trim());
-    } catch {
-      // Set for this session only.
-    }
-    return 'ok';
+  /**
+   * Takes the teacher's form however it arrives.
+   *
+   * A pre-filled link is understood everywhere. A plain link to the form is
+   * understood on the desktop, which may read the form's own page and work the
+   * boxes out — and while it is there, say what would refuse or cut a
+   * submission. Kept here rather than in one of the panels because both the
+   * student's dialog and the teacher's list hand a link over the same way.
+   */
+  const configureForm = async (pasted: string): Promise<'ok' | 'no-url' | 'no-fields' | 'needs-desktop'> => {
+    const keep = (value: string, learned: LearnedForm | null) => {
+      setFormSource(value);
+      setLearnedForm(learned);
+      try {
+        localStorage.setItem(FORM_KEY, value);
+      } catch {
+        // Set for this session only.
+      }
+      return 'ok' as const;
+    };
+
+    const { link, reason } = parseFormLink(pasted);
+    if (link) return keep(pasted.trim(), null);
+    if (reason === 'no-url') return 'no-url';
+
+    if (!onDesktop()) return 'needs-desktop';
+
+    const html = await fetchFormPage(pasted.trim());
+    const read = html ? learnForm(pasted.trim(), html) : null;
+    if (read?.prefilled && parseFormLink(read.prefilled).link) return keep(read.prefilled, read);
+    return 'no-fields';
   };
 
   const forgetForm = () => {
     setFormSource(null);
+    setLearnedForm(null);
     try {
       localStorage.removeItem(FORM_KEY);
     } catch {
@@ -1724,6 +1750,8 @@ export default function App() {
         student={student}
         onStudentChange={setStudent}
         link={formLink}
+        learned={learnedForm}
+        onConfigure={configureForm}
         work={submitWork}
         onSaveFile={saveSubmissionFile}
         onToast={showToast}
@@ -1735,6 +1763,7 @@ export default function App() {
         onClose={() => setIsSubmissionsOpen(false)}
         link={formLink}
         linkSource={formSource}
+        learned={learnedForm}
         onConfigure={configureForm}
         onForget={forgetForm}
         onOpenWork={openSubmittedWork}

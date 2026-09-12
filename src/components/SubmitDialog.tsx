@@ -4,7 +4,7 @@
  */
 
 import React, { useMemo, useRef, useState } from 'react';
-import { AlertTriangle, Check, Copy, Download, ExternalLink, Send, X } from 'lucide-react';
+import { AlertTriangle, Check, Copy, Download, ExternalLink, Link2, Send, X } from 'lucide-react';
 import { Language } from '../types';
 import { translations } from '../i18n/translations';
 import { stripDiacritics } from '../core/flowchart-gen';
@@ -19,6 +19,7 @@ import {
 } from '../core/submission';
 import { FormLink, responseUrl, submitFields, submitUrl } from '../core/form-link';
 import { PostOutcome, onDesktop, postSubmission } from '../core/form-post';
+import { LearnedForm } from '../core/form-page';
 
 /** The frame the form's own answer is rendered in; see `sendInPlace`. */
 const FRAME = 'predaja-odgovor';
@@ -36,6 +37,10 @@ interface SubmitDialogProps {
   onStudentChange: (next: SubmissionStudent) => void;
   /** The teacher's form, once it has been set up on this device. */
   link: FormLink | null;
+  /** What reading the form's own page turned up, when it could be read. */
+  learned: LearnedForm | null;
+  /** Takes a link to the form — this is where it is normally pasted. */
+  onConfigure: (pasted: string) => Promise<'ok' | 'no-url' | 'no-fields' | 'needs-desktop'>;
   work: Work | null;
   onSaveFile: (name: string, text: string) => void;
   onToast: (message: string, kind?: 'success' | 'error') => void;
@@ -60,6 +65,8 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
   student,
   onStudentChange,
   link,
+  learned,
+  onConfigure,
   work,
   onSaveFile,
   onToast,
@@ -69,6 +76,9 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
   const [sending, setSending] = useState(false);
   const [outcome, setOutcome] = useState<PostOutcome | null>(null);
   const [framed, setFramed] = useState(false);
+  const [draftLink, setDraftLink] = useState('');
+  const [reading, setReading] = useState(false);
+  const [changing, setChanging] = useState(false);
   const postForm = useRef<HTMLFormElement>(null);
 
   const submission = useMemo(() => {
@@ -173,6 +183,28 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
     window.open(submitUrl(link, values(inLink)), '_blank', 'noopener');
   };
 
+  /**
+   * The form is pasted here, where the work is handed in, rather than only in
+   * the teacher's list: on a school computer it is whoever is sitting there
+   * who is told "paste this link", and sending them off to another screen to
+   * do it is how a class loses ten minutes.
+   */
+  const configure = async () => {
+    setReading(true);
+    const outcome = await onConfigure(draftLink);
+    setReading(false);
+    if (outcome === 'ok') {
+      setDraftLink('');
+      setChanging(false);
+      onToast(t.configured, 'success');
+      return;
+    }
+    onToast(
+      outcome === 'no-url' ? t.formBad : outcome === 'needs-desktop' ? t.formPlainNeedsDesktop : t.formNoFields,
+      'error'
+    );
+  };
+
   const saveFile = () => {
     const slug = (s: string) => stripDiacritics(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const name = ['predaja', slug(student.last), slug(student.first), slug(work.task.id ?? work.task.title)]
@@ -272,6 +304,45 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
             onFocus={(e) => e.currentTarget.select()}
             className="w-full h-20 p-2 rounded-lg bg-black/60 border border-white/10 text-white/60 font-mono text-[10px] leading-snug resize-none outline-none"
           />
+
+          {/* Where the form is set: a plain link on the desktop, a pre-filled
+              one in a browser. Out of the way once it is known. */}
+          {!link || changing ? (
+            <div className="space-y-1.5">
+              <span className={label}>{t.formAny}</span>
+              <div className="flex gap-2">
+                <input
+                  value={draftLink}
+                  onChange={(e) => setDraftLink(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') void configure();
+                  }}
+                  placeholder="https://docs.google.com/forms/…"
+                  className={field}
+                />
+                <button
+                  type="button"
+                  onClick={() => void configure()}
+                  disabled={!draftLink.trim() || reading}
+                  className="h-9 px-3 shrink-0 rounded-lg bg-white text-black text-[11px] font-black uppercase tracking-wider disabled:opacity-30"
+                >
+                  {reading ? '…' : 'OK'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setChanging(true)}
+              className="flex items-center gap-1.5 text-[10.5px] text-white/40 hover:text-white/70 transition-colors"
+            >
+              <Link2 className="w-3.5 h-3.5 shrink-0" />
+              {t.formOk} {new URL(link.url).hostname} · {t.changeForm}
+            </button>
+          )}
+
+          {!!learned?.blocking.length && <p className="text-[11px] text-[#FCA5A5]">{t.formBlocking} {learned.blocking.map((q) => q.title).join(', ')}</p>}
+          {learned?.shortAnswerBox && <p className="text-[11px] text-[#FCD34D]">{t.formShortBox}</p>}
 
           {tooBig && !postTo && <p className="text-[11px] text-[#FCD34D]">{t.tooBig}</p>}
           {!link && <p className="text-[11px] text-white/50">{t.noForm}</p>}
