@@ -7,7 +7,7 @@ import React, { useMemo, useState } from 'react';
 import { AlertTriangle, Check, ChevronDown, ChevronUp, Copy, Inbox, Trash2, X } from 'lucide-react';
 import { Language } from '../types';
 import { translations } from '../i18n/translations';
-import { Submission, parseSubmissions, sameCode, studentName } from '../core/submission';
+import { Submission, parseSubmissions, sameCode, sameName, studentName } from '../core/submission';
 import { FormLink, configLink } from '../core/form-link';
 import { LearnedForm } from '../core/form-page';
 import { Regraded, regrade } from '../exercises/regrade';
@@ -72,7 +72,7 @@ export const SubmissionsPanel: React.FC<SubmissionsPanelProps> = ({
     for (const { submission } of rows) {
       const code = sameCode(submission.student.code);
       if (!code) continue;
-      const name = studentName(submission).toLocaleLowerCase();
+      const name = sameName(submission);
       if (!namesOfCode.has(code)) namesOfCode.set(code, new Set());
       if (!codesOfName.has(name)) codesOfName.set(name, new Set());
       namesOfCode.get(code)!.add(name);
@@ -84,7 +84,7 @@ export const SubmissionsPanel: React.FC<SubmissionsPanelProps> = ({
     for (const { submission } of rows) {
       const code = sameCode(submission.student.code);
       if (!code) continue;
-      const name = studentName(submission).toLocaleLowerCase();
+      const name = sameName(submission);
       if ((codesOfName.get(name)?.size ?? 0) > 1) clashing.set(`${name}|${code}`, 'codes');
       else if ((namesOfCode.get(code)?.size ?? 0) > 1) clashing.set(`${name}|${code}`, 'names');
     }
@@ -307,7 +307,7 @@ export const SubmissionsPanel: React.FC<SubmissionsPanelProps> = ({
                     )}
                     {!verdict && <div className="text-[11px] text-white/40 mt-0.5">{t.noTask}</div>}
                     {(() => {
-                      const clash = read.clashing.get(`${studentName(sub).toLocaleLowerCase()}|${sameCode(sub.student.code)}`);
+                      const clash = read.clashing.get(`${sameName(sub)}|${sameCode(sub.student.code)}`);
                       if (!clash) return null;
                       return (
                         <div className="flex items-center gap-1 text-[11px] text-[#FCD34D] mt-0.5">

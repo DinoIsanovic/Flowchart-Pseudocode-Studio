@@ -160,6 +160,29 @@ function submissionFor(task: Task, type: string, lang: Language, correct: boolea
   const sameHand = parseSubmissions([typed('k1', '2026-09-12T10:00Z'), typed('K1 ', '2026-09-12T10:05Z'), typed(' k1', '2026-09-12T10:09Z')].join('\n'));
   ok('ista šifra u drugom slovu je ista šifra', sameHand.found.length === 1, `${sameHand.found.length} predaje`);
 
+  // And the name is typed afresh every time beside it, so it gets the same
+  // reading: one student who wrote their own name three ways, not three.
+  const named = (first: string, last: string, at: string) =>
+    submissionText(buildSubmission({
+      app: '0.21.2', lang: 'bs', student: { ...STUDENT, first, last },
+      task: { id: task.id, topic: task.topic, type: 'samostalno', title: 'zadatak' },
+      answer: { code: solutionText(task, 'bs') }, at,
+    }));
+  const sameStudent = parseSubmissions([
+    named('Amina', 'Hodžić', '2026-09-12T10:00Z'),
+    named('amina', 'hodžić', '2026-09-12T10:05Z'),
+    named('Amina', 'Hodžić', '2026-09-12T10:09Z'),
+  ].join('\n'));
+  ok('isto ime u drugom slovu je isti učenik', sameStudent.found.length === 1, `${sameStudent.found.length} predaje`);
+  ok('najnovija od njih stoji', sameStudent.found[0]?.at === '2026-09-12T10:09Z');
+
+  // Two students are still two, however alike the names look.
+  const twoPeople = parseSubmissions([
+    named('Amina', 'Hodžić', '2026-09-12T10:00Z'),
+    named('Amina', 'Hodžić-Begić', '2026-09-12T10:05Z'),
+  ].join('\n'));
+  ok('dva imena ostaju dvoje', twoPeople.found.length === 2, `${twoPeople.found.length} predaja`);
+
   // An answer edited after the fact no longer adds up.
   const tampered = { ...sub, answer: { code: 'POČETAK\nKRAJ' } };
   ok('prepravljen odgovor se vidi', !intact(tampered));
