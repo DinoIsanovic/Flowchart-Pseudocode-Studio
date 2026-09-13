@@ -21,6 +21,11 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  // Croatian has no list of its own: it is the Bosnian one, read through the
+  // word map. Looking 'hr' up directly found nothing, and the `.map` below
+  // then took the whole app down to a black screen.
+  const base = language === 'hr' ? 'bs' : language;
+
   const shortcuts = {
     en: [
       { key: 'G', desc: 'Toggle snap to grid & node alignment' },
@@ -49,7 +54,7 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({
       { key: 'Dvoklik', desc: 'Uredi tekst simbola ili natpis na strelici' },
       { key: 'Escape', desc: 'Prekini uređivanje ili zatvori prozor' },
     ],
-  }[language];
+  }[base];
 
   const gestures = {
     en: [
@@ -70,7 +75,7 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({
       { gesture: 'Dodir i prevlačenje simbola', desc: 'Pomjeranje oblika po platnu' },
       { gesture: 'Prevlačenje kvadratića veze', desc: 'Podešavanje putanje i uglova strelica' },
     ],
-  }[language];
+  }[base];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-md animate-in fade-in duration-150">
@@ -104,7 +109,7 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({
                   <kbd className="px-2 py-0.5 bg-[#202020] border border-white/20 rounded text-[11px] font-mono font-bold text-white shadow-xs">
                     {s.key}
                   </kbd>
-                  <span className="text-white/70 text-[11.5px] text-right">{s.desc}</span>
+                  <span className="text-white/70 text-[11.5px] text-right">{localize(language, s.desc)}</span>
                 </div>
               ))}
             </div>
@@ -113,13 +118,13 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({
           <div>
             <h3 className="font-black text-white/80 uppercase text-[10.5px] tracking-[0.15em] mb-2 flex items-center gap-1.5">
               <Touchpad className="w-3.5 h-3.5 text-[#06B6D4]" />
-              <span>{language === 'en' ? 'Touch & Mobile Gestures' : language === 'de' ? 'Touch & Mobile Gesten' : 'Dodir i mobilne geste'}</span>
+              <span>{localize(language, language === 'en' ? 'Touch & Mobile Gestures' : language === 'de' ? 'Touch & Mobile Gesten' : 'Dodir i mobilne geste')}</span>
             </h3>
             <div className="space-y-1.5 bg-[#141414] p-3 rounded-xl border border-white/10">
               {gestures.map((g, i) => (
                 <div key={i} className="flex items-center justify-between py-1.5 border-b border-white/10 last:border-0">
-                  <span className="font-bold text-white text-[11px]">{g.gesture}</span>
-                  <span className="text-white/70 text-[11.5px] text-right">{g.desc}</span>
+                  <span className="font-bold text-white text-[11px]">{localize(language, g.gesture)}</span>
+                  <span className="text-white/70 text-[11.5px] text-right">{localize(language, g.desc)}</span>
                 </div>
               ))}
             </div>
@@ -132,7 +137,7 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({
             onClick={onClose}
             className="px-5 py-1.5 bg-white hover:bg-neutral-200 text-black font-black uppercase tracking-wider text-xs rounded-lg transition-colors"
           >
-            {language === 'en' ? 'Close' : language === 'de' ? 'Schließen' : 'Zatvori'}
+            {localize(language, language === 'en' ? 'Close' : language === 'de' ? 'Schließen' : 'Zatvori')}
           </button>
         </div>
       </div>
