@@ -920,7 +920,7 @@ dependencies = [
 
 [[package]]
 name = "flowchart-studio"
-version = "0.21.2"
+version = "0.21.3"
 dependencies = [
  "log",
  "serde",
