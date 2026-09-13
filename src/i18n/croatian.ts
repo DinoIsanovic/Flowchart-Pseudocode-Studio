@@ -98,6 +98,7 @@ const WORDS: Record<string, string> = {
   prečice: 'prečaci',
   prečicu: 'prečac',
   prečicama: 'prečacima',
+  računara: 'računala',
 
   // degrees
   stepen: 'stupanj',
@@ -142,6 +143,7 @@ export const BOSNIAN_ONLY: RegExp[] = [
   /\bzbir\p{L}*/giu,
   /\btastatur\p{L}*/giu,
   /\bprečic\p{L}*/giu,
+  /\bračunar\p{L}*/giu,
   /\bstepen\p{L}*/giu,
 ];
 

@@ -187,6 +187,25 @@ export function studentName(sub: Submission): string {
   return `${sub.student.last} ${sub.student.first}`.trim();
 }
 
+/** How many handed-in answers one device keeps a record of, newest last. */
+export const SENT_REMEMBERED = 60;
+
+/**
+ * The answers this device has already handed in, newest last.
+ *
+ * A checksum covers the whole submission except the moment it was made, so
+ * pressing Send twice on untouched work produces the same one, and a corrected
+ * answer produces a different one. That is the entire difference between a
+ * duplicate and an honest second attempt, and it is what lets the app hold back
+ * the first without ever standing in the way of the second.
+ *
+ * A record kept per device and not per student: these are school computers, and
+ * the point is to catch the press that repeats, not to know who is pressing.
+ */
+export function rememberSent(sent: string[], sum: string): string[] {
+  return [...sent.filter((s) => s !== sum), sum].slice(-SENT_REMEMBERED);
+}
+
 /**
  * A name as it counts for comparison: trimmed, spaces collapsed, in one case.
  *

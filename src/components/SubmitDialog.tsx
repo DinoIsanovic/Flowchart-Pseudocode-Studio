@@ -15,6 +15,7 @@ import {
   SubmissionStudent,
   SubmissionTask,
   buildSubmission,
+  rememberSent,
   submissionText,
 } from '../core/submission';
 import { FormLink, responseUrl, submitFields, submitUrl } from '../core/form-link';
@@ -23,6 +24,20 @@ import { LearnedForm } from '../core/form-page';
 
 /** The frame the form's own answer is rendered in; see `sendInPlace`. */
 const FRAME = 'predaja-odgovor';
+
+/** Where the record of what this device has handed in is kept. */
+const SENT_KEY = 'flowchart_studio_poslano_v1';
+
+function readSent(): string[] {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SENT_KEY) ?? '[]');
+    return Array.isArray(saved) ? saved.filter((s): s is string => typeof s === 'string') : [];
+  } catch {
+    // A device that will not keep the record still hands work in; it just
+    // cannot tell a repeated press from a first one.
+    return [];
+  }
+}
 
 export interface Work {
   task: SubmissionTask;
@@ -80,6 +95,14 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
   const [reading, setReading] = useState(false);
   const [changing, setChanging] = useState(false);
   const postForm = useRef<HTMLFormElement>(null);
+  const [sent, setSent] = useState<string[]>(readSent);
+  /**
+   * The answer a second press has been asked for, if one has.
+   *
+   * Held as the checksum rather than a flag so that correcting the work clears
+   * it by itself: the question was about that answer, and this is another one.
+   */
+  const [armed, setArmed] = useState<string | null>(null);
 
   const submission = useMemo(() => {
     if (!work) return null;
@@ -156,6 +179,18 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
       return;
     }
     if (!postTo) return;
+
+    // An answer already handed in from this device is asked about once, and
+    // sent on the next press. It is never refused outright: the app cannot see
+    // the teacher's spreadsheet, so a student whose first send did not arrive
+    // must always have a way to send a second — and a student who corrected
+    // something is handing in a different answer and is not asked at all.
+    if (sent.includes(submission.sum) && armed !== submission.sum) {
+      setArmed(submission.sum);
+      setOutcome(null);
+      return;
+    }
+
     setOutcome(null);
 
     if (onDesktop()) {
@@ -167,9 +202,14 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
           if (result.state === 'failed') {
             setFramed(true);
             postForm.current?.submit();
+            remember();
             return;
           }
           setOutcome(result);
+          // Only what the form itself confirmed. A refused submission is one a
+          // student has to fix and send again, and remembering it would put a
+          // question in front of them for doing exactly that.
+          if (result.state === 'recorded') remember();
         })
         .finally(() => setSending(false));
       return;
@@ -177,6 +217,21 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
 
     setFramed(true);
     postForm.current?.submit();
+    remember();
+  };
+
+  /** Writes this answer into the device's record of what it has handed in. */
+  const remember = () => {
+    setArmed(null);
+    setSent((prev) => {
+      const next = rememberSent(prev, submission.sum);
+      try {
+        localStorage.setItem(SENT_KEY, JSON.stringify(next));
+      } catch {
+        // Nothing to do and nothing worth saying: the work was handed in.
+      }
+      return next;
+    });
   };
 
   const openForm = () => {
@@ -356,6 +411,15 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
           {link && !postTo && <p className="text-[11px] text-white/50">{inLink ? t.prefilled : t.pasteThere}</p>}
           {postTo && <p className="text-[11px] text-white/50">{t.sendHow}</p>}
 
+          {/* Said before the press, not after it: the student is meant to stop
+              and think about whether they meant to hand the same work in twice. */}
+          {postTo && sent.includes(submission.sum) && (
+            <p className="flex items-start gap-1.5 text-[12px] text-[#FCD34D]">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-px" />
+              {armed === submission.sum ? t.sendAgainHint : t.already}
+            </p>
+          )}
+
           {/* Posted rather than typed: a real form submission, aimed at the
               frame below so the form's own answer lands in front of the
               student instead of in a tab they have to come back from. */}
@@ -376,7 +440,7 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
                 className="flex items-center gap-1.5 h-10 px-4 rounded-xl bg-white text-black text-[11px] font-black uppercase tracking-wider hover:bg-neutral-200 active:scale-95 transition-all disabled:opacity-40"
               >
                 <Send className="w-4 h-4" />
-                {sending ? t.sending : t.sendNow}
+                {sending ? t.sending : armed === submission.sum ? t.sendAgain : t.sendNow}
               </button>
             ) : (
               <button

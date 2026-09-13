@@ -35,11 +35,13 @@ import { buildFlowchart, parsePseudocode } from '../src/core/flowchart-gen';
 import { Interpreter } from '../src/core/interpreter';
 import {
   PREFILL_MAX,
+  SENT_REMEMBERED,
   SIZE_WARN,
   Submission,
   buildSubmission,
   intact,
   parseSubmissions,
+  rememberSent,
   submissionText,
 } from '../src/core/submission';
 import { configFromSearch, configLink, parseFormLink, responseUrl, submitFields, submitUrl } from '../src/core/form-link';
@@ -182,6 +184,38 @@ function submissionFor(task: Task, type: string, lang: Language, correct: boolea
     named('Amina', 'Hodžić-Begić', '2026-09-12T10:05Z'),
   ].join('\n'));
   ok('dva imena ostaju dvoje', twoPeople.found.length === 2, `${twoPeople.found.length} predaja`);
+
+  // What the device remembers having handed in. The same answer pressed twice
+  // is the same checksum; a corrected one is a different checksum and is never
+  // held back.
+  const corrected = buildSubmission({
+    app: '0.22.0', lang: 'bs', student: STUDENT,
+    task: { id: task.id, topic: task.topic, type: 'samostalno', title: 'zadatak' },
+    answer: { code: `${solutionText(task, 'bs')}\nISPIŠI "gotovo"` }, at: '2026-09-13T09:00Z',
+  });
+  ok('isti odgovor daje isti kontrolni kod', sub.sum === buildSubmission({
+    app: '0.21.1', lang: 'bs', student: STUDENT,
+    task: { id: task.id, topic: task.topic, type: 'samostalno', title: 'zadatak' },
+    answer: { code: solutionText(task, 'bs') }, at: '2026-09-12T23:30Z',
+  }).sum, 'vrijeme ne ulazi u kontrolni kod');
+  ok('ispravljen odgovor daje drugi kod', corrected.sum !== sub.sum);
+
+  let record: string[] = [];
+  record = rememberSent(record, sub.sum);
+  ok('poslano se pamti', record.includes(sub.sum));
+  ok('ispravljeno nije zapamćeno kao poslano', !record.includes(corrected.sum));
+  record = rememberSent(record, sub.sum);
+  ok('isto se ne pamti dvaput', record.length === 1);
+  record = rememberSent(record, corrected.sum);
+  ok('i ispravljeno se pamti kad se pošalje', record.length === 2 && record[1] === corrected.sum);
+
+  // The record is a device's, and a device is a school computer that a whole
+  // class sits at: it must not grow without end.
+  let many: string[] = [];
+  for (let i = 0; i < SENT_REMEMBERED + 25; i++) many = rememberSent(many, `S${i}`);
+  ok('zapis ne raste bez kraja', many.length === SENT_REMEMBERED, `${many.length}`);
+  ok('najnovije je zadržano', many[many.length - 1] === `S${SENT_REMEMBERED + 24}`);
+  ok('najstarije je ispalo', !many.includes('S0'));
 
   // An answer edited after the fact no longer adds up.
   const tampered = { ...sub, answer: { code: 'POČETAK\nKRAJ' } };

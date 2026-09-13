@@ -207,6 +207,9 @@ export interface Translations {
     forget: string;
     sendNow: string;
     sending: string;
+    already: string;
+    sendAgain: string;
+    sendAgainHint: string;
     sendHow: string;
     openForm: string;
     recorded: string;
@@ -465,6 +468,9 @@ const SOURCE: Record<SourceLang, Translations> = {
       forget: 'Forget this form',
       sendNow: 'Hand it in',
       sending: 'Sending…',
+      already: 'You have already handed this answer in from this computer.',
+      sendAgain: 'Hand it in again',
+      sendAgainHint: 'Press again to send the same answer a second time. If you spotted a mistake, correct your work first — a corrected answer is sent without asking.',
       sendHow: 'One press hands it in. The form\u2019s own answer appears below — read it before you leave.',
       openForm: 'Open the form',
       recorded: 'Recorded by the form.',
@@ -728,6 +734,9 @@ const SOURCE: Record<SourceLang, Translations> = {
       forget: 'Formular vergessen',
       sendNow: 'Abgeben',
       sending: 'Wird gesendet…',
+      already: 'Diese Antwort hast du von diesem Rechner schon abgegeben.',
+      sendAgain: 'Noch einmal abgeben',
+      sendAgainHint: 'Drücke noch einmal, um dieselbe Antwort ein zweites Mal zu senden. Wenn du einen Fehler bemerkt hast, verbessere zuerst deine Arbeit — eine verbesserte Antwort wird ohne Nachfrage gesendet.',
       sendHow: 'Ein Druck gibt ab. Die Antwort des Formulars erscheint unten — lies sie, bevor du weggehst.',
       openForm: 'Formular öffnen',
       recorded: 'Vom Formular aufgezeichnet.',
@@ -991,6 +1000,9 @@ const SOURCE: Record<SourceLang, Translations> = {
       forget: 'Zaboravi ovu formu',
       sendNow: 'Pošalji',
       sending: 'Šaljem…',
+      already: 'Ovaj odgovor si s ovog računara već predao.',
+      sendAgain: 'Pošalji ponovo',
+      sendAgainHint: 'Pritisni ponovo da isti odgovor pošalješ drugi put. Ako si primijetio grešku, prvo ispravi svoj rad — ispravljen odgovor se šalje bez pitanja.',
       sendHow: 'Jedan pritisak i predaja je poslana. Odgovor same forme pojavi se ispod — pročitaj ga prije nego odeš.',
       openForm: 'Otvori formu',
       recorded: 'Forma je zabilježila predaju.',
