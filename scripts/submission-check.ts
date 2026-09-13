@@ -279,6 +279,30 @@ for (const pack of PACKS) {
   const both = parseFormLink(
     'https://docs.google.com/forms/d/e/A/viewform?entry.7=Kod&entry.8=Kod zadatka'
   ).link;
+  // A box for the app's own marking, so the sheet can be filtered by it, in
+  // the words a teacher writes over such a column.
+  ok('„Provjera" je polje za ocjenu',
+    fieldOfTitle('Provjera') === 'verdict' && fieldOfTitle('PROVJERA') === 'verdict' &&
+    fieldOfTitle('Prüfung') === 'verdict' && fieldOfTitle('Check') === 'verdict' &&
+    fieldOfTitle('Check code') === 'code' &&
+    fieldOfTitle('Tačno') === 'verdict' && fieldOfTitle('Tačno/netačno') === 'verdict' &&
+    fieldOfTitle('Točno') === 'verdict' && fieldOfTitle('Rezultat') === 'verdict' && fieldOfTitle('Richtig') === 'verdict');
+  const judged = parseFormLink('https://docs.google.com/forms/d/e/A/viewform?entry.1=IME&entry.2=ZADATAK&entry.3=PROVJERA').link!;
+  ok('ocjena ide u svoju kolonu', submitFields(judged, { first: 'Amina', verdict: 'netačno' }).some(([n, v]) => n === 'entry.3' && v === 'netačno'));
+  ok('bez ocjene nema ni kolone', !submitFields(judged, { first: 'Amina' }).some(([n]) => n === 'entry.3'));
+  // A verdict travels only in its column: the packet never carries one, which
+  // is what keeps the list marking the work rather than believing it.
+  // The task's name gets a column too, and „Naziv zadatka" must not be read as
+  // the answer box because it ends in the word for one.
+  ok('„Naziv zadatka" je naziv, ne odgovor',
+    fieldOfTitle('Naziv zadatka') === 'title' && fieldOfTitle('Naziv') === 'title' &&
+    fieldOfTitle('Task title') === 'title' && fieldOfTitle('Zadatak') === 'payload');
+  const titled = parseFormLink('https://docs.google.com/forms/d/e/A/viewform?entry.1=IME&entry.2=ZADATAK&entry.4=NAZIV ZADATKA').link!;
+  ok('naziv ide u svoju kolonu', titled.fields.title === 'entry.4' && titled.fields.payload === 'entry.2' &&
+    submitFields(titled, { first: 'Amina', title: 'Zbir dva broja' }).some(([n, v]) => n === 'entry.4' && v === 'Zbir dva broja'));
+
+  ok('paket ne nosi ocjenu', !('verdict' in submissionFor(PACKS[0].tasks[0], 'samostalno', 'bs', true)));
+
   ok('šifra i kontrolni kod se ne miješaju',
     both?.fields.pupil === 'entry.7' && both?.fields.code === 'entry.8',
     JSON.stringify(both?.fields));
@@ -301,7 +325,7 @@ for (const pack of PACKS) {
   // Everything that form has is recognised. It has no box for a pupil's own
   // code — it was made before there was one — and a box the form does not have
   // is not a box the app failed to find.
-  ok('prava forma: sva polja prepoznata', real.missing.join(',') === 'pupil', real.missing.join(', '));
+  ok('prava forma: sva polja prepoznata', real.missing.join(',') === 'pupil,verdict,title', real.missing.join(', '));
   ok('prava forma: odgovor u svoje polje', real.link?.fields.payload === 'entry.117213090');
 
   // A form made in German, and one box left unmarked.
@@ -351,7 +375,7 @@ for (const pack of PACKS) {
 
   // What was learnt has to be exactly what a pre-filled link would have said.
   const { missing } = parseFormLink(learned.prefilled!);
-  ok('naučena veza pokriva sva polja forme', missing.join(',') === 'pupil', missing.join(', '));
+  ok('naučena veza pokriva sva polja forme', missing.join(',') === 'pupil,verdict,title', missing.join(', '));
 
   // A form that does have one: the box is read and the two codes stay apart.
   const withPin = learnForm(

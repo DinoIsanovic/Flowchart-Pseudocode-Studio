@@ -21,12 +21,12 @@ import { normWord } from './flowchart-gen';
  * class hands in without typing their names thirty times.
  */
 
-export type FormField = 'first' | 'last' | 'class' | 'group' | 'number' | 'payload' | 'pupil' | 'code';
+export type FormField = 'first' | 'last' | 'class' | 'group' | 'number' | 'payload' | 'pupil' | 'code' | 'verdict' | 'title';
 
 // `pupil` is tried before `code` on purpose: a box called „Kod učenika" is the
 // student's own code, and a box called „Kod zadatka" is the check code, and
 // only the order tells them apart.
-export const FORM_FIELDS: FormField[] = ['first', 'last', 'class', 'group', 'number', 'payload', 'pupil', 'code'];
+export const FORM_FIELDS: FormField[] = ['first', 'last', 'class', 'group', 'number', 'payload', 'pupil', 'code', 'verdict', 'title'];
 
 /**
  * What the teacher types into each box of their own form to mark it. Matched
@@ -49,6 +49,16 @@ export const FIELD_WORDS: Record<FormField, string[]> = {
   // only where a teacher wants to eye it beside the work; nothing depends on
   // it being there, since the app recomputes it from the text itself.
   code: ['KODZADATKA', 'KONTROLNIKOD', 'KONTROLNI', 'TASKCODE', 'CHECKCODE', 'PRUEFCODE'],
+  // Whether the app marked the answer right when it was handed in, so the
+  // spreadsheet can be filtered by it. A convenience for sorting, not a mark:
+  // the teacher's list still marks every submission again from the work itself.
+  // „Provjera" first: it is the word a form learnt from its own page is built
+  // with, and the name the user gave this column.
+  verdict: ['PROVJERA', 'TACNO', 'TOCNO', 'ISPRAVNO', 'REZULTAT', 'CHECK', 'CORRECT', 'RESULT', 'PRUEFUNG', 'PRUFUNG', 'RICHTIG', 'ERGEBNIS'],
+  // The task's name as a column of its own, so the sheet can be sorted by
+  // task: the bank's title, or what the student called work from the canvas.
+  // „Naziv zadatka" is matched whole, before „Zadatak" could claim its start.
+  title: ['NAZIV', 'NAZIVZADATKA', 'NASLOV', 'TITLE', 'TASKNAME', 'TASKTITLE', 'TITEL', 'AUFGABENNAME'],
 };
 
 export interface FormLink {
@@ -137,6 +147,10 @@ export interface FormValues {
   pupil?: string;
   /** The check code, which always fits. */
   code?: string;
+  /** „tačno" or „netačno" as the app marked it; absent for unmarked work. */
+  verdict?: string;
+  /** The task's name, from the bank or as the student wrote it. */
+  title?: string;
 }
 
 /** Every box this form wants, with what goes in it. */

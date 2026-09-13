@@ -21,6 +21,7 @@ import {
 import { FormLink, responseUrl, submitFields, submitUrl } from '../core/form-link';
 import { PostOutcome, onDesktop, postSubmission } from '../core/form-post';
 import { LearnedForm } from '../core/form-page';
+import { regrade } from '../exercises/regrade';
 
 /** The frame the form's own answer is rendered in; see `sendInPlace`. */
 const FRAME = 'predaja-odgovor';
@@ -117,6 +118,19 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
     // rather than on every keystroke in the name boxes.
   }, [work, student, title, language]);
 
+  /**
+   * „tačno" or „netačno" for a form with a box for it, so the teacher can
+   * filter the spreadsheet by it. Marked the way the teacher's list marks it,
+   * from the work and never from anything the student said. Only a sorting aid:
+   * the list marks everything again, so a hand-typed row cannot pass for right.
+   */
+  const verdict = useMemo(() => {
+    if (!submission || !link?.fields.verdict) return undefined;
+    const result = regrade(submission).result;
+    if (!result) return undefined;
+    return result.correct ? t.verdictRight : t.verdictWrong;
+  }, [submission, link, t]);
+
   if (!isOpen || !work || !submission) return null;
 
   const text = submissionText(submission);
@@ -137,6 +151,8 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
     payload: withPayload ? text : undefined,
     pupil: student.code,
     code: submission.sum,
+    verdict,
+    title: submission.task.title,
   });
 
   /** What a posted submission carries — everything, whatever its size. */
