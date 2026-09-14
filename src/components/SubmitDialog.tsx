@@ -287,6 +287,8 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
 
   const field = 'h-9 px-2.5 rounded-lg bg-white/5 border border-white/15 text-white text-[12px] outline-none focus:border-[#06B6D4]/60 w-full';
   const label = 'text-[9.5px] font-black tracking-[0.15em] text-white/40 uppercase';
+  /** The name over one box — readable at a glance, quieter than the section's. */
+  const boxLabel = 'text-[11px] font-semibold text-white/60';
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -367,49 +369,62 @@ export const SubmitDialog: React.FC<SubmitDialogProps> = ({
           {/* Who */}
           <div className="space-y-2">
             <span className={label}>{t.who}</span>
+            {/* Each box says what it is above it, not only inside it: a
+                placeholder is gone the moment the box holds a name, and on a
+                school computer it usually holds the last student's. */}
             <div className="grid grid-cols-2 gap-2">
-              <input
-                value={student.first}
-                onChange={(e) => set({ first: e.target.value })}
-                placeholder={t.first}
-                className={field}
-                autoComplete="given-name"
-              />
-              <input
-                value={student.last}
-                onChange={(e) => set({ last: e.target.value })}
-                placeholder={t.last}
-                className={field}
-                autoComplete="family-name"
-              />
-              <input
-                value={student.class ?? ''}
-                onChange={(e) => set({ class: e.target.value })}
-                placeholder={t.klasa}
-                className={field}
-              />
-              <div className="grid grid-cols-2 gap-2">
+              <label className="flex flex-col gap-1">
+                <span className={boxLabel}>{t.first}</span>
+                <input
+                  value={student.first}
+                  onChange={(e) => set({ first: e.target.value })}
+                  className={field}
+                  autoComplete="given-name"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className={boxLabel}>{t.last}</span>
+                <input
+                  value={student.last}
+                  onChange={(e) => set({ last: e.target.value })}
+                  className={field}
+                  autoComplete="family-name"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className={boxLabel}>{t.klasa}</span>
+                <input
+                  value={student.class ?? ''}
+                  onChange={(e) => set({ class: e.target.value })}
+                  className={field}
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className={boxLabel}>{t.group}</span>
                 <input
                   value={student.group ?? ''}
                   onChange={(e) => set({ group: e.target.value })}
-                  placeholder={t.group}
                   className={field}
                 />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className={boxLabel}>{t.number}</span>
                 <input
                   value={student.number ?? ''}
                   onChange={(e) => set({ number: e.target.value ? Number(e.target.value) : undefined })}
-                  placeholder={t.number}
                   inputMode="numeric"
                   className={field}
                 />
-              </div>
+              </label>
               {/* The one box nobody else can fill in for them. */}
-              <input
-                value={student.code ?? ''}
-                onChange={(e) => set({ code: e.target.value })}
-                placeholder={t.pupilCode}
-                className={`${field} col-span-2 font-mono tracking-wider`}
-              />
+              <label className="flex flex-col gap-1">
+                <span className={boxLabel}>{t.pupilCode}</span>
+                <input
+                  value={student.code ?? ''}
+                  onChange={(e) => set({ code: e.target.value })}
+                  className={`${field} font-mono tracking-wider`}
+                />
+              </label>
             </div>
             <p className="text-[10.5px] text-white/40">{t.pupilHint}</p>
           </div>
