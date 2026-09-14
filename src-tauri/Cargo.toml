@@ -1,6 +1,6 @@
 [package]
 name = "flowchart-studio"
-version = "0.23.2"
+version = "0.23.3"
 description = "Bi-directional flowchart and pseudocode editor"
 authors = ["Dino Isanović"]
 license = "Apache-2.0"
