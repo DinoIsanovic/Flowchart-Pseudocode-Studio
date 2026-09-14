@@ -42,6 +42,9 @@ export interface Translations {
   mode: string;
   modeMove: string;
   modeConnect: string;
+  /** The exercise drawing board, grown to the whole window and back. */
+  boardEnlarge: string;
+  boardShrink: string;
   zoom: string;
   zoomIn: string;
   zoomOut: string;
@@ -314,6 +317,8 @@ const SOURCE: Record<SourceLang, Translations> = {
     mode: 'OPERATION MODE',
     modeMove: '↕ Move & Edit',
     modeConnect: '→ Connect',
+    boardEnlarge: 'Enlarge',
+    boardShrink: 'Shrink',
     zoom: 'ZOOM & PAN',
     zoomIn: '+',
     zoomOut: '–',
@@ -582,6 +587,8 @@ const SOURCE: Record<SourceLang, Translations> = {
     mode: 'BETRIEBSMODUS',
     modeMove: '↕ Verschieben & Text',
     modeConnect: '→ Verbinden',
+    boardEnlarge: 'Vergrößern',
+    boardShrink: 'Verkleinern',
     zoom: 'ZOOM & ANSICHT',
     zoomIn: '+',
     zoomOut: '–',
@@ -850,6 +857,8 @@ const SOURCE: Record<SourceLang, Translations> = {
     mode: 'NAČIN RADA',
     modeMove: '↕ Pomjeranje',
     modeConnect: '→ Povezivanje',
+    boardEnlarge: 'Uvećaj',
+    boardShrink: 'Smanji',
     zoom: 'ZUM',
     zoomIn: '+',
     zoomOut: '–',

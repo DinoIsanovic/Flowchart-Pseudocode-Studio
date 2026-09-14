@@ -369,7 +369,13 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
 
   return (
     <div className="fixed inset-0 z-50 bg-[#050505]/97 backdrop-blur-xl flex flex-col">
-      <div className="w-full max-w-2xl mx-auto flex flex-col h-full">
+      {/* A drawing needs room a list of tiles does not: the panel widens
+          while the student draws and narrows again for everything else. */}
+      <div
+        className={`w-full mx-auto flex flex-col h-full ${
+          task && activeType === 'nacrtaj' ? 'max-w-6xl' : 'max-w-2xl'
+        }`}
+      >
         <div className="flex items-center gap-2 px-3 h-14 border-b border-white/10 shrink-0">
           {task ? (
             <button
@@ -634,7 +640,9 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                       setDrawn({ nodes, edges });
                       setResult(null);
                     }}
-                    height={420}
+                    // The rest of the screen, less the task above and the
+                    // buttons below; never smaller than it used to be.
+                    height="max(420px, calc(100dvh - 420px))"
                   />
                   <p className="text-[11px] text-white/40">
                     {t.writeTests}{' '}
