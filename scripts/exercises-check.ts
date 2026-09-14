@@ -19,7 +19,7 @@ import { Task, TaskPack, text } from '../src/exercises/types';
 import { blankedText, blanks, renderKeywords, solutionText, tiles } from '../src/exercises/render';
 import { MistakeKind, mistakeFor, plantMistake } from '../src/exercises/plant';
 import { traceTask } from '../src/exercises/trace';
-import { buildFlowchart } from '../src/core/flowchart-gen';
+import { buildFlowchart, orthogonalRoute } from '../src/core/flowchart-gen';
 import linijska from '../src/exercises/linijska.json';
 import grananje from '../src/exercises/grananje.json';
 import petlje from '../src/exercises/petlje.json';
@@ -133,6 +133,30 @@ for (const pack of packs) {
       const planted = plantMistake(built.nodes, built.edges, kind);
       if (!planted.issues.length) fail(task, `zasađena greška "${kind}" ne proizvodi nijedan nalaz`);
       if (!planted.answerIds.length) fail(task, `zasađena greška "${kind}" nije vezana ni za jedan oblik`);
+
+      // Every arrow has to be seen to be judged. The arrow out of END that
+      // „kraj" plants once ran straight up behind every shape in the column,
+      // so the picture showed nothing wrong while the key named END.
+      const byId = new Map(planted.nodes.map((n) => [n.id, n]));
+      const INSET = 8;
+      for (const e of planted.edges) {
+        const a = byId.get(e.from);
+        const b = byId.get(e.to);
+        if (!a || !b) continue;
+        const pts = orthogonalRoute(a, b, e.waypoints);
+        for (let i = 0; i + 1 < pts.length; i++) {
+          const p = pts[i];
+          const q = pts[i + 1];
+          for (const n of planted.nodes) {
+            if (n.id === a.id || n.id === b.id) continue;
+            const l = n.x - n.w / 2 + INSET, r = n.x + n.w / 2 - INSET;
+            const t = n.y - n.h / 2 + INSET, bt = n.y + n.h / 2 - INSET;
+            if (Math.max(p.x, q.x) > l && Math.min(p.x, q.x) < r && Math.max(p.y, q.y) > t && Math.min(p.y, q.y) < bt) {
+              fail(task, `strelica "${a.text}" → "${b.text}" u dijagramu s greškom "${kind}" prolazi iza "${n.text}"`);
+            }
+          }
+        }
+      }
     }
 
     // The state table is printed with one row per step and one column per

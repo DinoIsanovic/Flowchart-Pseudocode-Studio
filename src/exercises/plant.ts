@@ -5,6 +5,7 @@
 
 import { FlowEdge, FlowNode } from '../types';
 import { DiagramIssue, checkDiagram } from '../core/diagram-check';
+import { orthogonalRoute } from '../core/flowchart-gen';
 
 /**
  * Plants one mistake in a correct diagram, so a student can be asked to find
@@ -70,7 +71,32 @@ export function plantMistake(nodes: FlowNode[], edges: FlowEdge[], kind: Mistake
     const end = nodes.find(isEnd);
     const first = nodes.find((n) => n.type !== 'start_end');
     if (end && first) {
-      next.edges = [...edges, { id: `planted-${end.id}`, from: end.id, to: first.id, label: '' }];
+      // The arrow goes back up, and left to the router it would run up the
+      // column behind every shape between END and the first step — the
+      // mistake the student is asked to find, drawn where it cannot be seen.
+      // It takes a lane of its own instead, left of every shape and every
+      // other arrow, and comes in level with the step it returns to.
+      const byId = new Map(nodes.map((n) => [n.id, n]));
+      const xs = nodes.map((n) => n.x - n.w / 2);
+      for (const e of edges) {
+        const a = byId.get(e.from);
+        const b = byId.get(e.to);
+        if (a && b) orthogonalRoute(a, b, e.waypoints).forEach((p) => xs.push(p.x));
+      }
+      const lane = Math.min(...xs) - 40;
+      next.edges = [
+        ...edges,
+        {
+          id: `planted-${end.id}`,
+          from: end.id,
+          to: first.id,
+          label: '',
+          waypoints: [
+            { axis: 'x', v: lane },
+            { axis: 'y', v: first.y },
+          ],
+        },
+      ];
     }
   } else {
     const target = nodes.find((n) => n.type === 'process') ?? nodes.find((n) => n.type === 'io');

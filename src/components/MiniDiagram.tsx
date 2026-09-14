@@ -7,6 +7,7 @@ import React, { useMemo } from 'react';
 import { FlowEdge, FlowNode } from '../types';
 import { shapePolygonPoints } from '../core/shapes';
 import { layoutNodeText } from '../core/node-text';
+import { RoutePoint, orthogonalRoute } from '../core/flowchart-gen';
 
 interface MiniDiagramProps {
   nodes: FlowNode[];
@@ -21,34 +22,16 @@ interface MiniDiagramProps {
 
 const PAD = 40;
 
-/** Where an arrow should leave a shape on its way to another one. */
-function anchor(from: FlowNode, to: FlowNode): { x1: number; y1: number; x2: number; y2: number } {
-  const vertical = Math.abs(to.y - from.y) >= Math.abs(to.x - from.x);
-  if (vertical) {
-    const down = to.y > from.y;
-    return {
-      x1: from.x,
-      y1: from.y + (down ? from.h / 2 : -from.h / 2),
-      x2: to.x,
-      y2: to.y + (down ? -to.h / 2 : to.h / 2),
-    };
-  }
-  const right = to.x > from.x;
-  return {
-    x1: from.x + (right ? from.w / 2 : -from.w / 2),
-    y1: from.y,
-    x2: to.x + (right ? -to.w / 2 : to.w / 2),
-    y2: to.y,
-  };
-}
-
 /**
  * A flowchart to look at and tap, not to edit.
  *
  * It draws the same symbols and breaks the labels in the same places as the
  * canvas — a shape a student judges here has to look like the one they would
- * have drawn themselves. Arrows are straight rather than routed, which is
- * enough for the diagrams these exercises use and keeps the picture quiet.
+ * have drawn themselves. The arrows take the canvas's own routes too. They
+ * used to be straight lines, and in a diagram that is one column of shapes a
+ * straight arrow back up — a loop's return, or the arrow out of END that the
+ * „kraj" mistake plants — ran behind every shape in between and could not be
+ * seen at all, while the marking said it was there.
  */
 export const MiniDiagram: React.FC<MiniDiagramProps> = ({
   nodes,
@@ -58,16 +41,27 @@ export const MiniDiagram: React.FC<MiniDiagramProps> = ({
   markedIds = [],
   maxHeight = 460,
 }) => {
+  const routes = useMemo(() => {
+    const byId = new Map<string, FlowNode>(nodes.map((n) => [n.id, n]));
+    return edges
+      .map((edge) => {
+        const from = byId.get(edge.from);
+        const to = byId.get(edge.to);
+        return from && to ? { edge, pts: orthogonalRoute(from, to, edge.waypoints) } : null;
+      })
+      .filter((r): r is { edge: FlowEdge; pts: RoutePoint[] } => !!r && r.pts.length >= 2);
+  }, [nodes, edges]);
+
+  // The picture holds the arrows as well as the shapes: a loop's return lane
+  // runs outside the column, and cropping it would hide the very arrow asked about.
   const box = useMemo(() => {
     if (!nodes.length) return { x: 0, y: 0, w: 100, h: 100 };
-    const minX = Math.min(...nodes.map((n) => n.x - n.w / 2));
-    const maxX = Math.max(...nodes.map((n) => n.x + n.w / 2));
-    const minY = Math.min(...nodes.map((n) => n.y - n.h / 2));
-    const maxY = Math.max(...nodes.map((n) => n.y + n.h / 2));
-    return { x: minX - PAD, y: minY - PAD, w: maxX - minX + PAD * 2, h: maxY - minY + PAD * 2 };
-  }, [nodes]);
-
-  const byId = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes]);
+    const xs = [...nodes.flatMap((n) => [n.x - n.w / 2, n.x + n.w / 2]), ...routes.flatMap((r) => r.pts.map((p) => p.x))];
+    const ys = [...nodes.flatMap((n) => [n.y - n.h / 2, n.y + n.h / 2]), ...routes.flatMap((r) => r.pts.map((p) => p.y))];
+    const minX = Math.min(...xs);
+    const minY = Math.min(...ys);
+    return { x: minX - PAD, y: minY - PAD, w: Math.max(...xs) - minX + PAD * 2, h: Math.max(...ys) - minY + PAD * 2 };
+  }, [nodes, routes]);
 
   return (
     <svg
@@ -82,30 +76,21 @@ export const MiniDiagram: React.FC<MiniDiagramProps> = ({
         </marker>
       </defs>
 
-      {edges.map((edge) => {
-        const from = byId.get(edge.from);
-        const to = byId.get(edge.to);
-        if (!from || !to) return null;
-        const a = anchor(from, to);
+      {routes.map(({ edge, pts }) => {
+        // The label sits by the first stretch of the arrow, next to the shape
+        // it leaves, which is where a YES or NO is read.
+        const [p, q] = pts;
         return (
           <g key={edge.id}>
-            <line
-              x1={a.x1}
-              y1={a.y1}
-              x2={a.x2}
-              y2={a.y2}
+            <path
+              d={`M${pts.map((pt) => `${pt.x},${pt.y}`).join(' L')}`}
+              fill="none"
               stroke="#64748B"
               strokeWidth="2"
               markerEnd="url(#mini-arrow)"
             />
             {edge.label && (
-              <text
-                x={(a.x1 + a.x2) / 2 + 10}
-                y={(a.y1 + a.y2) / 2}
-                fontSize="13"
-                fontWeight="800"
-                fill="#94A3B8"
-              >
+              <text x={(p.x + q.x) / 2 + 10} y={(p.y + q.y) / 2} fontSize="13" fontWeight="800" fill="#94A3B8">
                 {edge.label}
               </text>
             )}
