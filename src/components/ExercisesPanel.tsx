@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useMemo, useState } from 'react';
-import { ArrowLeft, Check, CheckCircle2, ChevronLeft, ChevronRight, GraduationCap, RotateCcw, Send, Workflow, X } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, Check, CheckCircle2, ChevronLeft, ChevronRight, GraduationCap, RotateCcw, Send, Workflow, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { FlowEdge, FlowNode, Language } from '../types';
 import { translations } from '../i18n/translations';
 import { buildFlowchart, diagramToPseudocode, parsePseudocode } from '../core/flowchart-gen';
@@ -34,6 +34,25 @@ interface ExercisesPanelProps {
 }
 
 const PROGRESS_KEY = 'flowchart_studio_vjezbe_v1';
+
+/**
+ * How large the exercises are drawn, for a student who sees less well. The
+ * panel is written in fixed pixel sizes throughout, so a font setting would
+ * reach almost nothing; the whole content is scaled instead, and it reflows to
+ * the narrower width rather than running off the side. Remembered on the
+ * computer, since it is the student at that desk who needs it.
+ */
+const ZOOM_KEY = 'flowchart_studio_vjezbe_zoom';
+const ZOOM_STEPS = [1, 1.25, 1.5, 1.75, 2];
+
+function loadZoom(): number {
+  try {
+    const saved = Number(localStorage.getItem(ZOOM_KEY));
+    return ZOOM_STEPS.includes(saved) ? saved : 1;
+  } catch {
+    return 1;
+  }
+}
 
 /**
  * Marks where a blank sits while a line is split into parts. A control
@@ -121,6 +140,36 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
   const [drawn, setDrawn] = useState<{ nodes: FlowNode[]; edges: FlowEdge[] }>({ nodes: [], edges: [] });
   const [result, setResult] = useState<GradeResult | null>(null);
   const writingBox = React.useRef<HTMLTextAreaElement>(null);
+  const [zoom, setZoom] = useState<number>(loadZoom);
+
+  const stepZoom = (dir: -1 | 0 | 1) =>
+    setZoom((z) => {
+      const i = ZOOM_STEPS.indexOf(z);
+      return dir === 0 ? 1 : ZOOM_STEPS[Math.min(ZOOM_STEPS.length - 1, Math.max(0, i + dir))];
+    });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(ZOOM_KEY, String(zoom));
+    } catch {
+      // Kept for this session only.
+    }
+  }, [zoom]);
+
+  // Ctrl + / Ctrl − / Ctrl 0 while the panel is open, the keys a browser uses
+  // for the same thing — taken here so the page around the panel stays put.
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+      const dir = e.key === '+' || e.key === '=' ? 1 : e.key === '-' || e.key === '_' ? -1 : e.key === '0' ? 0 : null;
+      if (dir === null) return;
+      e.preventDefault();
+      stepZoom(dir);
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [isOpen]);
 
   /** What the writing box starts with: the two lines every algorithm has. */
   const frame = renderKeywords('@START\n\n@END', language);
@@ -370,11 +419,13 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
   return (
     <div className="fixed inset-0 z-50 bg-[#050505]/97 backdrop-blur-xl flex flex-col">
       {/* A drawing needs room a list of tiles does not: the panel widens
-          while the student draws and narrows again for everything else. */}
+          while the student draws and narrows again for everything else. A
+          larger text size widens it by the same factor — scaled inside the
+          narrow column, 175 % read as the same few words a line squeezed into
+          the middle of an empty screen. */}
       <div
-        className={`w-full mx-auto flex flex-col h-full ${
-          task && activeType === 'nacrtaj' ? 'max-w-6xl' : 'max-w-2xl'
-        }`}
+        className="w-full mx-auto flex flex-col h-full"
+        style={{ maxWidth: task && activeType === 'nacrtaj' ? '72rem' : `${42 * zoom}rem` }}
       >
         <div className="flex items-center gap-2 px-3 h-14 border-b border-white/10 shrink-0">
           {task ? (
@@ -395,6 +446,36 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
           <span className="flex-1 min-w-0 truncate text-[11px] text-white/45 text-right">
             {solvedCount} / {pack.tasks.length} {t.progress}
           </span>
+          {/* In the header, which does not scale, so the control never grows
+              out from under the finger that is pressing it. */}
+          <div className="flex items-center shrink-0 rounded-lg border border-white/10" title={t.textSize}>
+            <button
+              type="button"
+              onClick={() => stepZoom(-1)}
+              disabled={zoom === ZOOM_STEPS[0]}
+              aria-label={`${t.textSize} −`}
+              className="w-9 h-9 flex items-center justify-center rounded-l-lg text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent"
+            >
+              <ZoomOut className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => stepZoom(0)}
+              aria-label={t.textSize}
+              className="h-9 min-w-[3rem] px-1 text-[11px] font-black tabular-nums text-white/70 hover:text-white hover:bg-white/10"
+            >
+              {Math.round(zoom * 100)}%
+            </button>
+            <button
+              type="button"
+              onClick={() => stepZoom(1)}
+              disabled={zoom === ZOOM_STEPS[ZOOM_STEPS.length - 1]}
+              aria-label={`${t.textSize} +`}
+              className="w-9 h-9 flex items-center justify-center rounded-r-lg text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent"
+            >
+              <ZoomIn className="w-4 h-4" />
+            </button>
+          </div>
           <button
             type="button"
             onClick={onClose}
@@ -404,7 +485,13 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-3 py-3">
+        {/* The drawing board is left at its own size: it has a zoom of its own
+            and an Enlarge button, and its pointer maths reads screen positions
+            that a scaled ancestor would put out of step in some webviews. */}
+        <div
+          className="flex-1 overflow-y-auto px-3 py-3"
+          style={task && activeType === 'nacrtaj' ? undefined : { zoom }}
+        >
           {!task && (
             <>
               <p className="text-[11px] text-white/45 mb-3 px-1">
@@ -473,7 +560,10 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
               </div>
 
               {offered.length > 1 && (
-                <div className="flex gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/10">
+                // The names wrap onto a second row rather than being cut short:
+                // at a larger text size, or on a phone, six tabs no longer fit
+                // on one line, and "P…" does not say which exercise it is.
+                <div className="flex flex-wrap gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/10">
                   {offered.map((kind) => (
                     <button
                       key={kind}
@@ -483,7 +573,7 @@ export const ExercisesPanel: React.FC<ExercisesPanelProps> = ({ language, isOpen
                         if (kind === 'samostalno' && !written.trim()) setWritten(frame);
                         setResult(null);
                       }}
-                      className={`flex-1 min-w-0 truncate px-2 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
+                      className={`flex-auto whitespace-nowrap px-2 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
                         activeType === kind ? 'bg-white text-black' : 'text-white/60 hover:text-white'
                       }`}
                     >

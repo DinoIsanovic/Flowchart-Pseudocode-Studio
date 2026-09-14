@@ -272,6 +272,8 @@ export interface Translations {
     writeTests: string;
     draw: string;
     drawNote: string;
+    /** The size control over the exercises, for students who see less well. */
+    textSize: string;
     drawAll: string;
     inputLabel: string;
     outputLabel: string;
@@ -534,6 +536,7 @@ const SOURCE: Record<SourceLang, Translations> = {
       writeTests: 'Checked with:',
       draw: 'Draw the flowchart yourself, then check it.',
       drawNote: 'Add a symbol, drag it into place, then switch to Connect and tap two shapes to draw an arrow. Double click a shape to write in it.',
+      textSize: 'Text size',
       drawAll: 'Draw the algorithm first.',
       inputLabel: 'Input',
       outputLabel: 'Output',
@@ -804,6 +807,7 @@ const SOURCE: Record<SourceLang, Translations> = {
       writeTests: 'Geprüft mit:',
       draw: 'Zeichne das Flussdiagramm selbst und prüfe es dann.',
       drawNote: 'Symbol hinzufügen, an seinen Platz ziehen, dann auf Verbinden umschalten und zwei Symbole antippen — das ergibt einen Pfeil. Doppelklick auf ein Symbol, um hineinzuschreiben.',
+      textSize: 'Textgröße',
       drawAll: 'Zeichne zuerst den Algorithmus.',
       inputLabel: 'Eingabe',
       outputLabel: 'Ausgabe',
@@ -1074,6 +1078,7 @@ const SOURCE: Record<SourceLang, Translations> = {
       writeTests: 'Provjerava se za:',
       draw: 'Nacrtaj dijagram toka sam, pa ga provjeri.',
       drawNote: 'Dodaj simbol, prevuci ga na mjesto, pa pređi na Povezivanje i dodirni dva bloka — to je strelica. Dvoklik na blok da upišeš tekst.',
+      textSize: 'Veličina teksta',
       drawAll: 'Prvo nacrtaj algoritam.',
       inputLabel: 'Ulaz',
       outputLabel: 'Ispis',
