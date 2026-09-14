@@ -81,8 +81,11 @@ type Token =
   | { type: 'op'; text: string; pos: number }
   | { type: 'eof'; text: string; pos: number };
 
-// Longest first, so `<=` is never read as `<` followed by `=`.
-const OPERATORS = ['**', '<=', '>=', '<>', '!=', '==', '+', '-', '*', '/', '%', '^', '(', ')', ','];
+// Longest first, so `<=` is never read as `<` followed by `=`. `=<` and `=>`
+// are the same two signs the other way round, as a student says them, and are
+// read as `<=` and `>=` — nothing else could be meant by them.
+const OPERATORS = ['**', '<=', '>=', '=<', '=>', '<>', '!=', '==', '+', '-', '*', '/', '%', '^', '(', ')', ','];
+const SAME_AS: Record<string, string> = { '=<': '<=', '=>': '>=' };
 
 // The same identifier shape the Python generator scans for, so a name that is
 // legal in one place is legal in the other: letters (including the accented
@@ -141,7 +144,7 @@ function tokenize(src: string): Token[] {
 
     const op = OPERATORS.find((o) => src.startsWith(o, i));
     if (op) {
-      out.push({ type: 'op', text: op, pos: i });
+      out.push({ type: 'op', text: SAME_AS[op] ?? op, pos: i });
       i += op.length;
       continue;
     }

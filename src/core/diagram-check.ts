@@ -92,7 +92,7 @@ function shapeFromText(node: FlowNode): ShapeType | null {
   // The generator writes a condition as "a > b ?", which is the diamond.
   if (text.endsWith('?')) return 'decision';
   // A plain assignment is the rectangle.
-  if (/^[A-Za-z_À-ɏ][A-Za-z0-9_À-ɏ]*\s*=[^=]/.test(text)) return 'process';
+  if (/^[A-Za-z_À-ɏ][A-Za-z0-9_À-ɏ]*\s*=[^=<>]/.test(text)) return 'process';
   return null;
 }
 

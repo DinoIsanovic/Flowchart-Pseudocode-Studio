@@ -196,7 +196,7 @@ function variableNames(lines: string[]): string[] {
     const code = codeSpans(line)
       .map(([a, b]) => line.slice(a, b))
       .join(' ');
-    for (const m of code.matchAll(/\b([A-Za-zČĆŽŠĐčćžšđ_]\w*)\s*=(?!=)/g)) {
+    for (const m of code.matchAll(/\b([A-Za-zČĆŽŠĐčćžšđ_]\w*)\s*=(?![=<>])/g)) {
       if (!names.includes(m[1])) names.push(m[1]);
     }
     // `INPUT a, b` names two at once, and the keyword in front of them is a
@@ -220,7 +220,7 @@ function variableEdits(lines: string[]): Edit[] {
     // Left of the `=` is the name being defined; renaming that makes an
     // undefined variable rather than a wrong answer, which is a different
     // lesson and reads as a crash.
-    const defines = line.search(/=(?!=)/);
+    const defines = line.search(/=(?![=<>])/);
     for (const m of line.matchAll(/\b[A-Za-zČĆŽŠĐčćžšđ_]\w*\b/g)) {
       const at = m.index ?? 0;
       if (!inCode(spans, at) || !names.includes(m[0])) continue;

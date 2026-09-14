@@ -520,7 +520,7 @@ function getLocalizedNo(lang: Language): string {
 /** Splits `zbir = a + b` in two; null when the text assigns nothing. */
 function assignmentParts(text: string): { target: string; value: string } | null {
   const eq = text.indexOf('=');
-  if (eq < 1 || '<>!='.includes(text[eq - 1]) || text[eq + 1] === '=') return null;
+  if (eq < 1 || '<>!='.includes(text[eq - 1]) || '=<>'.includes(text[eq + 1] ?? '')) return null;
   const target = text.slice(0, eq).trim();
   const value = text.slice(eq + 1).trim();
   return target && value ? { target, value } : null;
@@ -1123,8 +1123,8 @@ export function pickDecisionBranches(outs: FlowEdge[]): { da: FlowEdge | null; n
 export function negateCondition(cond: string, lang: Language = 'en'): string {
   const text = String(cond || '').trim();
   const flips: [RegExp, string][] = [
-    [/<=|≤/, '>'],
-    [/>=|≥/, '<'],
+    [/<=|=<|≤/, '>'],
+    [/>=|=>|≥/, '<'],
     [/<>|!=|≠/, '='],
     [/==/, '!='],
     [/</, '>='],

@@ -122,7 +122,10 @@ export function expressionToPython(src: string): string {
   try {
     return emit(parseExpression(text), 0);
   } catch {
-    return text.replace(/(^|[^=!<>])=(?!=)/g, '$1==');
+    return text
+      .replace(/=</g, '<=')
+      .replace(/=>/g, '>=')
+      .replace(/(^|[^=!<>])=(?!=)/g, '$1==');
   }
 }
 

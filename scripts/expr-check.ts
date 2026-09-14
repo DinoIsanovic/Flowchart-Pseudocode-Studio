@@ -61,6 +61,9 @@ ok('a == 7', true);
 ok('a <> b', true);
 ok('a != b', true);
 ok('i <= 10', true);
+ok('i =< 10', true);          // the same two signs the other way round
+ok('a => 7', true);
+ok('a =>8', false);
 ok('"abc" < "abd"', true);
 ok('a = "7"', false);         // cross-type equality is false, not an error
 
