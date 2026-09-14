@@ -153,6 +153,31 @@ export interface FormValues {
   title?: string;
 }
 
+/**
+ * A remembered form link, brought up to date with what its page says now.
+ *
+ * A form is learnt once and remembered as a link, and a teacher goes on
+ * editing the form afterwards: a „Provjera" question added a week later is
+ * nowhere in the link a class set up with, so it stayed empty with nothing to
+ * say why. Every box the remembered link already names keeps its place — the
+ * teacher marked those — and only boxes it does not know are taken from the
+ * page. Returns the remembered link itself when there is nothing to add, so
+ * the caller can tell an update from none.
+ */
+export function mergeFormLink(remembered: string, learned: string): string {
+  const old = parseFormLink(remembered).link;
+  const fresh = parseFormLink(learned).link;
+  if (!old || !fresh || old.url !== fresh.url) return remembered;
+
+  const taken = new Set(Object.values(old.fields));
+  const added = FORM_FIELDS.filter((f) => !old.fields[f] && fresh.fields[f] && !taken.has(fresh.fields[f]!));
+  if (!added.length) return remembered;
+
+  const url = new URL(remembered.trim());
+  for (const field of added) url.searchParams.append(fresh.fields[field]!, FIELD_WORDS[field][0]);
+  return url.toString();
+}
+
 /** Every box this form wants, with what goes in it. */
 export function submitFields(link: FormLink, values: FormValues): [string, string][] {
   const out: [string, string][] = [...link.extra];

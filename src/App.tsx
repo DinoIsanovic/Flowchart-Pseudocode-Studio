@@ -36,7 +36,7 @@ import { ExercisesPanel } from './components/ExercisesPanel';
 import { SubmitDialog, Work } from './components/SubmitDialog';
 import { SubmissionsPanel } from './components/SubmissionsPanel';
 import { Submission, SubmissionStudent } from './core/submission';
-import { CONFIG_PARAM, configFromSearch, parseFormLink } from './core/form-link';
+import { CONFIG_PARAM, configFromSearch, mergeFormLink, parseFormLink, responseUrl } from './core/form-link';
 import { LearnedForm, learnForm } from './core/form-page';
 import { fetchFormPage, onDesktop } from './core/form-post';
 
@@ -958,6 +958,46 @@ export default function App() {
     // Once, on the way in.
   }, []);
 
+  /** A Google form's own page, as a learnt form. Null off the desktop or offline. */
+  const readFormPage = async (source: string): Promise<LearnedForm | null> => {
+    const link = parseFormLink(source).link;
+    const page = link && responseUrl(link) ? link.url : source.split('?')[0];
+    if (!onDesktop() || !page.endsWith('/viewform')) return null;
+    const html = await fetchFormPage(page);
+    const read = html ? learnForm(page, html) : null;
+    return read?.prefilled ? read : null;
+  };
+
+  /**
+   * The remembered form, brought up to date whenever work is about to be handed
+   * in or read. A teacher keeps editing their form after a class has set it up,
+   * and a question added since — „Provjera", in the case that found this —
+   * stayed empty on every computer until someone thought to paste the link
+   * again. Done quietly: offline, or in a browser, the remembered link stands.
+   */
+  const handingIn = !!submitWork || isSubmissionsOpen;
+  useEffect(() => {
+    if (!handingIn || !formSource) return;
+    let cancelled = false;
+    void readFormPage(formSource).then((fresh) => {
+      if (cancelled || !fresh) return;
+      setLearnedForm(fresh);
+      const merged = mergeFormLink(formSource, fresh.prefilled!);
+      if (merged === formSource) return;
+      setFormSource(merged);
+      try {
+        localStorage.setItem(FORM_KEY, merged);
+      } catch {
+        // Up to date for this session; read again next time.
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+    // Once per opening, not on every change the update itself makes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handingIn]);
+
   /**
    * Takes the teacher's form however it arrives.
    *
@@ -980,7 +1020,14 @@ export default function App() {
     };
 
     const { link, reason } = parseFormLink(pasted);
-    if (link) return keep(pasted.trim(), null);
+    if (link) {
+      // A pre-filled link is taken as it stands, and on the desktop also read
+      // against the form's page: a link copied before a question was added
+      // does not name that question, and pasting it again used to change
+      // nothing at all.
+      const fresh = await readFormPage(pasted.trim());
+      return keep(fresh ? mergeFormLink(pasted.trim(), fresh.prefilled!) : pasted.trim(), fresh);
+    }
     if (reason === 'no-url') return 'no-url';
 
     if (!onDesktop()) return 'needs-desktop';

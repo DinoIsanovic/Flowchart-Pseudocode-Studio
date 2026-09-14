@@ -44,7 +44,7 @@ import {
   rememberSent,
   submissionText,
 } from '../src/core/submission';
-import { configFromSearch, configLink, parseFormLink, responseUrl, submitFields, submitUrl } from '../src/core/form-link';
+import { configFromSearch, configLink, mergeFormLink, parseFormLink, responseUrl, submitFields, submitUrl } from '../src/core/form-link';
 import { fieldOfTitle, learnForm, parseFormPage } from '../src/core/form-page';
 import { readFileSync } from 'node:fs';
 
@@ -408,6 +408,23 @@ for (const pack of PACKS) {
     refusing.blocking.length === 1 && refusing.blocking[0].title === 'Datum');
   const cutting = learnForm('https://docs.google.com/forms/d/e/A/viewform', shaped(0, false));
   ok('kratko polje za odgovor se prijavljuje', cutting.shortAnswerBox);
+
+  // A form learnt before its „Provjera" question existed, as it was found
+  // remembered on the user's own computer on 2026-09-13, and the same form's
+  // page read again afterwards.
+  const remembered =
+    'https://docs.google.com/forms/d/e/A/viewform?usp=pp_url&entry.11=IME&entry.16=NAZIV&entry.13=ZADATAK&entry.30=SIFRA';
+  const later = learnForm(
+    'https://docs.google.com/forms/d/e/A/viewform',
+    '<script>FB_PUBLIC_LOAD_DATA_ = [null,[null,[[1,"Ime",null,0,[[11,null,1]]],[2,"Naziv zadatka",null,0,[[16,null,0]]],[3,"Zadatak",null,1,[[13,null,0]]],[4,"Kod",null,0,[[30,null,0]]],[5,"Provjera",null,0,[[99,null,0]]]]]];</script>'
+  );
+  const merged = mergeFormLink(remembered, later.prefilled!);
+  const mergedLink = parseFormLink(merged).link;
+  ok('zapamćena forma nauči novo pitanje', mergedLink?.fields.verdict === 'entry.99', merged);
+  ok('stara polja ostaju gdje su bila',
+    mergedLink?.fields.first === 'entry.11' && mergedLink?.fields.payload === 'entry.13' && mergedLink?.fields.pupil === 'entry.30');
+  ok('ništa novo, ista veza', mergeFormLink(merged, later.prefilled!) === merged);
+  ok('druga forma se ne miješa', mergeFormLink(remembered, 'https://docs.google.com/forms/d/e/B/viewform?entry.99=PROVJERA') === remembered);
 
   ok('stranica bez podataka ne izmišlja', parseFormPage('<html><body>ništa</body></html>').length === 0);
 }
